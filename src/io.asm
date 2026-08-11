@@ -12,6 +12,7 @@ section .text
     global io_close
     global io_read
     global io_write
+    global io_seek
 
 ; io_open(path, flags, mode) -> fd
 io_open:
@@ -75,6 +76,25 @@ io_write:
     mov rsi, buf
     mov rdx, count
     mov rax, 1          ; sys_write
+    syscall
+    postccall
+
+    endfn
+    ret 24
+
+; io_seek(fd, offset, whence) -> 新的文件偏移量 (rax)
+; whence: 0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END
+io_seek:
+    beginfn
+    %define fd     [rbp+32]
+    %define offset [rbp+24]
+    %define whence [rbp+16]
+
+    preccall
+    mov rdi, fd
+    mov rsi, offset
+    mov rdx, whence
+    mov rax, 8          ; sys_lseek
     syscall
     postccall
 

@@ -10,6 +10,7 @@ section .data
     err_write   db "io_write short write", 0
     err_read    db "io_read short read", 0
     err_content db "io_read content mismatch", 0
+    err_seek    db "io_seek(SEEK_SET, 0) did not return 0", 0
 
 section .bss
     readbuf resb 64
@@ -21,7 +22,7 @@ amain:
     beginfn rbx
 
     push path
-    push 0x241          ; flags O_WRONLY|O_CREAT|O_TRUNC
+    push 0x242          ; flags O_RDWR|O_CREAT|O_TRUNC（后面要在同一个 fd 上 seek 回去再读）
     push 0x1A4          ; mode 0644
     call io_open
     mov rbx, rax
@@ -42,6 +43,31 @@ amain:
     sete al
     movzx rax, al
     push err_write
+    push rax
+    call assert
+
+    ; 不关闭 fd，用 io_seek 倒回文件开头再读一遍，验证 seek 生效
+    push rbx
+    push 0              ; offset
+    push 0              ; whence SEEK_SET
+    call io_seek
+
+    cmp rax, 0
+    sete al
+    movzx rax, al
+    push err_seek
+    push rax
+    call assert
+
+    push rbx
+    push readbuf
+    push msg_len
+    call io_read
+
+    cmp rax, msg_len
+    sete al
+    movzx rax, al
+    push err_read
     push rax
     call assert
 
