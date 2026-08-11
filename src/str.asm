@@ -26,7 +26,6 @@ str_len:
     ret 8
 
 ; str_eq(a, b) -> 1 表示两个字符串相等，0 表示不相等
-; 调用方按顺序 push a; push b（第一个参数先 push）
 str_eq:
     beginfn rbx, rcx
     %define a [rbp+24]

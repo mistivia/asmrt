@@ -13,7 +13,6 @@ section .text
     global fs_unlink
 
 ; fs_stat(path, statbuf) -> result (rax)
-; 调用方按顺序 push path; push statbuf（第一个参数先 push）
 fs_stat:
     beginfn
     %define path [rbp+24]
@@ -29,8 +28,7 @@ fs_stat:
     endfn
     ret 16
 
-; fs_fstat(fd, statbuf) -> result (rax)
-; 调用方按顺序 push fd; push statbuf（第一个参数先 push）
+; fs_fstat(fd, statbuf) -> result
 fs_fstat:
     beginfn
     %define fd  [rbp+24]
@@ -46,8 +44,7 @@ fs_fstat:
     endfn
     ret 16
 
-; fs_mkdir(path, mode) -> result (rax)
-; 调用方按顺序 push path; push mode（第一个参数先 push）
+; fs_mkdir(path, mode) -> result
 fs_mkdir:
     beginfn
     %define path [rbp+24]
@@ -63,7 +60,7 @@ fs_mkdir:
     endfn
     ret 16
 
-; fs_rmdir(path) -> result (rax)
+; fs_rmdir(path) -> result
 fs_rmdir:
     beginfn
     %define path [rbp+16]
@@ -77,7 +74,7 @@ fs_rmdir:
     endfn
     ret 8
 
-; fs_unlink(path) -> result (rax)  即删除一个文件（"rm"）
+; fs_unlink(path) -> result
 fs_unlink:
     beginfn
     %define path [rbp+16]

@@ -13,8 +13,7 @@ section .text
     global io_read
     global io_write
 
-; io_open(path, flags, mode) -> fd (rax)
-; 调用方按顺序 push path; push flags; push mode（第一个参数先 push）
+; io_open(path, flags, mode) -> fd
 io_open:
     beginfn
     %define path  [rbp+32]
@@ -46,8 +45,7 @@ io_close:
     endfn
     ret 8
 
-; io_read(fd, buf, count) -> bytes read (rax)
-; 调用方按顺序 push fd; push buf; push count（第一个参数先 push）
+; io_read(fd, buf, count) -> bytes read
 io_read:
     beginfn
     %define fd    [rbp+32]
@@ -65,8 +63,7 @@ io_read:
     endfn
     ret 24
 
-; io_write(fd, buf, count) -> bytes written (rax)
-; 调用方按顺序 push fd; push buf; push count（第一个参数先 push）
+; io_write(fd, buf, count) -> bytes written
 io_write:
     beginfn
     %define fd    [rbp+32]
