@@ -44,7 +44,7 @@
     pop rcx
 %endmacro
 
-%macro beginfn 1-*
+%macro beginfn 0-*
     push rbp
     mov  rbp, rsp
 %rep %0
@@ -53,7 +53,7 @@
 %endrep
 %endmacro
 
-%macro endfn 1-*
+%macro endfn 0-*
 %rep %0
     %rotate -1
     pop %1

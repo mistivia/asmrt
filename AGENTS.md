@@ -16,7 +16,7 @@
 ### 1. `beginfn` / `endfn`：变长寄存器帧宏
 
 ```asm
-%macro beginfn 1-*
+%macro beginfn 0-*
     push rbp
     mov  rbp, rsp
 %rep %0
@@ -25,7 +25,7 @@
 %endrep
 %endmacro
 
-%macro endfn 1-*
+%macro endfn 0-*
 %rep %0
     %rotate -1
     pop %1
@@ -34,11 +34,16 @@
 %endmacro
 ```
 
-- 利用 NASM 的可变参数宏（`1-*`、`%0`、`%rep`/`%rotate`）实现"传入几个寄存器名，就 push/pop 几个"。
-- `beginfn rbp` 建立标准栈帧后，紧接着把调用列表中的寄存器逐个压栈（用作函数内的局部保存）。
+- 利用 NASM 的可变参数宏（`0-*`、`%0`、`%rep`/`%rotate`）实现"传入几个寄存器名，就 push/pop 几个"；参数个数允许为 0——不需要额外保存寄存器、也不需要栈对齐补位时，直接写 `beginfn` / `endfn`，不用传任何占位寄存器。
+- `beginfn rbp; mov rbp, rsp` 建立标准栈帧后，紧接着把调用列表中的寄存器逐个压栈（用作函数内的局部保存）。
 - `endfn` 以相反顺序弹出，最后恢复 `rbp`。
 - 用法示例：`beginfn rcx`（`fibo` 函数）表示该函数内部会用 `rcx` 存中间结果，进入时保存、退出时恢复，从而使 `rcx` 在这个自定义 ABI 下对调用者也是"安全"的。
-- `print_num` 里的 `beginfn rbp` 则是另一种用法：额外 push 一次 `rbp` 本身，不是为了保存寄存器，而是用来凑够 16 字节栈对齐。因为进入函数时已经有 `push rbp`（帧指针）+ `call` 压入的返回地址，栈偏移是不对齐的；`beginfn` 的可变参数列表每传入一个寄存器就多 push 8 字节，所以传 `rbp` 只是借用它当"占位寄存器"再压一次栈，把栈调整到 16 字节对齐，以满足之后 `call printf` 时 System V ABI 对调用点栈对齐的要求。`endfn rbp` 对应地多弹出一次，抵消这次占位 push。
+- `print_num` 里的 `beginfn rbp` 则是另一种用法：额外 push 一次 `rbp` 本身，不是为了保存寄存器，而是用来凑够 16 字节栈对齐，以满足之后 `call printf` 时 System V ABI 对调用点栈对齐的要求。`endfn rbp` 对应地多弹出一次，抵消这次占位 push。
+- **但这个占位 push 不是每次都需要**——只有当参数帧本身不是 16 字节对齐时才要补。具体算法：进入函数时栈上已经有 `call` 压入的返回地址（8 字节）+ `beginfn` 自己 push 的旧 `rbp`（8 字节）+ 调用方压入的参数（`8 * 参数个数`字节），也就是 `16 + 8n` 字节（`n` = 参数个数）。这个值 mod 16 只取决于 `n` 的奇偶：
+  - `n` 为偶数（参数帧本身已经 16 字节对齐）：不需要额外占位寄存器。
+  - `n` 为奇数：差 8 字节，需要在 `beginfn` 里多传一个占位寄存器（通常复用 `rbp`）来补齐。
+  - `print_num` 只有 1 个参数（奇数），所以要 `beginfn rbp` 占位；如果它有 2 个参数，参数帧就已经是 16 字节对齐，直接 `beginfn`（不加占位寄存器，只保存必要寄存器）即可，不用再多 push 一次 `rbp`。
+  - 如果函数本身还要保存别的寄存器（例如 `fibo` 用 `beginfn rcx` 保存 `rcx`），要把这些寄存器也计入总 push 次数一起算奇偶：`n + beginfn 里实际 push 的寄存器个数` 为偶数就已对齐，为奇数才需要再加一个占位寄存器补齐。
 
 ### 2. `preccall` / `postccall`：跨真实 ABI 调用的寄存器保护
 

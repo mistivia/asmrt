@@ -16,7 +16,7 @@ section .text
 ; io_open(path, flags, mode) -> fd (rax)
 ; 调用方按顺序 push path; push flags; push mode（第一个参数先 push）
 io_open:
-    beginfn rbp
+    beginfn
     %define path  [rbp+32]
     %define flags [rbp+24]
     %define mode  [rbp+16]
@@ -29,7 +29,7 @@ io_open:
     syscall
     postccall
 
-    endfn rbp
+    endfn
     ret 24
 %undef path
 %undef flags
@@ -37,7 +37,7 @@ io_open:
 
 ; io_close(fd) -> result (rax)
 io_close:
-    beginfn rbp
+    beginfn
     %define fd [rbp+16]
 
     preccall
@@ -46,14 +46,14 @@ io_close:
     syscall
     postccall
 
-    endfn rbp
+    endfn
     ret 8
 %undef fd
 
 ; io_read(fd, buf, count) -> bytes read (rax)
 ; 调用方按顺序 push fd; push buf; push count（第一个参数先 push）
 io_read:
-    beginfn rbp
+    beginfn
     %define fd    [rbp+32]
     %define buf   [rbp+24]
     %define count [rbp+16]
@@ -66,7 +66,7 @@ io_read:
     syscall
     postccall
 
-    endfn rbp
+    endfn
     ret 24
 %undef fd
 %undef buf
@@ -75,7 +75,7 @@ io_read:
 ; io_write(fd, buf, count) -> bytes written (rax)
 ; 调用方按顺序 push fd; push buf; push count（第一个参数先 push）
 io_write:
-    beginfn rbp
+    beginfn
     %define fd    [rbp+32]
     %define buf   [rbp+24]
     %define count [rbp+16]
@@ -88,7 +88,7 @@ io_write:
     syscall
     postccall
 
-    endfn rbp
+    endfn
     ret 24
 %undef fd
 %undef buf

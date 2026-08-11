@@ -15,7 +15,7 @@ section .text
 ; fs_stat(path, statbuf) -> result (rax)
 ; 调用方按顺序 push path; push statbuf（第一个参数先 push）
 fs_stat:
-    beginfn rbp
+    beginfn
     %define path [rbp+24]
     %define buf  [rbp+16]
 
@@ -26,7 +26,7 @@ fs_stat:
     syscall
     postccall
 
-    endfn rbp
+    endfn
     ret 16
 %undef path
 %undef buf
@@ -34,7 +34,7 @@ fs_stat:
 ; fs_fstat(fd, statbuf) -> result (rax)
 ; 调用方按顺序 push fd; push statbuf（第一个参数先 push）
 fs_fstat:
-    beginfn rbp
+    beginfn
     %define fd  [rbp+24]
     %define buf [rbp+16]
 
@@ -45,7 +45,7 @@ fs_fstat:
     syscall
     postccall
 
-    endfn rbp
+    endfn
     ret 16
 %undef fd
 %undef buf
@@ -53,7 +53,7 @@ fs_fstat:
 ; fs_mkdir(path, mode) -> result (rax)
 ; 调用方按顺序 push path; push mode（第一个参数先 push）
 fs_mkdir:
-    beginfn rbp
+    beginfn
     %define path [rbp+24]
     %define mode [rbp+16]
 
@@ -64,14 +64,14 @@ fs_mkdir:
     syscall
     postccall
 
-    endfn rbp
+    endfn
     ret 16
 %undef path
 %undef mode
 
 ; fs_rmdir(path) -> result (rax)
 fs_rmdir:
-    beginfn rbp
+    beginfn
     %define path [rbp+16]
 
     preccall
@@ -80,13 +80,13 @@ fs_rmdir:
     syscall
     postccall
 
-    endfn rbp
+    endfn
     ret 8
 %undef path
 
 ; fs_unlink(path) -> result (rax)  即删除一个文件（"rm"）
 fs_unlink:
-    beginfn rbp
+    beginfn
     %define path [rbp+16]
 
     preccall
@@ -95,6 +95,6 @@ fs_unlink:
     syscall
     postccall
 
-    endfn rbp
+    endfn
     ret 8
 %undef path
