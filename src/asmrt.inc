@@ -63,6 +63,9 @@
 
 ; ---- 运行时导出符号 ----
 
+; main.asm
+extern rt_exit
+
 ; io.asm
 extern io_open
 extern io_close
