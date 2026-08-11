@@ -16,8 +16,8 @@ section .text
 ; 调用方按顺序 push path; push statbuf（第一个参数先 push）
 fs_stat:
     beginfn rbp
-    %define buf  [rbp+16]
     %define path [rbp+24]
+    %define buf  [rbp+16]
 
     preccall
     mov rdi, path
@@ -35,8 +35,8 @@ fs_stat:
 ; 调用方按顺序 push fd; push statbuf（第一个参数先 push）
 fs_fstat:
     beginfn rbp
-    %define buf [rbp+16]
     %define fd  [rbp+24]
+    %define buf [rbp+16]
 
     preccall
     mov rdi, fd
@@ -54,8 +54,8 @@ fs_fstat:
 ; 调用方按顺序 push path; push mode（第一个参数先 push）
 fs_mkdir:
     beginfn rbp
-    %define mode [rbp+16]
     %define path [rbp+24]
+    %define mode [rbp+16]
 
     preccall
     mov rdi, path

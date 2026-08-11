@@ -17,9 +17,9 @@ section .text
 ; 调用方按顺序 push path; push flags; push mode（第一个参数先 push）
 io_open:
     beginfn rbp
-    %define mode  [rbp+16]
-    %define flags [rbp+24]
     %define path  [rbp+32]
+    %define flags [rbp+24]
+    %define mode  [rbp+16]
 
     preccall
     mov rdi, path
@@ -54,9 +54,9 @@ io_close:
 ; 调用方按顺序 push fd; push buf; push count（第一个参数先 push）
 io_read:
     beginfn rbp
-    %define count [rbp+16]
-    %define buf   [rbp+24]
     %define fd    [rbp+32]
+    %define buf   [rbp+24]
+    %define count [rbp+16]
 
     preccall
     mov rdi, fd
@@ -76,9 +76,9 @@ io_read:
 ; 调用方按顺序 push fd; push buf; push count（第一个参数先 push）
 io_write:
     beginfn rbp
-    %define count [rbp+16]
-    %define buf   [rbp+24]
     %define fd    [rbp+32]
+    %define buf   [rbp+24]
+    %define count [rbp+16]
 
     preccall
     mov rdi, fd

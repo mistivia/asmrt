@@ -30,8 +30,8 @@ str_len:
 ; 调用方按顺序 push a; push b（第一个参数先 push）
 str_eq:
     beginfn rbx, rcx
-    %define b [rbp+16]
     %define a [rbp+24]
+    %define b [rbp+16]
 
     mov rbx, a
     mov rcx, b

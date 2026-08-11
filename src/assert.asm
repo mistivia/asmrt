@@ -13,8 +13,8 @@ section .text
 ; 调用方按顺序 push msg; push flag（第一个参数先 push）
 assert:
     beginfn rbx
-    %define flag [rbp+16]
     %define msg  [rbp+24]
+    %define flag [rbp+16]
 
     cmp qword flag, 0
     jne .ok
