@@ -28,8 +28,6 @@ fs_stat:
 
     endfn
     ret 16
-%undef path
-%undef buf
 
 ; fs_fstat(fd, statbuf) -> result (rax)
 ; 调用方按顺序 push fd; push statbuf（第一个参数先 push）
@@ -47,8 +45,6 @@ fs_fstat:
 
     endfn
     ret 16
-%undef fd
-%undef buf
 
 ; fs_mkdir(path, mode) -> result (rax)
 ; 调用方按顺序 push path; push mode（第一个参数先 push）
@@ -66,8 +62,6 @@ fs_mkdir:
 
     endfn
     ret 16
-%undef path
-%undef mode
 
 ; fs_rmdir(path) -> result (rax)
 fs_rmdir:
@@ -82,7 +76,6 @@ fs_rmdir:
 
     endfn
     ret 8
-%undef path
 
 ; fs_unlink(path) -> result (rax)  即删除一个文件（"rm"）
 fs_unlink:
@@ -97,4 +90,3 @@ fs_unlink:
 
     endfn
     ret 8
-%undef path

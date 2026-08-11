@@ -42,5 +42,3 @@ assert:
 .ok:
     endfn rbx
     ret 16
-%undef msg
-%undef flag

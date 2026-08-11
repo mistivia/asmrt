@@ -31,9 +31,6 @@ io_open:
 
     endfn
     ret 24
-%undef path
-%undef flags
-%undef mode
 
 ; io_close(fd) -> result (rax)
 io_close:
@@ -48,7 +45,6 @@ io_close:
 
     endfn
     ret 8
-%undef fd
 
 ; io_read(fd, buf, count) -> bytes read (rax)
 ; 调用方按顺序 push fd; push buf; push count（第一个参数先 push）
@@ -68,9 +64,6 @@ io_read:
 
     endfn
     ret 24
-%undef fd
-%undef buf
-%undef count
 
 ; io_write(fd, buf, count) -> bytes written (rax)
 ; 调用方按顺序 push fd; push buf; push count（第一个参数先 push）
@@ -90,6 +83,3 @@ io_write:
 
     endfn
     ret 24
-%undef fd
-%undef buf
-%undef count

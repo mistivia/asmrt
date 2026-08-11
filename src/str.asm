@@ -24,7 +24,6 @@ str_len:
 
     endfn rbx
     ret 8
-%undef s
 
 ; str_eq(a, b) -> 1 表示两个字符串相等，0 表示不相等
 ; 调用方按顺序 push a; push b（第一个参数先 push）
@@ -53,5 +52,3 @@ str_eq:
 
     endfn rbx, rcx
     ret 16
-%undef a
-%undef b
