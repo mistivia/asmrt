@@ -2,7 +2,7 @@
 ;
 ; 约定：字符串均为以 NUL(0) 结尾的 C 风格字符串。
 
-%include "abi.inc"
+%include "asmrt.inc"
 
 section .text
     global str_len

@@ -1,6 +1,6 @@
 ; test_fs.asm —— fs_mkdir/fs_stat/fs_rmdir 测试
 
-%include "abi.inc"
+%include "asmrt.inc"
 
 section .data
     dir        db "/tmp/asmrt_test_dir", 0
@@ -13,10 +13,6 @@ section .bss
     statbuf resb 144
 
 section .text
-    extern fs_mkdir
-    extern fs_stat
-    extern fs_rmdir
-    extern assert
     global amain
 
 amain:

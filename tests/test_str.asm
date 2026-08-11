@@ -1,6 +1,6 @@
 ; test_str.asm —— str_len/str_eq 测试
 
-%include "abi.inc"
+%include "asmrt.inc"
 
 section .data
     s1        db "hello", 0
@@ -18,9 +18,6 @@ section .data
     err_eq_self   db "str_eq(s1, s1) 应该相等", 0
 
 section .text
-    extern str_len
-    extern str_eq
-    extern assert
     global amain
 
 amain:

@@ -5,7 +5,7 @@
 ;   flag 为真时：什么也不做，正常返回。
 ; 直接使用 write/exit 系统调用，不依赖 io.asm，保持独立可用。
 
-%include "abi.inc"
+%include "asmrt.inc"
 
 section .text
     global assert

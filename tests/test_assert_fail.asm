@@ -2,13 +2,12 @@
 ; 这是一个"预期失败"的测试：Makefile 的 test 目标会把 *_fail 结尾的用例
 ; 期望退出码当作 255，而不是 0。
 
-%include "abi.inc"
+%include "asmrt.inc"
 
 section .data
     msg db "expected failure: intentional assert trip for test harness", 10, 0
 
 section .text
-    extern assert
     global amain
 
 amain:

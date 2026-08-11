@@ -5,7 +5,7 @@
 ; syscall 指令本身会破坏 rcx/r11，且需要把参数搬进 rdi/rsi/rdx，
 ; 所以用 preccall/postccall 包裹，保证“调用不改变寄存器”的约定对调用方成立。
 
-%include "abi.inc"
+%include "asmrt.inc"
 
 section .text
     global io_open

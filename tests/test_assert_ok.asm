@@ -1,12 +1,11 @@
 ; test_assert_ok.asm —— flag 为真时 assert 应直接返回，不打印、不退出
 
-%include "abi.inc"
+%include "asmrt.inc"
 
 section .data
     msg db "this should never be printed", 10, 0
 
 section .text
-    extern assert
     global amain
 
 amain:

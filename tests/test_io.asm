@@ -1,6 +1,6 @@
 ; test_io.asm —— io_open/io_write/io_read/io_close 往返测试
 
-%include "abi.inc"
+%include "asmrt.inc"
 
 section .data
     msg         db "hello asmrt io test", 10
@@ -15,12 +15,6 @@ section .bss
     readbuf resb 64
 
 section .text
-    extern io_open
-    extern io_write
-    extern io_read
-    extern io_close
-    extern fs_unlink
-    extern assert
     global amain
 
 amain:

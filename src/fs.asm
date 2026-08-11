@@ -3,7 +3,7 @@
 ; 全部直接调用 Linux x86-64 syscall，不依赖 libc。
 ; 每个函数遵循自定义 ABI：参数压栈传入，返回值在 rax，callee 用 ret N 清栈。
 
-%include "abi.inc"
+%include "asmrt.inc"
 
 section .text
     global fs_stat
