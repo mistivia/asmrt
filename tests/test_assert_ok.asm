@@ -9,12 +9,12 @@ section .text
     global amain
 
 amain:
-    beginfn rbx
+    begin
 
     push msg
     push 1              ; flag = true
     call assert
 
     mov rax, 0
-    endfn rbx
+    end
     ret 24

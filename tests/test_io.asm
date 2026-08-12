@@ -19,22 +19,25 @@ section .text
     global amain
 
 amain:
-    beginfn rbx
+    begin
+    ;; local vars
+    %define fd [rbp-8]   ; fd 要跨多次 call 存活，必须落栈，不能只放在寄存器里
+    sub rsp, 8
 
     push path
     push 0x242          ; flags O_RDWR|O_CREAT|O_TRUNC（后面要在同一个 fd 上 seek 回去再读）
     push 0x1A4          ; mode 0644
     call io_open
-    mov rbx, rax
+    mov fd, rax
 
-    cmp rbx, 0
+    cmp qword fd, 0
     setge al
     movzx rax, al
     push err_open
     push rax
     call assert
 
-    push rbx
+    push fd
     push msg
     push msg_len
     call io_write
@@ -47,7 +50,7 @@ amain:
     call assert
 
     ; 不关闭 fd，用 io_seek 倒回文件开头再读一遍，验证 seek 生效
-    push rbx
+    push fd
     push 0              ; offset
     push 0              ; whence SEEK_SET
     call io_seek
@@ -59,7 +62,7 @@ amain:
     push rax
     call assert
 
-    push rbx
+    push fd
     push readbuf
     push msg_len
     call io_read
@@ -71,16 +74,16 @@ amain:
     push rax
     call assert
 
-    push rbx
+    push fd
     call io_close
 
     push path
     push 0              ; flags O_RDONLY
     push 0              ; mode (O_RDONLY 时忽略)
     call io_open
-    mov rbx, rax
+    mov fd, rax
 
-    push rbx
+    push fd
     push readbuf
     push msg_len
     call io_read
@@ -92,7 +95,7 @@ amain:
     push rax
     call assert
 
-    push rbx
+    push fd
     call io_close
 
     xor rcx, rcx
@@ -114,5 +117,5 @@ amain:
     call fs_unlink
 
     mov rax, 0
-    endfn rbx
+    end
     ret 24

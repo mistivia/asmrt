@@ -16,7 +16,7 @@ section .text
     global amain
 
 amain:
-    beginfn rbx
+    begin
 
     push dir
     push 0x1ED          ; mode 0755
@@ -62,5 +62,5 @@ amain:
     call assert
 
     mov rax, 0
-    endfn rbx
+    end
     ret 24

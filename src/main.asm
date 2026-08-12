@@ -19,8 +19,7 @@ section .text
     global rt_exit
 
 main:
-    push rbp
-    mov  rbp, rsp
+    begin
 
     push rdi            ; argc -> amain 第 1 个参数，最先 push
     push rsi            ; argv -> amain 第 2 个参数
@@ -28,14 +27,16 @@ main:
 
     call amain           ; 自定义 ABI 调用，amain 内部 ret 24 清栈
 
-    pop rbp
+    end
     ret
 
 ; rt_exit(code) -> 不返回
 ; 调用方按顺序 push code
 rt_exit:
-    beginfn
+    ;; params
     %define code [rbp+16]
+
+    begin
 
     mov rdi, code
     mov rax, 60         ; sys_exit

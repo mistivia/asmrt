@@ -11,20 +11,21 @@ section .text
 
 ; 调用方按顺序 push msg; push flag（第一个参数先 push）
 assert:
-    beginfn rbx
+    ;; params
     %define msg  [rbp+24]
     %define flag [rbp+16]
+
+    begin
+    ; n=2(偶) + L'=0(偶) 已对齐，无局部变量，不需要 sub rsp
 
     cmp qword flag, 0
     jne .ok
 
-    mov rbx, msg
-
     push msg
-    call str_len        ; rax = strlen(msg)
+    call str_len        ; rax = strlen(msg)；msg 是栈上参数，调用后仍可直接再读
 
     push 2               ; fd = stderr
-    push rbx              ; buf = msg
+    push msg              ; buf = msg
     push rax               ; count = strlen(msg)
     call io_write
 
@@ -32,5 +33,5 @@ assert:
     call rt_exit          ; 不会返回
 
 .ok:
-    endfn rbx
+    end
     ret 16

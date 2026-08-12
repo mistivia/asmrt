@@ -11,7 +11,7 @@ section .text
     global amain
 
 amain:
-    beginfn rbx
+    begin
 
     push msg
     push 0              ; flag = false -> assert 应该终止进程
@@ -19,5 +19,5 @@ amain:
 
     ; 不应该执行到这里；如果执行到了，返回一个不同于期望值 255 的退出码
     mov rax, 1
-    endfn rbx
+    end
     ret 24

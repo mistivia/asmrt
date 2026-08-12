@@ -21,7 +21,7 @@ section .text
     global amain
 
 amain:
-    beginfn rbx
+    begin
 
     push s1
     call str_len
@@ -72,5 +72,5 @@ amain:
     call assert
 
     mov rax, 0
-    endfn rbx
+    end
     ret 24
