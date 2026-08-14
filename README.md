@@ -27,18 +27,88 @@ make clean
 src/asmrt.inc   shared header: ABI macros + extern declarations for every runtime function
 src/main.asm    process entry point (main -> entry), rtExit
 src/assert.asm  assert(msg, flag)
-src/io.asm      file I/O syscalls: ioOpen, ioClose, ioRead, ioWrite, ioSeek
-src/fs.asm      filesystem syscalls: fsStat, fsFstat, fsMkdir, fsRmdir, fsUnlink
-src/mem.asm     malloc/free/realloc wrappers (memAlloc, memFree, memReloc)
-                plus native memcpy/memmove/memset-alikes: memCopy, memMove, memFill
-src/str.asm     NUL-terminated string helpers: strLen, strEq
-src/sort.asm    generic in-place sort (qsort-style): sort(base, nmemb, size, cmpFn)
+src/io.asm      file I/O syscalls
+src/fs.asm      filesystem syscalls
+src/mem.asm     malloc/free/realloc wrappers, plus native memcpy/memmove/memset-alikes
+src/str.asm     NUL-terminated string helpers
+src/sort.asm    generic in-place sort (qsort-style, recursive quicksort)
 tests/          one test_*.asm per module, run via `make test`
 ```
+
+See [Function reference](#function-reference) below for the full list of
+what each module exports.
 
 Every runtime `.asm` file only needs `%include "asmrt.inc"` — it pulls in
 the ABI macros and declares every exported function as `extern`, so
 callers never hand-write their own `extern` lines.
+
+## Function reference
+
+Every function below follows the custom ABI (see
+[The ABI in short](#the-abi-in-short)): arguments pushed by the caller
+in declaration order, return value in `rax`, callee cleans the stack
+with `ret N`. All of them are `global` and declared `extern` in
+`asmrt.inc`, so any file that includes it can call them directly.
+
+**main.asm**
+
+| Function | Description |
+|---|---|
+| `rtExit(code)` | terminate the process with `code` — the only place under this ABI that should issue `sys_exit` directly |
+
+**io.asm**
+
+| Function | Description |
+|---|---|
+| `ioOpen(path, flags, mode) -> fd` | `sys_open` |
+| `ioClose(fd) -> result` | `sys_close` |
+| `ioRead(fd, buf, count) -> bytesRead` | `sys_read` |
+| `ioWrite(fd, buf, count) -> bytesWritten` | `sys_write` |
+| `ioSeek(fd, offset, whence) -> newOffset` | `sys_lseek`; `whence`: 0=SEEK_SET, 1=SEEK_CUR, 2=SEEK_END |
+
+**fs.asm**
+
+| Function | Description |
+|---|---|
+| `fsStat(path, statBuf) -> result` | `sys_stat` |
+| `fsFstat(fd, statBuf) -> result` | `sys_fstat` |
+| `fsMkdir(path, mode) -> result` | `sys_mkdir` |
+| `fsRmdir(path) -> result` | `sys_rmdir` |
+| `fsUnlink(path) -> result` | `sys_unlink` |
+
+**mem.asm**
+
+| Function | Description |
+|---|---|
+| `memAlloc(size) -> ptr` | wraps libc `malloc`; NULL on failure |
+| `memFree(ptr)` | wraps libc `free`; `rax` is always 0 |
+| `memReloc(ptr, size) -> newPtr` | wraps libc `realloc`; NULL on failure, `ptr` left untouched |
+| `memCopy(dest, src, n) -> dest` | native memcpy-alike; the two regions must not overlap |
+| `memMove(dest, src, n) -> dest` | native memmove-alike; safe for overlapping regions |
+| `memFill(dest, val, n) -> dest` | native memset-alike; fills `n` bytes with `val`'s low byte |
+
+**assert.asm**
+
+| Function | Description |
+|---|---|
+| `assert(msg, flag)` | if `flag` is false (0), writes `msg` to stderr and terminates with exit code -1; otherwise returns normally |
+
+**str.asm**
+
+| Function | Description |
+|---|---|
+| `strLen(s) -> length` | length of a NUL-terminated string, excluding the trailing NUL |
+| `strEq(a, b) -> 1/0` | 1 if the two NUL-terminated strings are equal, 0 otherwise |
+
+**sort.asm**
+
+| Function | Description |
+|---|---|
+| `sort(base, nmemb, size, cmpFn)` | recursive quicksort (Lomuto partition) over `nmemb` elements of `size` bytes each at `base`, ordered by the custom-ABI comparator `cmpFn(a, b)` — same contract as libc's qsort comparator, just called through this runtime's own ABI |
+
+`partition`/`swapElems` (sort.asm) and `copyForward` (mem.asm) are
+internal helpers used only within their own file — not `global`, not
+declared in `asmrt.inc`, and not meant to be called from elsewhere.
 
 ## Writing a program against asmrt
 
