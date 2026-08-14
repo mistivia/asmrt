@@ -21,6 +21,19 @@ make test   # build and run every test in tests/
 make clean
 ```
 
+`make install` installs `libasmrt.a` into `$(PREFIX)/lib` and
+`asmrt.inc` into `$(PREFIX)/include/nasm` (so it's found by
+`nasm -I /usr/local/include/nasm/ ...` or just dropped alongside a
+project's own `-I` path). `PREFIX` defaults to `/usr/local` and can be
+overridden (`make install PREFIX=/usr`); `DESTDIR` is honored too, for
+staged installs. `make uninstall` removes both. Installing system-wide
+typically needs root, e.g. `sudo make install`.
+
+```sh
+sudo make install
+make uninstall
+```
+
 ## Layout
 
 ```

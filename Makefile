@@ -3,6 +3,7 @@ ASFLAGS := -f elf64 -I src/
 AR      := ar
 CC      := gcc
 CFLAGS  := -no-pie
+INSTALL := install
 
 SRC_DIR   := src
 BUILD_DIR := build
@@ -12,11 +13,16 @@ TEST_BUILD_DIR := $(BUILD_DIR)/tests
 SRCS := $(wildcard $(SRC_DIR)/*.asm)
 OBJS := $(patsubst $(SRC_DIR)/%.asm,$(BUILD_DIR)/%.o,$(SRCS))
 LIB  := $(BUILD_DIR)/libasmrt.a
+INC  := $(SRC_DIR)/asmrt.inc
 
 TEST_SRCS := $(wildcard $(TEST_DIR)/*.asm)
 TEST_BINS := $(patsubst $(TEST_DIR)/%.asm,$(TEST_BUILD_DIR)/%,$(TEST_SRCS))
 
-.PHONY: all lib test clean
+PREFIX  ?= /usr/local
+LIBDIR  := $(PREFIX)/lib
+INCDIR  := $(PREFIX)/include/nasm
+
+.PHONY: all lib test clean install uninstall
 
 all: lib
 
@@ -59,6 +65,16 @@ test: $(TEST_BINS)
 		fi; \
 	done; \
 	exit $$status
+
+install: $(LIB)
+	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
+	$(INSTALL) -m 644 $(LIB) $(DESTDIR)$(LIBDIR)/
+	$(INSTALL) -d $(DESTDIR)$(INCDIR)
+	$(INSTALL) -m 644 $(INC) $(DESTDIR)$(INCDIR)/
+
+uninstall:
+	rm -f $(DESTDIR)$(LIBDIR)/$(notdir $(LIB))
+	rm -f $(DESTDIR)$(INCDIR)/$(notdir $(INC))
 
 clean:
 	rm -rf $(BUILD_DIR)
