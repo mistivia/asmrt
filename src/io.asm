@@ -1,21 +1,23 @@
-; io.asm —— 文件打开/关闭/读写的自定义 ABI 封装
+; io.asm -- custom-ABI wrappers for opening/closing/reading/writing files
 ;
-; 全部直接调用 Linux x86-64 syscall，不依赖 libc。
-; 每个函数遵循自定义 ABI：参数压栈传入，返回值在 rax，callee 用 ret N 清栈。
-; syscall 会破坏 rcx/r11，但因为调用（含裸 syscall）本来就默认破坏除 rax
-; 外的所有寄存器，不需要也不再有寄存器保护宏可用。
+; All of these call the Linux x86-64 syscalls directly, no libc dependency.
+; Every function follows the custom ABI: arguments pushed on the stack,
+; return value in rax, callee cleans the stack with ret N.
+; syscall clobbers rcx/r11, but since a call (including a bare syscall)
+; already clobbers every register except rax by convention, there's no
+; register-protection macro needed or available here.
 
 %include "asmrt.inc"
 
 section .text
-    global io_open
-    global io_close
-    global io_read
-    global io_write
-    global io_seek
+    global ioOpen
+    global ioClose
+    global ioRead
+    global ioWrite
+    global ioSeek
 
-; io_open(path, flags, mode) -> fd
-io_open:
+; ioOpen(path, flags, mode) -> fd
+ioOpen:
     ;; params
     %define path  [rbp+32]
     %define flags [rbp+24]
@@ -32,8 +34,8 @@ io_open:
     end
     ret 24
 
-; io_close(fd) -> result (rax)
-io_close:
+; ioClose(fd) -> result (rax)
+ioClose:
     ;; params
     %define fd [rbp+16]
 
@@ -46,8 +48,8 @@ io_close:
     end
     ret 8
 
-; io_read(fd, buf, count) -> bytes read
-io_read:
+; ioRead(fd, buf, count) -> bytes read
+ioRead:
     ;; params
     %define fd    [rbp+32]
     %define buf   [rbp+24]
@@ -64,8 +66,8 @@ io_read:
     end
     ret 24
 
-; io_write(fd, buf, count) -> bytes written
-io_write:
+; ioWrite(fd, buf, count) -> bytes written
+ioWrite:
     ;; params
     %define fd    [rbp+32]
     %define buf   [rbp+24]
@@ -82,9 +84,9 @@ io_write:
     end
     ret 24
 
-; io_seek(fd, offset, whence) -> 新的文件偏移量 (rax)
+; ioSeek(fd, offset, whence) -> new file offset (rax)
 ; whence: 0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END
-io_seek:
+ioSeek:
     ;; params
     %define fd     [rbp+32]
     %define offset [rbp+24]

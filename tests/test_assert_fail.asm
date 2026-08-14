@@ -1,6 +1,7 @@
-; test_assert_fail.asm —— flag 为假时 assert 应打印 msg 并以退出码 -1(255) 终止进程
-; 这是一个"预期失败"的测试：Makefile 的 test 目标会把 *_fail 结尾的用例
-; 期望退出码当作 255，而不是 0。
+; test_assert_fail.asm -- when flag is false, assert should print msg and
+; terminate the process with exit code -1 (255).
+; This is an "expected failure" test case: the Makefile's test target
+; treats *_fail-suffixed cases as expecting exit code 255, not 0.
 
 %include "asmrt.inc"
 
@@ -14,10 +15,10 @@ amain:
     begin
 
     push msg
-    push 0              ; flag = false -> assert 应该终止进程
+    push 0              ; flag = false -> assert should terminate the process
     call assert
 
-    ; 不应该执行到这里；如果执行到了，返回一个不同于期望值 255 的退出码
+    ; should never reach here; if we do, return a code other than the expected 255
     mov rax, 1
     end
     ret 24

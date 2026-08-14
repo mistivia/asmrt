@@ -1,21 +1,22 @@
-; str.asm —— 简单字符串操作，自定义 ABI
+; str.asm -- simple string operations, custom ABI
 ;
-; 约定：字符串均为以 NUL(0) 结尾的 C 风格字符串。
+; Convention: strings are NUL(0)-terminated C-style strings.
 
 %include "asmrt.inc"
 
 section .text
-    global str_len
-    global str_eq
+    global strLen
+    global strEq
 
-; str_len(s) -> 长度，不含结尾 NUL (rax)
-str_len:
+; strLen(s) -> length, excluding the trailing NUL (rax)
+strLen:
     ;; params
     %define s [rbp+16]
 
     begin
-    ; 循环体内没有 call，rbx 只是这一段计算的草稿寄存器，
-    ; 不需要也不用保存/恢复——调用方本来就假定它会被破坏
+    ; no call inside the loop, so rbx is just scratch for this stretch of
+    ; code -- no need to save/restore it, the caller already assumes it's
+    ; clobbered
 
     mov rbx, s
     xor rax, rax
@@ -29,14 +30,14 @@ str_len:
     end
     ret 8
 
-; str_eq(a, b) -> 1 表示两个字符串相等，0 表示不相等
-str_eq:
+; strEq(a, b) -> 1 if the two strings are equal, 0 otherwise
+strEq:
     ;; params
     %define a [rbp+24]
     %define b [rbp+16]
 
     begin
-    ; 同上：循环体内没有 call，rbx/rcx 只是草稿寄存器
+    ; same as above: no call inside the loop, rbx/rcx are just scratch
 
     mov rbx, a
     mov rcx, b
@@ -45,7 +46,7 @@ str_eq:
     cmp al, [rcx]
     jne .neq
     test al, al
-    je .eq              ; 两边同时遇到 NUL，说明相等
+    je .eq              ; both sides hit NUL at the same time -> equal
     inc rbx
     inc rcx
     jmp .loop

@@ -1,37 +1,49 @@
-; asmrt.inc —— asmrt 运行时统一头文件
+; asmrt.inc -- shared header for the asmrt runtime
 ;
-; 包含自定义 ABI 支持宏，以及运行时对外提供的全部函数的 extern 声明。
-; 任何用到 asmrt 的文件（包括运行时自身的实现文件）只需要
-; %include "asmrt.inc" 即可，不用再逐个手写 extern。
-; （NASM 允许一个符号在同一文件里既 extern 又 global + 定义，
-;  此时以本文件的定义为准，所以实现文件包含本文件是安全的。）
+; Contains the custom-ABI support macros plus extern declarations for
+; every function the runtime exposes. Any file that uses asmrt (including
+; the runtime's own implementation files) only needs to
+; %include "asmrt.inc" -- no need to hand-write extern lines one by one.
+; (NASM allows a symbol to be both extern and global+defined in the same
+;  file; the definition in this file wins, so implementation files can
+;  safely include this header too.)
 ;
-; 自定义 ABI 约定：
-;   - 参数由调用方 push 压栈传入（不用寄存器传参），按参数声明顺序
-;     正向 push（第一个参数先 push）
-;   - 被调用方通过 ret N 清理栈上的参数（N = 参数总字节数）
-;   - 返回值统一放在 rax
-;   - 除 rax 外，一次调用（自定义 ABI 的 call、真实 ABI 的 call、裸
-;     syscall）之后，其余所有寄存器一律视为已被破坏。因此变量一律
-;     落栈：参数和局部变量都以 [rbp+N] / [rbp-N] 的形式通过 %define
-;     起别名访问，寄存器只用来承载一次表达式求值过程中的中间结果，
-;     绝不让寄存器里的值跨越一次 call。
+; Custom ABI conventions:
+;   - Arguments are pushed onto the stack by the caller (never passed in
+;     registers), in declaration order (the first argument is pushed
+;     first).
+;   - The callee cleans up its own arguments with ret N (N = total
+;     argument bytes).
+;   - The return value always goes in rax.
+;   - Aside from rax, every register is considered clobbered after any
+;     call (a custom-ABI call, a real-ABI call, or a bare syscall).
+;     Because of that, all variables live on the stack: parameters and
+;     locals are both accessed as [rbp+N] / [rbp-N] through %define
+;     aliases, and registers only ever hold a scratch value for the
+;     duration of one expression -- never carried across a call.
 ;
-; begin/end：建立/收尾标准栈帧。
+; begin/end: set up / tear down the standard stack frame.
 ;   begin = push rbp; mov rbp, rsp
 ;   end   = mov rsp, rbp; pop rbp
-;   局部变量的 sub rsp, N 写在 begin 之后、函数体之前，N 的取值要按
-;   16 字节对齐规则手算（参数个数 + 实际分配的局部变量槽位数之和必须
-;   为偶数，不够则多垫一个占位槽），详见 AGENTS.md。
+;   The sub rsp, N for locals goes right after begin, before the body of
+;   the function; as long as every local variable itself occupies a
+;   multiple of 8 bytes (hard rule, see AGENTS.md), N is automatically a
+;   multiple of 8 too -- no extra rounding needed.
 ;
-; 因为"调用会破坏所有寄存器"这条假设本来就统一适用于自定义 ABI 调用、
-; 真实 System V ABI 调用（如 libc 函数）和裸 syscall，所以不再需要任何
-; 寄存器保护宏（原来的 preccall/postccall 已删除）。
+; hexalign: dynamic stack alignment at a real-ABI call site. Drop a
+;   hexalign right before a real-ABI call; it checks/pads 8 bytes at
+;   runtime as needed, so there's no need to hand-compute the parity of
+;   argument/local counts at the function entry, and no paired "undo"
+;   macro is needed either. See AGENTS.md.
+;
+; preasmcall/postasmcall: a pair of full-register-protection macros that
+;   wrap a custom-ABI call made from inside a real-ABI callback (push
+;   every register / pop them back). See AGENTS.md.
 
 %ifndef ASMRT_INC
 %define ASMRT_INC
 
-; ---- 自定义 ABI 支持宏 ----
+; ---- custom ABI support macros ----
 
 %macro begin 0
     push rbp
@@ -43,30 +55,91 @@
     pop  rbp
 %endmacro
 
-; ---- 运行时导出符号 ----
+; hexalign: dynamic stack alignment at a real-ABI call site, replacing
+; the old "hand-compute argument/local parity" approach. Before calling
+; a real-ABI function, it checks whether rsp is already 16-byte aligned
+; (under this ABI rsp is always at least 8-byte aligned, so it can only
+; be off by 0 or 8 bytes) and pads that 8 bytes if needed. No paired
+; "undo" macro is needed -- the padding doesn't need to be reclaimed by
+; hand, since end's mov rsp,rbp reclaims it along with everything else
+; on the way out. See AGENTS.md.
+%macro hexalign 0
+    mov  rax, rsp
+    and  rax, 8          ; 0 when rsp is already 16-byte aligned, 8 otherwise
+    sub  rsp, rax
+%endmacro
+
+; preasmcall/postasmcall: full-register-protection macros for C callback
+; scenarios. Used when a real-ABI callback (e.g. a function pointer
+; registered with a C library) needs to call into a custom-ABI function
+; -- push/pop every register around that call so the real-ABI caller's
+; expectations (especially the callee-saved rbx/rbp/r12-r15) survive.
+; The protected range includes rax: after postasmcall, rax is back to
+; whatever it was before preasmcall, so if the intervening call's return
+; value is needed it must be stashed to memory before postasmcall runs.
+; See AGENTS.md.
+%macro preasmcall 0
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rbp
+    push rsi
+    push rdi
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+    sub  rsp, 8   ; 15 registers is odd, pad one slot to keep 16-byte alignment
+%endmacro
+
+%macro postasmcall 0
+    add  rsp, 8
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rdi
+    pop rsi
+    pop rbp
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+%endmacro
+
+; ---- runtime exported symbols ----
 
 ; main.asm
-extern rt_exit
+extern rtExit
 
 ; io.asm
-extern io_open
-extern io_close
-extern io_read
-extern io_write
-extern io_seek
+extern ioOpen
+extern ioClose
+extern ioRead
+extern ioWrite
+extern ioSeek
 
 ; fs.asm
-extern fs_stat
-extern fs_fstat
-extern fs_mkdir
-extern fs_rmdir
-extern fs_unlink
+extern fsStat
+extern fsFstat
+extern fsMkdir
+extern fsRmdir
+extern fsUnlink
 
 ; assert.asm
 extern assert
 
 ; str.asm
-extern str_len
-extern str_eq
+extern strLen
+extern strEq
 
 %endif ; ASMRT_INC

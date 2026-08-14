@@ -1,4 +1,4 @@
-; test_assert_ok.asm —— flag 为真时 assert 应直接返回，不打印、不退出
+; test_assert_ok.asm -- when flag is true, assert should return directly, no print, no exit
 
 %include "asmrt.inc"
 

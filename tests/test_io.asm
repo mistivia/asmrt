@@ -1,19 +1,19 @@
-; test_io.asm —— io_open/io_write/io_read/io_close 往返测试
+; test_io.asm -- ioOpen/ioWrite/ioRead/ioClose round-trip test
 
 %include "asmrt.inc"
 
 section .data
     msg         db "hello asmrt io test", 10
-    msg_len     equ $ - msg
+    msgLen      equ $ - msg
     path        db "/tmp/asmrt_test_io.txt", 0
-    err_open    db "io_open failed", 0
-    err_write   db "io_write short write", 0
-    err_read    db "io_read short read", 0
-    err_content db "io_read content mismatch", 0
-    err_seek    db "io_seek(SEEK_SET, 0) did not return 0", 0
+    errOpen     db "ioOpen failed", 0
+    errWrite    db "ioWrite short write", 0
+    errRead     db "ioRead short read", 0
+    errContent  db "ioRead content mismatch", 0
+    errSeek     db "ioSeek(SEEK_SET, 0) did not return 0", 0
 
 section .bss
-    readbuf resb 64
+    readBuf resb 64
 
 section .text
     global amain
@@ -21,100 +21,100 @@ section .text
 amain:
     begin
     ;; local vars
-    %define fd [rbp-8]   ; fd 要跨多次 call 存活，必须落栈，不能只放在寄存器里
+    %define fd [rbp-8]   ; fd needs to survive multiple calls, so it must live on the stack, not just in a register
     sub rsp, 8
 
     push path
-    push 0x242          ; flags O_RDWR|O_CREAT|O_TRUNC（后面要在同一个 fd 上 seek 回去再读）
+    push 0x242          ; flags O_RDWR|O_CREAT|O_TRUNC (need to seek back on the same fd and read later)
     push 0x1A4          ; mode 0644
-    call io_open
+    call ioOpen
     mov fd, rax
 
     cmp qword fd, 0
     setge al
     movzx rax, al
-    push err_open
+    push errOpen
     push rax
     call assert
 
     push fd
     push msg
-    push msg_len
-    call io_write
+    push msgLen
+    call ioWrite
 
-    cmp rax, msg_len
+    cmp rax, msgLen
     sete al
     movzx rax, al
-    push err_write
+    push errWrite
     push rax
     call assert
 
-    ; 不关闭 fd，用 io_seek 倒回文件开头再读一遍，验证 seek 生效
+    ; leave fd open, use ioSeek to rewind to the start and read again, to verify seek works
     push fd
     push 0              ; offset
     push 0              ; whence SEEK_SET
-    call io_seek
+    call ioSeek
 
     cmp rax, 0
     sete al
     movzx rax, al
-    push err_seek
+    push errSeek
     push rax
     call assert
 
     push fd
-    push readbuf
-    push msg_len
-    call io_read
+    push readBuf
+    push msgLen
+    call ioRead
 
-    cmp rax, msg_len
+    cmp rax, msgLen
     sete al
     movzx rax, al
-    push err_read
+    push errRead
     push rax
     call assert
 
     push fd
-    call io_close
+    call ioClose
 
     push path
     push 0              ; flags O_RDONLY
-    push 0              ; mode (O_RDONLY 时忽略)
-    call io_open
+    push 0              ; mode (ignored for O_RDONLY)
+    call ioOpen
     mov fd, rax
 
     push fd
-    push readbuf
-    push msg_len
-    call io_read
+    push readBuf
+    push msgLen
+    call ioRead
 
-    cmp rax, msg_len
+    cmp rax, msgLen
     sete al
     movzx rax, al
-    push err_read
+    push errRead
     push rax
     call assert
 
     push fd
-    call io_close
+    call ioClose
 
     xor rcx, rcx
-.cmp_loop:
-    cmp rcx, msg_len
-    je .cmp_ok
+.cmpLoop:
+    cmp rcx, msgLen
+    je .cmpOk
     mov al, [msg + rcx]
-    cmp al, [readbuf + rcx]
-    jne .cmp_fail
+    cmp al, [readBuf + rcx]
+    jne .cmpFail
     inc rcx
-    jmp .cmp_loop
-.cmp_fail:
-    push err_content
+    jmp .cmpLoop
+.cmpFail:
+    push errContent
     push 0
     call assert
-.cmp_ok:
+.cmpOk:
 
     push path
-    call fs_unlink
+    call fsUnlink
 
     mov rax, 0
     end
