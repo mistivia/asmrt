@@ -141,6 +141,9 @@ extern fsUnlink
 extern memAlloc
 extern memFree
 extern memReloc
+extern memCopy
+extern memMove
+extern memFill
 
 ; assert.asm
 extern assert
