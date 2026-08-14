@@ -11,14 +11,14 @@ section .text
 ; strLen(s) -> length, excluding the trailing NUL (rax)
 strLen:
     ;; params
-    %define s [rbp+16]
+    %define s (rbp+16)
 
     begin
     ; no call inside the loop, so rbx is just scratch for this stretch of
     ; code -- no need to save/restore it, the caller already assumes it's
     ; clobbered
 
-    mov rbx, s
+    mov rbx, [s]
     xor rax, rax
 .loop:
     cmp byte [rbx + rax], 0
@@ -33,14 +33,14 @@ strLen:
 ; strEq(a, b) -> 1 if the two strings are equal, 0 otherwise
 strEq:
     ;; params
-    %define a [rbp+24]
-    %define b [rbp+16]
+    %define a (rbp+24)
+    %define b (rbp+16)
 
     begin
     ; same as above: no call inside the loop, rbx/rcx are just scratch
 
-    mov rbx, a
-    mov rcx, b
+    mov rbx, [a]
+    mov rcx, [b]
 .loop:
     mov al, [rbx]
     cmp al, [rcx]

@@ -19,15 +19,15 @@ section .text
 ; ioOpen(path, flags, mode) -> fd
 ioOpen:
     ;; params
-    %define path  [rbp+32]
-    %define flags [rbp+24]
-    %define mode  [rbp+16]
+    %define path  (rbp+32)
+    %define flags (rbp+24)
+    %define mode  (rbp+16)
 
     begin
 
-    mov rdi, path
-    mov rsi, flags
-    mov rdx, mode
+    mov rdi, [path]
+    mov rsi, [flags]
+    mov rdx, [mode]
     mov rax, 2          ; sys_open
     syscall
 
@@ -37,11 +37,11 @@ ioOpen:
 ; ioClose(fd) -> result (rax)
 ioClose:
     ;; params
-    %define fd [rbp+16]
+    %define fd (rbp+16)
 
     begin
 
-    mov rdi, fd
+    mov rdi, [fd]
     mov rax, 3          ; sys_close
     syscall
 
@@ -51,15 +51,15 @@ ioClose:
 ; ioRead(fd, buf, count) -> bytes read
 ioRead:
     ;; params
-    %define fd    [rbp+32]
-    %define buf   [rbp+24]
-    %define count [rbp+16]
+    %define fd    (rbp+32)
+    %define buf   (rbp+24)
+    %define count (rbp+16)
 
     begin
 
-    mov rdi, fd
-    mov rsi, buf
-    mov rdx, count
+    mov rdi, [fd]
+    mov rsi, [buf]
+    mov rdx, [count]
     mov rax, 0          ; sys_read
     syscall
 
@@ -69,15 +69,15 @@ ioRead:
 ; ioWrite(fd, buf, count) -> bytes written
 ioWrite:
     ;; params
-    %define fd    [rbp+32]
-    %define buf   [rbp+24]
-    %define count [rbp+16]
+    %define fd    (rbp+32)
+    %define buf   (rbp+24)
+    %define count (rbp+16)
 
     begin
 
-    mov rdi, fd
-    mov rsi, buf
-    mov rdx, count
+    mov rdi, [fd]
+    mov rsi, [buf]
+    mov rdx, [count]
     mov rax, 1          ; sys_write
     syscall
 
@@ -88,15 +88,15 @@ ioWrite:
 ; whence: 0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END
 ioSeek:
     ;; params
-    %define fd     [rbp+32]
-    %define offset [rbp+24]
-    %define whence [rbp+16]
+    %define fd     (rbp+32)
+    %define offset (rbp+24)
+    %define whence (rbp+16)
 
     begin
 
-    mov rdi, fd
-    mov rsi, offset
-    mov rdx, whence
+    mov rdi, [fd]
+    mov rsi, [offset]
+    mov rdx, [whence]
     mov rax, 8          ; sys_lseek
     syscall
 

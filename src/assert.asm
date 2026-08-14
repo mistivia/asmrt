@@ -13,20 +13,20 @@ section .text
 ; caller pushes in order: push msg; push flag (first argument pushed first)
 assert:
     ;; params
-    %define msg  [rbp+24]
-    %define flag [rbp+16]
+    %define msg  (rbp+24)
+    %define flag (rbp+16)
 
     begin
     ; no locals needed here
 
-    cmp qword flag, 0
+    cmp qword [flag], 0
     jne .ok
 
-    push msg
+    push [msg]
     call strLen          ; rax = strlen(msg); msg is a stack argument, still readable after the call
 
     push 2               ; fd = stderr
-    push msg             ; buf = msg
+    push [msg]           ; buf = msg
     push rax             ; count = strlen(msg)
     call ioWrite
 

@@ -21,23 +21,24 @@ section .text
 entry:
     begin
     ;; local vars
-    %define fd [rbp-8]   ; fd needs to survive multiple calls, so it must live on the stack, not just in a register
+    %assign fd_offset (-8)  ; fd needs to survive multiple calls, so it must live on the stack, not just in a register
+    %define fd (rbp + fd_offset)
     sub rsp, 8
 
     push path
     push 0x242          ; flags O_RDWR|O_CREAT|O_TRUNC (need to seek back on the same fd and read later)
     push 0x1A4          ; mode 0644
     call ioOpen
-    mov fd, rax
+    mov [fd], rax
 
-    cmp qword fd, 0
+    cmp qword [fd], 0
     setge al
     movzx rax, al
     push errOpen
     push rax
     call assert
 
-    push fd
+    push [fd]
     push msg
     push msgLen
     call ioWrite
@@ -50,7 +51,7 @@ entry:
     call assert
 
     ; leave fd open, use ioSeek to rewind to the start and read again, to verify seek works
-    push fd
+    push [fd]
     push 0              ; offset
     push 0              ; whence SEEK_SET
     call ioSeek
@@ -62,7 +63,7 @@ entry:
     push rax
     call assert
 
-    push fd
+    push [fd]
     push readBuf
     push msgLen
     call ioRead
@@ -74,16 +75,16 @@ entry:
     push rax
     call assert
 
-    push fd
+    push [fd]
     call ioClose
 
     push path
     push 0              ; flags O_RDONLY
     push 0              ; mode (ignored for O_RDONLY)
     call ioOpen
-    mov fd, rax
+    mov [fd], rax
 
-    push fd
+    push [fd]
     push readBuf
     push msgLen
     call ioRead
@@ -95,7 +96,7 @@ entry:
     push rax
     call assert
 
-    push fd
+    push [fd]
     call ioClose
 
     xor rcx, rcx

@@ -19,13 +19,13 @@ section .text
 ; fsStat(path, statBuf) -> result (rax)
 fsStat:
     ;; params
-    %define path [rbp+24]
-    %define buf  [rbp+16]
+    %define path (rbp+24)
+    %define buf  (rbp+16)
 
     begin
 
-    mov rdi, path
-    mov rsi, buf
+    mov rdi, [path]
+    mov rsi, [buf]
     mov rax, 4          ; sys_stat
     syscall
 
@@ -35,13 +35,13 @@ fsStat:
 ; fsFstat(fd, statBuf) -> result
 fsFstat:
     ;; params
-    %define fd  [rbp+24]
-    %define buf [rbp+16]
+    %define fd  (rbp+24)
+    %define buf (rbp+16)
 
     begin
 
-    mov rdi, fd
-    mov rsi, buf
+    mov rdi, [fd]
+    mov rsi, [buf]
     mov rax, 5          ; sys_fstat
     syscall
 
@@ -51,13 +51,13 @@ fsFstat:
 ; fsMkdir(path, mode) -> result
 fsMkdir:
     ;; params
-    %define path [rbp+24]
-    %define mode [rbp+16]
+    %define path (rbp+24)
+    %define mode (rbp+16)
 
     begin
 
-    mov rdi, path
-    mov rsi, mode
+    mov rdi, [path]
+    mov rsi, [mode]
     mov rax, 83         ; sys_mkdir
     syscall
 
@@ -67,11 +67,11 @@ fsMkdir:
 ; fsRmdir(path) -> result
 fsRmdir:
     ;; params
-    %define path [rbp+16]
+    %define path (rbp+16)
 
     begin
 
-    mov rdi, path
+    mov rdi, [path]
     mov rax, 84         ; sys_rmdir
     syscall
 
@@ -81,11 +81,11 @@ fsRmdir:
 ; fsUnlink(path) -> result
 fsUnlink:
     ;; params
-    %define path [rbp+16]
+    %define path (rbp+16)
 
     begin
 
-    mov rdi, path
+    mov rdi, [path]
     mov rax, 87         ; sys_unlink
     syscall
 

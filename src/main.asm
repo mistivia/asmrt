@@ -38,10 +38,10 @@ main:
 ; Caller pushes code
 rtExit:
     ;; params
-    %define code [rbp+16]
+    %define code (rbp+16)
 
     begin
 
-    mov rdi, code
+    mov rdi, [code]
     mov rax, 60         ; sys_exit
     syscall             ; never returns

@@ -19,12 +19,12 @@ section .text
 ; memAlloc(size) -> ptr (rax), NULL on failure
 memAlloc:
     ;; params
-    %define size [rbp+16]
+    %define size (rbp+16)
 
     begin
 
     hexalign
-    mov rdi, size
+    mov rdi, [size]
     call malloc
 
     end
@@ -33,12 +33,12 @@ memAlloc:
 ; memFree(ptr) -> rax is always 0; free() itself returns nothing
 memFree:
     ;; params
-    %define ptr [rbp+16]
+    %define ptr (rbp+16)
 
     begin
 
     hexalign
-    mov rdi, ptr
+    mov rdi, [ptr]
     call free
 
     mov rax, 0
@@ -48,14 +48,14 @@ memFree:
 ; memReloc(ptr, size) -> new ptr (rax), NULL on failure (ptr is left untouched by libc on failure)
 memReloc:
     ;; params
-    %define ptr  [rbp+24]
-    %define size [rbp+16]
+    %define ptr  (rbp+24)
+    %define size (rbp+16)
 
     begin
 
     hexalign
-    mov rdi, ptr
-    mov rsi, size
+    mov rdi, [ptr]
+    mov rsi, [size]
     call realloc
 
     end

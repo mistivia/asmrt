@@ -18,25 +18,26 @@ section .text
 entry:
     begin
     ;; local vars
-    %define ptr [rbp-8]   ; ptr crosses multiple calls, must live on the stack
+    %assign ptr_offset (-8)  ; ptr crosses multiple calls, must live on the stack
+    %define ptr (rbp + ptr_offset)
     sub rsp, 8
 
     push 16
     call memAlloc
-    mov ptr, rax
+    mov [ptr], rax
 
-    cmp qword ptr, 0
+    cmp qword [ptr], 0
     setne al
     movzx rax, al
     push errAllocNull
     push rax
     call assert
 
-    mov rax, ptr
+    mov rax, [ptr]
     mov rbx, [pattern1]
     mov [rax], rbx
 
-    mov rax, ptr
+    mov rax, [ptr]
     mov rbx, [rax]
     cmp rbx, [pattern1]
     sete al
@@ -45,19 +46,19 @@ entry:
     push rax
     call assert
 
-    push ptr
+    push [ptr]
     push 32
     call memReloc
-    mov ptr, rax
+    mov [ptr], rax
 
-    cmp qword ptr, 0
+    cmp qword [ptr], 0
     setne al
     movzx rax, al
     push errRelocNull
     push rax
     call assert
 
-    mov rax, ptr
+    mov rax, [ptr]
     mov rbx, [rax]
     cmp rbx, [pattern1]
     sete al
@@ -66,11 +67,11 @@ entry:
     push rax
     call assert
 
-    mov rax, ptr
+    mov rax, [ptr]
     mov rbx, [pattern2]
     mov [rax+8], rbx
 
-    mov rax, ptr
+    mov rax, [ptr]
     mov rbx, [rax+8]
     cmp rbx, [pattern2]
     sete al
@@ -79,7 +80,7 @@ entry:
     push rax
     call assert
 
-    push ptr
+    push [ptr]
     call memFree
 
     mov rax, 0

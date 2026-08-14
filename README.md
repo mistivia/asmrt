@@ -85,7 +85,11 @@ gcc -no-pie hello.o build/libasmrt.a -o hello
 - Registers: aside from `rax`, every register is clobbered by any call
   (custom-ABI call, real-ABI call, or bare `syscall`), so no variable is
   ever kept live in a register across a call — everything lives on the
-  stack, accessed through `%define`/`%assign` aliases.
+  stack. `%define` aliases expand to a bare address expression (e.g.
+  `%define flag (rbp+16)`), not a full memory operand, so each use site
+  adds its own `[]` (`[flag]`); locals get there via `%assign name_offset`
+  for the raw number plus a `%define name (rbp + name_offset)` wrapper —
+  see [AGENTS.md](AGENTS.md) for the full convention.
 
 Macros provided by `asmrt.inc`:
 

@@ -18,9 +18,11 @@
 ;   - Aside from rax, every register is considered clobbered after any
 ;     call (a custom-ABI call, a real-ABI call, or a bare syscall).
 ;     Because of that, all variables live on the stack: parameters and
-;     locals are both accessed as [rbp+N] / [rbp-N] through %define
-;     aliases, and registers only ever hold a scratch value for the
-;     duration of one expression -- never carried across a call.
+;     locals are both accessed through %define aliases that expand to a
+;     bare address expression -- (rbp+N) for a parameter, (rbp+name_offset)
+;     for a local -- not a full memory operand, so each use site adds its
+;     own [] (e.g. [flag], [fd]). Registers only ever hold a scratch value
+;     for the duration of one expression -- never carried across a call.
 ;
 ; begin/end: set up / tear down the standard stack frame.
 ;   begin = push rbp; mov rbp, rsp
