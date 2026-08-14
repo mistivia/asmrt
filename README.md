@@ -31,6 +31,7 @@ src/io.asm      file I/O syscalls: ioOpen, ioClose, ioRead, ioWrite, ioSeek
 src/fs.asm      filesystem syscalls: fsStat, fsFstat, fsMkdir, fsRmdir, fsUnlink
 src/mem.asm     malloc/free/realloc wrappers: memAlloc, memFree, memReloc
 src/str.asm     NUL-terminated string helpers: strLen, strEq
+src/sort.asm    generic in-place sort (qsort-style): sort(base, nmemb, size, cmpFn)
 tests/          one test_*.asm per module, run via `make test`
 ```
 

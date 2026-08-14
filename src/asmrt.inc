@@ -149,4 +149,7 @@ extern assert
 extern strLen
 extern strEq
 
+; sort.asm
+extern sort
+
 %endif ; ASMRT_INC
