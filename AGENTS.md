@@ -34,7 +34,7 @@
 
 `begin` 除了建立标准栈帧，还 `%push` 一个 NASM 预处理器 context，`end` 收尾时 `%pop` 掉它。这是因为**参数、局部变量都通过 context-local 的 `%$name` 别名访问**（而不是普通全局 `%define`）：同一个变量名（`path`、`fd`、`size`……）在不同函数里反复出现是常态，如果用普通 `%define` 定义，NASM 预处理器会在扫描到*下一次*同名声明所在的那一行时，把这行里的裸标识符先展开成上一个函数遗留下来的旧定义（这一步发生在 NASM 识别这是一次宏调用之前），导致声明直接损坏、编译失败。`%$name` 是 context-local 的，`%pop` 时自动失效，不会有这个问题。
 
-**硬性规定：一个函数里 `begin`/`end` 必须各出现且只出现一次**——`%push`/`%pop` 是预处理期指令，按源码文本顺序执行，不看运行时走的是哪条分支。函数内如果有多个提前返回的出口，必须让它们都跳转到同一个 `end` 之前，不能各自各写一个 `end`。
+**硬性规定：一个函数里 `proc`（内含 `begin`）/`end` 必须各出现且只出现一次**——`%push`/`%pop` 是预处理期指令，按源码文本顺序执行，不看运行时走的是哪条分支。函数内如果有多个提前返回的出口，必须让它们都跳转到同一个 `end` 之前，不能各自各写一个 `end`。
 
 **每个函数体内的顺序固定为：`proc name` → `args`（声明参数）→ `local`...（声明局部变量）→ `endlocal` → 函数体 → `end`。** `args`/`local` 必须写在 `proc`/`begin` 之后，因为 `begin` 是 push context 的地方。
 
@@ -86,17 +86,23 @@
 不再手写 `%assign Type_field (...)` 链，直接用 NASM 自带的结构体宏：
 
 ```asm
-struc Sample
+struc Sample                ; int32 x; int32 y; int64 z;
     .x: resd 1
     .y: resd 1
     .z: resq 1
-    resd 1          ; 手动 padding，凑够 8 的整数倍（见下面的硬性规定）
-endstruc
+endstruc                    ; Sample_size = 4+4+8 = 16，已经是 8 的整数倍，不用 padding
 ```
 
 `Sample.x`/`Sample.y`/`Sample.z` 是字段偏移，`Sample_size` 是整个结构体的字节数。访问字段：`[%$c + Sample.y]`（`%$c` 是 `local`/`args` 声明的、指向该结构体实例的地址）或 `[somePtr + Sample.y]`（`somePtr` 是指向堆/全局实例的指针）。
 
-**硬性规定不变：`Sample_size` 必须是 8 的整数倍**，凑不满时像上面一样手动加一个 `resX` padding 字段。
+**硬性规定不变：`Type_size` 必须是 8 的整数倍。** 字段本身凑不满时手动补一个 `resX` padding 字段：
+
+```asm
+struc Tiny                  ; int32 x;
+    .x: resd 1
+    resd 1                  ; 4 字节实际数据凑不满 8，补 4 字节 padding
+endstruc                    ; Tiny_size = 4+4 = 8
+```
 
 ## hexalign：真实 ABI 调用点的动态栈对齐
 
