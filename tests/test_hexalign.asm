@@ -13,9 +13,9 @@ section .data
     errAlignedCase2 db "case2: rsp should be 16-byte aligned after hexalign", 0
 
 section .text
-    global amain
+    global entry
 
-amain:
+entry:
     begin
 
     ; ---- case 1: the call site is already 16-byte aligned ----

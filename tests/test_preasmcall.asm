@@ -57,9 +57,9 @@ section .bss
     actR15 resq 1
 
 section .text
-    global amain
+    global entry
 
-amain:
+entry:
     begin
 
     mov rax, [expRax]

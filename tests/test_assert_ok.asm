@@ -6,9 +6,9 @@ section .data
     msg db "this should never be printed", 10, 0
 
 section .text
-    global amain
+    global entry
 
-amain:
+entry:
     begin
 
     push msg

@@ -20,9 +20,9 @@ section .bss
     statBuf resb 144
 
 section .text
-    global amain
+    global entry
 
-amain:
+entry:
     begin
 
     push dir

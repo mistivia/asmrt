@@ -18,9 +18,9 @@ section .data
     errEqSelf    db "strEq(s1, s1) should be equal", 0
 
 section .text
-    global amain
+    global entry
 
-amain:
+entry:
     begin
 
     push s1

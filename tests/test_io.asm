@@ -16,9 +16,9 @@ section .bss
     readBuf resb 64
 
 section .text
-    global amain
+    global entry
 
-amain:
+entry:
     begin
     ;; local vars
     %define fd [rbp-8]   ; fd needs to survive multiple calls, so it must live on the stack, not just in a register

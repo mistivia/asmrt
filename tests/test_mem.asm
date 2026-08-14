@@ -13,9 +13,9 @@ section .data
     errRelocReadback db "value read back from the grown region does not match what was written", 0
 
 section .text
-    global amain
+    global entry
 
-amain:
+entry:
     begin
     ;; local vars
     %define ptr [rbp-8]   ; ptr crosses multiple calls, must live on the stack

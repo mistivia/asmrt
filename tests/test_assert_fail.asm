@@ -9,9 +9,9 @@ section .data
     msg db "expected failure: intentional assert trip for test harness", 10, 0
 
 section .text
-    global amain
+    global entry
 
-amain:
+entry:
     begin
 
     push msg
