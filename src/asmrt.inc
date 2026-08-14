@@ -135,6 +135,11 @@ extern fsMkdir
 extern fsRmdir
 extern fsUnlink
 
+; mem.asm
+extern memAlloc
+extern memFree
+extern memReloc
+
 ; assert.asm
 extern assert
 
