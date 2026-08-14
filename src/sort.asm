@@ -12,10 +12,8 @@
 ;            sort after *b -- same contract as libc's qsort comparator,
 ;            just called through this runtime's own ABI (pushed args,
 ;            ret N) instead of the real System V one.
-;            (Named cmpFn, not cmp, so the %define alias below doesn't
-;            collide with the x86 `cmp` instruction mnemonic -- NASM's
-;            preprocessor would otherwise rewrite every `cmp` in this
-;            file into the parameter's address expression.)
+;            (Named cmpFn, not cmp, so args's %$cmpFn alias doesn't
+;            collide with the x86 `cmp` instruction mnemonic.)
 ;
 ; Implementation is recursive quicksort (Lomuto partition, last element
 ; as pivot). sort() *is* the recursive step -- there's no separate
@@ -28,8 +26,8 @@
 ; this file calls them directly, so they're not declared in asmrt.inc
 ; either. Every one of them still follows the same custom ABI as any
 ; exported function, recursive calls included: the pivot index p, which
-; must survive the call to partition(), lives in an %assign/%define
-; local-variable slot, never a register.
+; must survive the call to partition(), lives in a `local` slot, never a
+; register.
 ;
 ; Naive last-element-as-pivot quicksort degrades to O(n) recursion depth
 ; (and O(n^2) time) on already-sorted or reverse-sorted input -- a known
@@ -42,52 +40,45 @@ section .text
     global sort
 
 ; caller pushes in order: push base; push nmemb; push size; push cmpFn
-sort:
-    ;; params
-    %define base  (rbp+40)
-    %define nmemb (rbp+32)
-    %define size  (rbp+24)
-    %define cmpFn (rbp+16)
+proc sort
+    args base, nmemb, size, cmpFn
+    local p          ; partition point, returned by partition(); must
+                     ; survive the call, so it lives on the stack
+    endlocal
 
-    begin
-    ;; local vars
-    %assign p_offset (-8)  ; partition point, returned by partition(); must
-    %define p (rbp + p_offset)  ; survive the call, so it lives on the stack
-    sub rsp, 8
-
-    mov rax, [nmemb]
+    mov rax, [%$nmemb]
     cmp rax, 2
     jl .done                ; 0 or 1 elements -- already sorted, nothing to do
 
-    push [base]
-    push [nmemb]
-    push [size]
-    push [cmpFn]
+    push [%$base]
+    push [%$nmemb]
+    push [%$size]
+    push [%$cmpFn]
     call partition
-    mov [p], rax
+    mov [%$p], rax
 
     ; left part: the p elements before the pivot -- same base, shrunk nmemb
-    push [base]
-    push [p]
-    push [size]
-    push [cmpFn]
+    push [%$base]
+    push [%$p]
+    push [%$size]
+    push [%$cmpFn]
     call sort
 
     ; right part: everything after the pivot -- base moves past it, nmemb shrinks to match
-    mov rax, [p]
+    mov rax, [%$p]
     inc rax
-    imul rax, [size]
-    add rax, [base]
+    imul rax, [%$size]
+    add rax, [%$base]
     push rax                  ; new base = base + (p+1)*size
 
-    mov rax, [nmemb]
-    mov rbx, [p]
+    mov rax, [%$nmemb]
+    mov rbx, [%$p]
     inc rbx
     sub rax, rbx
     push rax                  ; new nmemb = nmemb - (p+1)
 
-    push [size]
-    push [cmpFn]
+    push [%$size]
+    push [%$cmpFn]
     call sort
 
 .done:
@@ -102,94 +93,84 @@ sort:
 ; range it's handed, which is exactly why sort() can recurse by just
 ; handing it a narrower (base, nmemb) slice instead of extra indices.
 ; caller pushes in order: push base; push nmemb; push size; push cmpFn
-partition:
-    ;; params
-    %define base  (rbp+40)
-    %define nmemb (rbp+32)
-    %define size  (rbp+24)
-    %define cmpFn (rbp+16)
+proc partition
+    args base, nmemb, size, cmpFn
+    local i          ; boundary: [0, i] are known < pivot so far
+    local j          ; scan cursor over [0, nmemb-1)
+    endlocal
 
-    begin
-    ;; local vars
-    %assign i_offset (-8)             ; boundary: [0, i] are known < pivot so far
-    %define i (rbp + i_offset)
-    %assign j_offset (i_offset - 8)   ; scan cursor over [0, nmemb-1)
-    %define j (rbp + j_offset)
-    %assign stksz (-j_offset)
-    sub rsp, stksz
-
-    mov qword [i], -1
-    mov qword [j], 0
+    mov qword [%$i], -1
+    mov qword [%$j], 0
 .loop:
-    mov rax, [j]
-    mov rbx, [nmemb]
+    mov rax, [%$j]
+    mov rbx, [%$nmemb]
     dec rbx
     cmp rax, rbx
     jge .loopDone              ; loop while j < nmemb-1 (pivot itself is excluded)
 
     ; addr of elem[j] -> 1st cmpFn arg (a), pushed first
-    mov rax, [j]
-    imul rax, [size]
-    add rax, [base]
+    mov rax, [%$j]
+    imul rax, [%$size]
+    add rax, [%$base]
     push rax
 
     ; addr of elem[nmemb-1] (the pivot) -> 2nd cmpFn arg (b), pushed last
-    mov rax, [nmemb]
+    mov rax, [%$nmemb]
     dec rax
-    imul rax, [size]
-    add rax, [base]
+    imul rax, [%$size]
+    add rax, [%$base]
     push rax
 
-    call [cmpFn]          ; custom-ABI call through the function pointer; cleans its own 16 bytes
+    call [%$cmpFn]        ; custom-ABI call through the function pointer; cleans its own 16 bytes
 
     cmp rax, 0
     jge .noSwap                  ; elem[j] >= pivot, leave it where it is
 
-    mov rax, [i]
+    mov rax, [%$i]
     inc rax
-    mov [i], rax                  ; i++
+    mov [%$i], rax                  ; i++
 
     ; swap elem[i], elem[j]
-    mov rax, [i]
-    imul rax, [size]
-    add rax, [base]
+    mov rax, [%$i]
+    imul rax, [%$size]
+    add rax, [%$base]
     push rax                       ; addrA = elem[i]
 
-    mov rax, [j]
-    imul rax, [size]
-    add rax, [base]
+    mov rax, [%$j]
+    imul rax, [%$size]
+    add rax, [%$base]
     push rax                       ; addrB = elem[j]
 
-    push [size]
+    push [%$size]
     call swapElems
 
 .noSwap:
-    mov rax, [j]
+    mov rax, [%$j]
     inc rax
-    mov [j], rax
+    mov [%$j], rax
     jmp .loop
 .loopDone:
 
     ; final swap: put the pivot (elem[nmemb-1]) right after the < region, at elem[i+1]
-    mov rax, [i]
+    mov rax, [%$i]
     inc rax
-    mov [i], rax                  ; i = i + 1, the pivot's final resting index
+    mov [%$i], rax                  ; i = i + 1, the pivot's final resting index
 
-    mov rax, [i]
-    imul rax, [size]
-    add rax, [base]
+    mov rax, [%$i]
+    imul rax, [%$size]
+    add rax, [%$base]
     push rax                       ; addrA = elem[i]
 
-    mov rax, [nmemb]
+    mov rax, [%$nmemb]
     dec rax
-    imul rax, [size]
-    add rax, [base]
+    imul rax, [%$size]
+    add rax, [%$base]
     push rax                       ; addrB = elem[nmemb-1]
 
-    push [size]
+    push [%$size]
     call swapElems
 
-    mov rax, [i]                  ; return the pivot's final index
+    mov rax, [%$i]                  ; return the pivot's final index
 
     end
     ret 32
@@ -201,19 +182,14 @@ partition:
 ; either loop, so rax/rbx/rcx/rdx/r8/r9b are pure scratch for that
 ; stretch, same as strEq's loop in str.asm.
 ; caller pushes in order: push addrA; push addrB; push size
-swapElems:
-    ;; params
-    %define addrA (rbp+32)
-    %define addrB (rbp+24)
-    %define size  (rbp+16)
+proc swapElems
+    args addrA, addrB, size
 
-    begin
-
-    mov rbx, [addrA]
-    mov rcx, [addrB]
+    mov rbx, [%$addrA]
+    mov rcx, [%$addrB]
     xor r8, r8
 .qwordLoop:
-    mov rax, [size]
+    mov rax, [%$size]
     sub rax, r8
     cmp rax, 8
     jl .byteLoop           ; fewer than 8 bytes left -- finish those one at a time
@@ -224,7 +200,7 @@ swapElems:
     add r8, 8
     jmp .qwordLoop
 .byteLoop:
-    cmp r8, [size]
+    cmp r8, [%$size]
     jge .done
     mov al,  [rbx + r8]
     mov r9b, [rcx + r8]

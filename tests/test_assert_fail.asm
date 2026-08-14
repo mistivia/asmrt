@@ -11,8 +11,7 @@ section .data
 section .text
     global entry
 
-entry:
-    begin
+proc entry
 
     push msg
     push 0              ; flag = false -> assert should terminate the process

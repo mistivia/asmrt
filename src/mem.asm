@@ -29,28 +29,22 @@ section .text
     extern realloc
 
 ; memAlloc(size) -> ptr (rax), NULL on failure
-memAlloc:
-    ;; params
-    %define size (rbp+16)
-
-    begin
+proc memAlloc
+    args size
 
     hexalign
-    mov rdi, [size]
+    mov rdi, [%$size]
     call malloc
 
     end
     ret 8
 
 ; memFree(ptr) -> rax is always 0; free() itself returns nothing
-memFree:
-    ;; params
-    %define ptr (rbp+16)
-
-    begin
+proc memFree
+    args ptr
 
     hexalign
-    mov rdi, [ptr]
+    mov rdi, [%$ptr]
     call free
 
     mov rax, 0
@@ -58,16 +52,12 @@ memFree:
     ret 8
 
 ; memReloc(ptr, size) -> new ptr (rax), NULL on failure (ptr is left untouched by libc on failure)
-memReloc:
-    ;; params
-    %define ptr  (rbp+24)
-    %define size (rbp+16)
-
-    begin
+proc memReloc
+    args ptr, size
 
     hexalign
-    mov rdi, [ptr]
-    mov rsi, [size]
+    mov rdi, [%$ptr]
+    mov rsi, [%$size]
     call realloc
 
     end
@@ -77,17 +67,12 @@ memReloc:
 ; Copies n bytes from src to dest. Assumes the two regions don't
 ; overlap -- for possibly-overlapping regions use memMove instead.
 ; caller pushes in order: push dest; push src; push n
-memCopy:
-    ;; params
-    %define dest (rbp+32)
-    %define src  (rbp+24)
-    %define n    (rbp+16)
+proc memCopy
+    args dest, src, n
 
-    begin
-
-    push [dest]
-    push [src]
-    push [n]
+    push [%$dest]
+    push [%$src]
+    push [%$n]
     call copyForward
 
     end
@@ -98,16 +83,11 @@ memCopy:
 ; (low to high address) when dest <= src, backward (high to low) when
 ; dest > src, so a byte is never overwritten before it's read.
 ; caller pushes in order: push dest; push src; push n
-memMove:
-    ;; params
-    %define dest (rbp+32)
-    %define src  (rbp+24)
-    %define n    (rbp+16)
+proc memMove
+    args dest, src, n
 
-    begin
-
-    mov rax, [dest]
-    mov rbx, [src]
+    mov rax, [%$dest]
+    mov rbx, [%$src]
     cmp rax, rbx
     jbe .forward
 
@@ -117,9 +97,9 @@ memMove:
     ; earlier chunk in this loop has touched -- copy that forward, order
     ; doesn't matter for those last few bytes. No call happens inside
     ; either loop, so rax/rbx/rcx/r8/al are pure scratch throughout.
-    mov rbx, [dest]
-    mov rcx, [src]
-    mov r8, [n]
+    mov rbx, [%$dest]
+    mov rcx, [%$src]
+    mov r8, [%$n]
 .backQwordLoop:
     cmp r8, 8
     jl .backByteLoop
@@ -135,16 +115,16 @@ memMove:
     mov [rbx + r8], al
     jmp .backByteLoop
 .backDone:
-    mov rax, [dest]
-    end
-    ret 24
+    mov rax, [%$dest]
+    jmp .exit
 
 .forward:
-    push [dest]
-    push [src]
-    push [n]
+    push [%$dest]
+    push [%$src]
+    push [%$n]
     call copyForward     ; already returns dest in rax
 
+.exit:
     end
     ret 24
 
@@ -157,15 +137,10 @@ memMove:
 ; of 8) -- same chunking as copyForward/swapElems. No call happens in
 ; either loop, so rax/rbx/r8/r10 are pure scratch throughout.
 ; caller pushes in order: push dest; push val; push n
-memFill:
-    ;; params
-    %define dest (rbp+32)
-    %define val  (rbp+24)
-    %define n    (rbp+16)
+proc memFill
+    args dest, val, n
 
-    begin
-
-    mov rax, [val]
+    mov rax, [%$val]
     and rax, 0xFF
     mov r10, rax
     shl r10, 8
@@ -177,10 +152,10 @@ memFill:
     shl r10, 32
     or  r10, rax          ; r10 = val's low byte broadcast across all 8 bytes
 
-    mov rbx, [dest]
+    mov rbx, [%$dest]
     xor r8, r8
 .qwordLoop:
-    mov rax, [n]
+    mov rax, [%$n]
     sub rax, r8
     cmp rax, 8
     jl .byteLoop
@@ -188,13 +163,13 @@ memFill:
     add r8, 8
     jmp .qwordLoop
 .byteLoop:
-    cmp r8, [n]
+    cmp r8, [%$n]
     jge .done
     mov [rbx + r8], r10b
     inc r8
     jmp .byteLoop
 .done:
-    mov rax, [dest]
+    mov rax, [%$dest]
 
     end
     ret 24
@@ -205,19 +180,14 @@ memFill:
 ; left (n isn't guaranteed to be a multiple of 8). No call happens
 ; inside either loop, so rax/rbx/rcx/r8 are pure scratch throughout.
 ; caller pushes in order: push dest; push src; push n
-copyForward:
-    ;; params
-    %define dest (rbp+32)
-    %define src  (rbp+24)
-    %define n    (rbp+16)
+proc copyForward
+    args dest, src, n
 
-    begin
-
-    mov rbx, [dest]
-    mov rcx, [src]
+    mov rbx, [%$dest]
+    mov rcx, [%$src]
     xor r8, r8
 .qwordLoop:
-    mov rax, [n]
+    mov rax, [%$n]
     sub rax, r8
     cmp rax, 8
     jl .byteLoop
@@ -226,14 +196,14 @@ copyForward:
     add r8, 8
     jmp .qwordLoop
 .byteLoop:
-    cmp r8, [n]
+    cmp r8, [%$n]
     jge .done
     mov al, [rcx + r8]
     mov [rbx + r8], al
     inc r8
     jmp .byteLoop
 .done:
-    mov rax, [dest]
+    mov rax, [%$dest]
 
     end
     ret 24

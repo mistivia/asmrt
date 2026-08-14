@@ -22,8 +22,7 @@ section .text
     global main
     global rtExit
 
-main:
-    begin
+proc main
 
     push rdi            ; argc -> entry's 1st argument, pushed first
     push rsi            ; argv -> entry's 2nd argument
@@ -36,12 +35,9 @@ main:
 
 ; rtExit(code) -> does not return
 ; Caller pushes code
-rtExit:
-    ;; params
-    %define code (rbp+16)
+proc rtExit
+    args code
 
-    begin
-
-    mov rdi, [code]
+    mov rdi, [%$code]
     mov rax, 60         ; sys_exit
     syscall             ; never returns

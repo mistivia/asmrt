@@ -1,4 +1,5 @@
-; test_io.asm -- ioOpen/ioWrite/ioRead/ioClose round-trip test
+; test_io.asm -- ioOpen/ioWrite/ioRead/ioClose/ioWriteNum/ioWriteChar
+; round-trip test
 
 %include "asmrt.inc"
 
@@ -12,33 +13,35 @@ section .data
     errContent  db "ioRead content mismatch", 0
     errSeek     db "ioSeek(SEEK_SET, 0) did not return 0", 0
 
+    numPath     db "/tmp/asmrt_test_io_num.txt", 0
+    numExpect   db "42,-7,0,A", 10
+    numExpectLen equ $ - numExpect
+    errNumContent db "ioWriteNum/ioWriteChar content mismatch", 0
+
 section .bss
     readBuf resb 64
 
 section .text
     global entry
 
-entry:
-    begin
-    ;; local vars
-    %assign fd_offset (-8)  ; fd needs to survive multiple calls, so it must live on the stack, not just in a register
-    %define fd (rbp + fd_offset)
-    sub rsp, 8
+proc entry
+    local fd         ; fd needs to survive multiple calls, so it must live on the stack, not just in a register
+    endlocal
 
     push path
     push 0x242          ; flags O_RDWR|O_CREAT|O_TRUNC (need to seek back on the same fd and read later)
     push 0x1A4          ; mode 0644
     call ioOpen
-    mov [fd], rax
+    mov [%$fd], rax
 
-    cmp qword [fd], 0
+    cmp qword [%$fd], 0
     setge al
     movzx rax, al
     push errOpen
     push rax
     call assert
 
-    push [fd]
+    push [%$fd]
     push msg
     push msgLen
     call ioWrite
@@ -51,7 +54,7 @@ entry:
     call assert
 
     ; leave fd open, use ioSeek to rewind to the start and read again, to verify seek works
-    push [fd]
+    push [%$fd]
     push 0              ; offset
     push 0              ; whence SEEK_SET
     call ioSeek
@@ -63,7 +66,7 @@ entry:
     push rax
     call assert
 
-    push [fd]
+    push [%$fd]
     push readBuf
     push msgLen
     call ioRead
@@ -75,16 +78,16 @@ entry:
     push rax
     call assert
 
-    push [fd]
+    push [%$fd]
     call ioClose
 
     push path
     push 0              ; flags O_RDONLY
     push 0              ; mode (ignored for O_RDONLY)
     call ioOpen
-    mov [fd], rax
+    mov [%$fd], rax
 
-    push [fd]
+    push [%$fd]
     push readBuf
     push msgLen
     call ioRead
@@ -96,7 +99,7 @@ entry:
     push rax
     call assert
 
-    push [fd]
+    push [%$fd]
     call ioClose
 
     xor rcx, rcx
@@ -115,6 +118,90 @@ entry:
 .cmpOk:
 
     push path
+    call fsUnlink
+
+    ; ioWriteNum/ioWriteChar round trip
+    push numPath
+    push 0x242          ; flags O_RDWR|O_CREAT|O_TRUNC
+    push 0x1A4          ; mode 0644
+    call ioOpen
+    mov [%$fd], rax
+
+    cmp qword [%$fd], 0
+    setge al
+    movzx rax, al
+    push errOpen
+    push rax
+    call assert
+
+    push [%$fd]
+    push 42
+    call ioWriteNum
+
+    push [%$fd]
+    push ','
+    call ioWriteChar
+
+    push [%$fd]
+    push -7
+    call ioWriteNum
+
+    push [%$fd]
+    push ','
+    call ioWriteChar
+
+    push [%$fd]
+    push 0
+    call ioWriteNum
+
+    push [%$fd]
+    push ','
+    call ioWriteChar
+
+    push [%$fd]
+    push 'A'
+    call ioWriteChar
+
+    push [%$fd]
+    push 10
+    call ioWriteChar
+
+    push [%$fd]
+    push 0              ; offset
+    push 0              ; whence SEEK_SET
+    call ioSeek
+
+    push [%$fd]
+    push readBuf
+    push numExpectLen
+    call ioRead
+
+    cmp rax, numExpectLen
+    sete al
+    movzx rax, al
+    push errRead
+    push rax
+    call assert
+
+    push [%$fd]
+    call ioClose
+
+    xor rcx, rcx
+.numCmpLoop:
+    cmp rcx, numExpectLen
+    je .numCmpOk
+    mov al, [numExpect + rcx]
+    cmp al, [readBuf + rcx]
+    jne .numCmpFail
+    inc rcx
+    jmp .numCmpLoop
+.numCmpFail:
+    push errNumContent
+    push 0
+    call assert
+.numCmpOk:
+
+    push numPath
     call fsUnlink
 
     mov rax, 0

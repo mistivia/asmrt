@@ -22,8 +22,7 @@ section .bss
 section .text
     global entry
 
-entry:
-    begin
+proc entry
 
     push dir
     push 0x1ED          ; mode 0755

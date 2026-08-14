@@ -1,46 +1,21 @@
 ; asmrt.inc -- shared header for the asmrt runtime
 ;
-; Contains the custom-ABI support macros plus extern declarations for
-; every function the runtime exposes. Any file that uses asmrt (including
-; the runtime's own implementation files) only needs to
-; %include "asmrt.inc" -- no need to hand-write extern lines one by one.
-; (NASM allows a symbol to be both extern and global+defined in the same
-;  file; the definition in this file wins, so implementation files can
-;  safely include this header too.)
+; Custom ABI: caller pushes args in declaration order (last-pushed arg
+; lands at [rbp+16]); callee cleans its own args with ret N; return value
+; in rax; every register but rax is clobbered by any call (custom-ABI,
+; real-ABI, or bare syscall) -- so no variable ever lives in a register
+; across a call, only on the stack.
 ;
-; Custom ABI conventions:
-;   - Arguments are pushed onto the stack by the caller (never passed in
-;     registers), in declaration order (the first argument is pushed
-;     first).
-;   - The callee cleans up its own arguments with ret N (N = total
-;     argument bytes).
-;   - The return value always goes in rax.
-;   - Aside from rax, every register is considered clobbered after any
-;     call (a custom-ABI call, a real-ABI call, or a bare syscall).
-;     Because of that, all variables live on the stack: parameters and
-;     locals are both accessed through %define aliases that expand to a
-;     bare address expression -- (rbp+N) for a parameter, (rbp+name_offset)
-;     for a local -- not a full memory operand, so each use site adds its
-;     own [] (e.g. [flag], [fd]). Registers only ever hold a scratch value
-;     for the duration of one expression -- never carried across a call.
+; Params and locals are declared with args/local and accessed as
+; context-local %$name aliases (NASM %push/%pop), e.g. [%$fd], [%$flag].
+; Using %$ instead of a plain global %define means the same name can be
+; reused in different functions in the same file without colliding --
+; a plain %define would otherwise leak for the rest of the file and get
+; pre-expanded (and corrupted) the next time that name is declared.
 ;
-; begin/end: set up / tear down the standard stack frame.
-;   begin = push rbp; mov rbp, rsp
-;   end   = mov rsp, rbp; pop rbp
-;   The sub rsp, N for locals goes right after begin, before the body of
-;   the function; as long as every local variable itself occupies a
-;   multiple of 8 bytes (hard rule, see AGENTS.md), N is automatically a
-;   multiple of 8 too -- no extra rounding needed.
-;
-; hexalign: dynamic stack alignment at a real-ABI call site. Drop a
-;   hexalign right before a real-ABI call; it checks/pads 8 bytes at
-;   runtime as needed, so there's no need to hand-compute the parity of
-;   argument/local counts at the function entry, and no paired "undo"
-;   macro is needed either. See AGENTS.md.
-;
-; preasmcall/postasmcall: a pair of full-register-protection macros that
-;   wrap a custom-ABI call made from inside a real-ABI callback (push
-;   every register / pop them back). See AGENTS.md.
+; Required order in every function: proc name -> args -> local... ->
+; endlocal -> body -> end. (args/local must come after proc/begin
+; because begin is what pushes the context %$ names live in.)
 
 %ifndef ASMRT_INC
 %define ASMRT_INC
@@ -48,38 +23,65 @@
 ; ---- custom ABI support macros ----
 
 %macro begin 0
+    %push
     push rbp
     mov  rbp, rsp
+    %assign __localSize 0
 %endmacro
 
 %macro end 0
     mov  rsp, rbp
     pop  rbp
+    %pop
 %endmacro
 
-; hexalign: dynamic stack alignment at a real-ABI call site, replacing
-; the old "hand-compute argument/local parity" approach. Before calling
-; a real-ABI function, it checks whether rsp is already 16-byte aligned
-; (under this ABI rsp is always at least 8-byte aligned, so it can only
-; be off by 0 or 8 bytes) and pads that 8 bytes if needed. No paired
-; "undo" macro is needed -- the padding doesn't need to be reclaimed by
-; hand, since end's mov rsp,rbp reclaims it along with everything else
-; on the way out. See AGENTS.md.
+; proc name: function label + begin, merged. Write `proc funcName`
+; instead of `funcName:` followed by `begin`. Does not emit `global` --
+; that's still declared separately at the top of the file, as before.
+%macro proc 1
+%1:
+    begin
+%endmacro
+
+; args a1, ..., an: declare params in push order (a1 pushed first, an
+; pushed last, landing at [rbp+16]). Must follow begin.
+%macro args 1-*
+    %assign %%n %0
+    %assign %%i 1
+    %rep %0
+        %xdefine %[%$ %+ %1] (rbp + 16 + 8*(%%n - %%i))
+        %assign %%i %%i+1
+    %rotate 1
+    %endrep
+%endmacro
+
+; local name[, size=8]: declare a local, accumulating __localSize (reset
+; by begin). size must be a multiple of 8 (see AGENTS.md). Call
+; endlocal once, after the last local, to emit the sub rsp.
+%macro local 1-2 8
+    %assign __localSize __localSize + %2
+    %assign %[%$ %+ %1 %+ _offset] (-__localSize)
+    %xdefine %[%$ %+ %1] (rbp + %[%$ %+ %1 %+ _offset])
+%endmacro
+
+%macro endlocal 0
+    sub rsp, __localSize
+%endmacro
+
+; hexalign: pad rsp to 16-byte alignment before a real-ABI call. Under
+; this ABI rsp is always at least 8-byte aligned, so it's only ever off
+; by 0 or 8; no paired "undo" needed (end's mov rsp,rbp reclaims it).
 %macro hexalign 0
     mov  rax, rsp
-    and  rax, 8          ; 0 when rsp is already 16-byte aligned, 8 otherwise
+    and  rax, 8
     sub  rsp, rax
 %endmacro
 
-; preasmcall/postasmcall: full-register-protection macros for C callback
-; scenarios. Used when a real-ABI callback (e.g. a function pointer
-; registered with a C library) needs to call into a custom-ABI function
-; -- push/pop every register around that call so the real-ABI caller's
-; expectations (especially the callee-saved rbx/rbp/r12-r15) survive.
-; The protected range includes rax: after postasmcall, rax is back to
-; whatever it was before preasmcall, so if the intervening call's return
-; value is needed it must be stashed to memory before postasmcall runs.
-; See AGENTS.md.
+; preasmcall/postasmcall: push/pop every register (rax included), for
+; calling into a custom-ABI function from inside a real-ABI callback
+; (e.g. a C function-pointer callback) without clobbering what the
+; real-ABI caller expects to survive. Stash any needed return value to
+; memory before postasmcall -- it restores rax too.
 %macro preasmcall 0
     push rax
     push rbx
@@ -129,6 +131,8 @@ extern ioClose
 extern ioRead
 extern ioWrite
 extern ioSeek
+extern ioWriteNum
+extern ioWriteChar
 
 ; fs.asm
 extern fsStat

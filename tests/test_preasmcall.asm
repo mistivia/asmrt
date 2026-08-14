@@ -59,8 +59,7 @@ section .bss
 section .text
     global entry
 
-entry:
-    begin
+proc entry
 
     mov rax, [expRax]
     mov rbx, [expRbx]

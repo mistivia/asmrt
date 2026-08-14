@@ -18,15 +18,12 @@ section .text
     global entry
 
 ; cmpInt64(a, b) -> *a - *b, a/b are pointers to int64 elements
-cmpInt64:
-    %define a (rbp+24)
-    %define b (rbp+16)
+proc cmpInt64
+    args a, b
 
-    begin
-
-    mov rax, [a]
+    mov rax, [%$a]
     mov rax, [rax]
-    mov rbx, [b]
+    mov rbx, [%$b]
     mov rbx, [rbx]
     sub rax, rbx
 
@@ -34,27 +31,21 @@ cmpInt64:
     ret 16
 
 ; cmpInt32(a, b) -> *a - *b (sign-extended to 64 bits), a/b point to int32 elements
-cmpInt32:
-    %define a (rbp+24)
-    %define b (rbp+16)
+proc cmpInt32
+    args a, b
 
-    begin
-
-    mov rax, [a]
+    mov rax, [%$a]
     movsx rax, dword [rax]
-    mov rbx, [b]
+    mov rbx, [%$b]
     movsx rbx, dword [rbx]
     sub rax, rbx
 
     end
     ret 16
 
-entry:
-    begin
-    ;; local vars
-    %assign idx_offset (-8)
-    %define idx (rbp + idx_offset)
-    sub rsp, 8
+proc entry
+    local idx
+    endlocal
 
     push arr64
     push arr64Len
@@ -62,13 +53,13 @@ entry:
     push cmpInt64
     call sort
 
-    mov qword [idx], 0
+    mov qword [%$idx], 0
 .check64Loop:
-    mov rax, [idx]
+    mov rax, [%$idx]
     cmp rax, arr64Len
     jge .check64Done
 
-    mov rbx, [idx]
+    mov rbx, [%$idx]
     mov rcx, [arr64 + rbx*8]
     cmp rcx, rbx                ; ascending 0..9 -> arr64[i] should equal i
     sete al
@@ -77,9 +68,9 @@ entry:
     push rax
     call assert
 
-    mov rax, [idx]
+    mov rax, [%$idx]
     inc rax
-    mov [idx], rax
+    mov [%$idx], rax
     jmp .check64Loop
 .check64Done:
 
@@ -89,15 +80,15 @@ entry:
     push cmpInt32
     call sort
 
-    mov qword [idx], 0
+    mov qword [%$idx], 0
 .check32Loop:
-    mov rax, [idx]
+    mov rax, [%$idx]
     cmp rax, arr32Len
     jge .check32Done
     cmp rax, 0
     je .check32Next             ; nothing to compare the first element against
 
-    mov rbx, [idx]
+    mov rbx, [%$idx]
     movsx rcx, dword [arr32 + rbx*4]
     dec rbx
     movsx rdx, dword [arr32 + rbx*4]
@@ -109,9 +100,9 @@ entry:
     call assert
 
 .check32Next:
-    mov rax, [idx]
+    mov rax, [%$idx]
     inc rax
-    mov [idx], rax
+    mov [%$idx], rax
     jmp .check32Loop
 .check32Done:
 

@@ -15,8 +15,7 @@ section .data
 section .text
     global entry
 
-entry:
-    begin
+proc entry
 
     ; ---- case 1: the call site is already 16-byte aligned ----
     mov rax, rsp
