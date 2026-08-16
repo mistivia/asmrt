@@ -13,7 +13,7 @@
 ; instead of wrapping libc's. copyForward (the shared
 ; 8-bytes-at-a-time-then-a-tail loop used by both memCopy and memMove's
 ; non-overlapping case) is internal, not `global` -- same pattern as
-; sort.asm's swapElems helper.
+; utils.asm's swapElems helper.
 
 %include "asmrt.inc"
 

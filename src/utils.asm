@@ -1,5 +1,24 @@
-; sort.asm -- generic in-place sort, custom ABI (like libc's qsort)
+; utils.asm -- assorted generic utilities, custom ABI
 ;
+;   sort(base, nmemb, size, cmpFn) -- generic in-place sort over opaque
+;     byte blobs, ordered by a custom-ABI comparator (qsort-style,
+;     recursive quicksort with Lomuto partition).
+;   fnv64(data, dataSize, input) -- FNV-1a 64-bit hash, mirrors
+;     ckit/cbase/cbase.h's fnv64.
+;
+; partition()/swapElems() (sort internals) are not `global` and not
+; declared in asmrt.inc -- they're private to this file.
+;
+; fnv64's FNV_OFFSET_BASIS = 0xcbf29ce484222325, FNV_PRIME = 0x100000001b3.
+
+%include "asmrt.inc"
+
+section .text
+    global sort
+    global fnv64
+
+; ============================ sort ============================
+
 ; sort(base, nmemb, size, cmpFn)
 ;   base  -- pointer to the first element of the array
 ;   nmemb -- number of elements
@@ -33,11 +52,6 @@
 ; (and O(n^2) time) on already-sorted or reverse-sorted input -- a known
 ; limitation of the simplest textbook version, left as-is here in
 ; keeping with this runtime's teaching/experiment scope over robustness.
-
-%include "asmrt.inc"
-
-section .text
-    global sort
 
 ; caller pushes in order: push base; push nmemb; push size; push cmpFn
 proc sort
@@ -209,6 +223,47 @@ proc swapElems
     inc r8
     jmp .byteLoop
 .done:
+
+    end
+    ret 24
+
+; ============================ fnv64 ===========================
+
+; fnv64(data, dataSize, input) -> FNV-1a hash of dataSize bytes at data,
+; seeded with input.  Mirrors cbase/cbase.h's fnv64.
+; caller pushes in order: push data; push dataSize; push input
+proc fnv64
+    args data, dataSize, input
+    local hash
+    local i
+    endlocal
+
+    mov rax, [%$input]
+    mov [%$hash], rax
+    mov qword [%$i], 0
+.loop:
+    mov rax, [%$i]
+    cmp rax, [%$dataSize]
+    jae .done
+
+    ; hash *= 0x100000001b3  (too big for an imm32, so via rbx)
+    mov rax, [%$hash]
+    mov rbx, 0x100000001b3
+    imul rax, rbx
+    mov [%$hash], rax
+
+    ; hash ^= data[i]
+    mov rax, [%$hash]
+    mov rbx, [%$data]
+    mov rcx, [%$i]
+    movzx rdx, byte [rbx + rcx]
+    xor rax, rdx
+    mov [%$hash], rax
+
+    inc qword [%$i]
+    jmp .loop
+.done:
+    mov rax, [%$hash]
 
     end
     ret 24

@@ -44,7 +44,7 @@ src/io.asm      file I/O syscalls
 src/fs.asm      filesystem syscalls
 src/mem.asm     malloc/free/realloc wrappers, plus native memcpy/memmove/memset-alikes
 src/str.asm     NUL-terminated string helpers
-src/sort.asm    generic in-place sort (qsort-style, recursive quicksort)
+src/utils.asm   generic sort (qsort-style recursive quicksort) + fnv64 hash
 tests/          one test_*.asm per module, run via `make test`
 ```
 
@@ -115,13 +115,13 @@ with `ret N`. All of them are `global` and declared `extern` in
 | `strLen(s) -> length` | length of a NUL-terminated string, excluding the trailing NUL |
 | `strEq(a, b) -> 1/0` | 1 if the two NUL-terminated strings are equal, 0 otherwise |
 
-**sort.asm**
+**utils.asm**
 
 | Function | Description |
 |---|---|
 | `sort(base, nmemb, size, cmpFn)` | recursive quicksort (Lomuto partition) over `nmemb` elements of `size` bytes each at `base`, ordered by the custom-ABI comparator `cmpFn(a, b)` — same contract as libc's qsort comparator, just called through this runtime's own ABI |
 
-`partition`/`swapElems` (sort.asm) and `copyForward` (mem.asm) are
+`partition`/`swapElems` (utils.asm) and `copyForward` (mem.asm) are
 internal helpers used only within their own file — not `global`, not
 declared in `asmrt.inc`, and not meant to be called from elsewhere.
 

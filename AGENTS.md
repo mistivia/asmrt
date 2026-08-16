@@ -14,6 +14,7 @@
 
 - **变量**（参数、局部变量、全局变量）和**函数名**用 `camelCase`：`msg`、`flag`、`printMsg`、`strLen`。
 - **结构体等类型名**用 `CamelCase`（PascalCase）：`Point`、`FileStat`。
+- **指针参数/指针返回值在签名注释中以 `p` 前缀命名**：`pVec`、`pMeta`、`pBuf`、`pPath`……（`asmrt.inc` 中每个 `extern` 上方都有带签名的注释，命名一眼能看出哪个参数是地址）。
 
 ## begin / end：建帧、收尾，兼管理变量作用域
 
@@ -103,6 +104,11 @@ struc Tiny                  ; int32 x;
     resd 1                  ; 4 字节实际数据凑不满 8，补 4 字节 padding
 endstruc                    ; Tiny_size = 4+4 = 8
 ```
+
+跨模块共享的结构体（如 `ValueMeta`、`Vec`）统一声明在 `asmrt.inc` 的
+"shared struct definitions" 段，而不放在某个 `.asm` 模块里——这样任何
+`%include "asmrt.inc"` 的模块都能直接用结构体名和字段偏移。`struc` 的
+字段布局必须保持 8 的整数倍（见上），`Type_size` 同样必须是 8 的倍数。
 
 ## hexalign：真实 ABI 调用点的动态栈对齐
 
@@ -223,6 +229,73 @@ proc printNum
     end
     ret 8
 ```
+
+## 项目布局
+
+```
+src/asmrt.inc   共享头文件：ABI 宏 + 公共 struc + 所有运行时函数的 extern 声明
+src/main.asm    进程入口（main -> entry）、rtExit
+src/assert.asm  assert(msg, flag)
+src/io.asm      文件 I/O syscalls（ioOpen/ioClose/ioRead/ioWrite/ioSeek/...）
+src/fs.asm      文件系统 syscalls（fsStat/fsFstat/fsMkdir/fsRmdir/fsUnlink）
+src/mem.asm     malloc/free/realloc 包装 + 原生 memcpy/memmove/memset 类似物
+src/str.asm     NUL 结尾字符串辅助（strLen/strEq）
+src/utils.asm   通用工具：sort（qsort 风格递归快速排序）+ fnv64（FNV-1a 64 位哈希）
+src/ds.asm      数据结构模块（vec，镜像 ckit/cbase/cbase.h）
+tests/          每个模块一个 test_*.asm，`make test` 编译并运行
+```
+
+每个运行时 `.asm` 文件只需 `%include "asmrt.inc"`——ABI 宏、公共结构体
+以及所有运行时函数的 `extern` 声明都由它统一提供，调用方不需要手写
+`extern` 行。
+
+## 构建与测试
+
+- `make`：nasm 汇编 `src/*.asm` 为 `build/*.o`，再 `ar rcs` 打包成
+  `build/libasmrt.a`。
+- `make test`：汇编 `tests/test_*.asm`，与 `libasmrt.a` 链接后逐个运行；
+  退出码 0 为通过，`*_fail` 测试期望 255。每个测试文件导出
+  `global entry`（无参数、custom ABI、`ret 24`），由 `main.asm` 的
+  `main` push argc/argv/envp 后调用，entry 的返回值即进程退出码。
+- `make install PREFIX=/usr/local`：把 `libasmrt.a` 装到 `$(PREFIX)/lib`，
+  `asmrt.inc` 装到 `$(PREFIX)/include/nasm`。
+- **注意**：Makefile 没有把 `asmrt.inc` 列入依赖。修改 `.inc` 后必须
+  `make clean && make`，否则会得到 "Nothing to be done"。
+
+## 数据结构模块（ds.asm）
+
+镜像 ckit/cbase/cbase.h 的 `struct vec` / `struct value_meta`，实现
+"值语义 + trait 回调"的通用动态数组。导出符号命名沿用 cbase 的
+`vec_*`，但按本仓库约定写成 camelCase：
+
+```
+vecInit, vecWithCapacity, vecReserve, vecPushCp, vecPushMv,
+vecPop, vecGet, vecSetCp, vecSetMv, vecFirst, vecLast, vecLen,
+vecIsEmpty, vecClear, vecTruncate, vecDrop, vecSwapElement, vecSwap,
+vecEq, vecInsertCp, vecInsertMv, vecRemove, vecAsPtr, vecCopy, vecMove,
+vecSort, vecCmp, vecHash, vecMeta
+```
+
+`fnv64` 哈希函数与 `sort` 一起放在 `utils.asm` 模块（vecHash 内部通过
+extern 调用它）。
+
+约定：
+
+- `ValueMeta` 的 6 个 trait 回调（`drop`/`cmp`/`eq`/`hash`/`copy`/`move`）
+  全部是**自定义 ABI 函数**，签名与 sort 的比较器一致：参数 push 传、
+  返回值在 rax、callee 用 `ret N` 清栈。
+- vec 的内存分配/释放/扩容走 `memAlloc`/`memFree`/`memReloc`，字节搬运走
+  `memCopy`/`memMove`——这些包装内部已处理真实 ABI 与栈对齐，vec 自身
+  不需要 `hexalign`。
+- `vecMeta` 是 `.data` 里的一个 `ValueMeta` 实例，描述 `Vec` 自身
+  （`size = Vec_size`，`cmp = vecCmp` ...），供嵌套容器（vec of vec）使用。
+- 内部 helper（如 `elemAddr`）非 `global`，也不出现在 `asmrt.inc` 的
+  extern 声明里；只有公共 API 才导出。
+
+## 注意事项
+
+- x86-64 没有 `push imm64`。需要压入 64 位立即数时先 `mov rax, imm64`
+  再 `push rax`。
 
 ## 适用场景与局限
 
