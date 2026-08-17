@@ -68,17 +68,17 @@ struct Sample {
 ```asm
 ;; struct Sample
 resetOffset
-;; i32 x
+
 %assign Sample_x offset
-%assign offset (offset + 4)
-;; i32 y
+incOffset 4
+
 %assign Sample_y offset
-%assign offset (offset + 4)
-;; i64 z
+incOffset 4
+
 %assign Sample_z offset
-%assign offset (offset + 8)
-;; endstruct
-%assign Sample_size offset
+incOffset 8
+
+%assign sizeof_Sample offset
 ```
 
 `Sample_x`/`Sample_y`/`Sample_z` 是字段偏移，`Sample_size` 是整个结构体的字节数。
@@ -88,12 +88,12 @@ resetOffset
 ```asm
 ;; struct Tiny
 resetOffset
-;; i32 x
+
 %assign Tiny_x offset
-%assign offset (offset + 4)
-;; endstruct
-%assign offset (offset + 4) ;; padding
-%assign Tiny_size offset
+incOffset 4
+
+incOffset 4 ;; padding
+%assign sizof_Tiny offset
 ```
 
 跨模块共享的结构体（如 `ValueMeta`、`Vec`）统一声明在 `asmrt.inc` 的
@@ -161,13 +161,13 @@ fibo:
     ;; args: x
     argnum 1
     %assign x arg(1)
+
     begin
-    ;; local acc
     resetOffset
     ;; int64_t acc
     decOffset 8
     %assign acc offset
-    ;; endlocal
+
     sub rsp, (-offset)
 
     mov rax, [rbp + x]

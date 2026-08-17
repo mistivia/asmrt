@@ -156,10 +156,10 @@ vecWithCapacity:
 ; vecReserve(self, additional) -- ensure capacity for len+additional
 ; elements, doubling from 4 as cbase does.
 vecReserve:
-    ;; args: self, additional
     argnum 2
     %assign self arg(1)
     %assign additional arg(2)
+
     begin
     ;; local variables
     resetOffset
@@ -219,17 +219,16 @@ vecReserve:
 ; vecDrop(self) -- drop every element (via meta->drop), free the buffer,
 ; and reset the vec in place.
 vecDrop:
-    ;; args: self
     argnum 1
     %assign self arg(1)
-    begin
 
+    begin
     ;; local variables
     resetOffset
-    ;; i 8 bytes
+    
     decOffset 8
     %assign i offset
-    ;; endlocal
+
     sub rsp, (-offset)
 
     mov qword [rbp + i], 0
