@@ -184,8 +184,9 @@ stringEq:
 .loop:
     cmp rdx, rcx
     jae .eq
-    mov rsi, [rax + 8 + rdx]
-    cmp sil, [rbx + 8 + rdx]
+    movzx rsi, byte [rax + 8 + rdx]
+    movzx rdi, byte [rbx + 8 + rdx]
+    cmp sil, dil
     jne .neq
     inc rdx
     jmp .loop
@@ -330,7 +331,6 @@ stringCopy:
     mov rax, [rbp + pSrc]
     mov rax, [rax]              ; string
     mov rbx, [rax]              ; len
-    push rax
     add rax, 8
     push rax                    ; data pointer
     push rbx
@@ -524,8 +524,10 @@ stringSubstring:
     jmp .done
 
 .empty:
-    ; result = the shared empty string
-    lea rax, [rel emptyStr]
+    ; start >= endIdx: allocate a real (droppable) empty heap string
+    push 0
+    call allocStr               ; rax = heap string, len prefix already 0
+    mov byte [rax + 8], 0       ; trailing NUL
 .done:
     end
     ret 24
@@ -1208,7 +1210,6 @@ stringRemovePrefix:
     ; just deep-copy the whole string
     mov rax, [rbp + pStr]
     mov rbx, [rax]              ; len
-    push qword [rbp + pStr]
     add rax, 8
     push rax
     push rbx
@@ -1247,7 +1248,6 @@ stringRemoveSuffix:
     ; just deep-copy the whole string
     mov rax, [rbp + pStr]
     mov rbx, [rax]              ; len
-    push qword [rbp + pStr]
     add rax, 8
     push rax
     push rbx
@@ -1627,8 +1627,3 @@ stringJoin:
     mov rax, [rbp + pResult]
     end
     ret 16
-
-section .rodata
-emptyStr:
-    dq 0
-    db 0
