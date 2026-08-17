@@ -140,11 +140,13 @@ ioWriteNum:
     end
     ret 16
 
-; ioWriteString(fd, pStr) -> bytes written
-; Writes the whole length-prefixed string pStr (see str.asm layout:
-; [8-byte len][data][NUL]) to fd in one syscall.
+; ioWriteString(fd, string) -> bytes written
+; Writes the whole length-prefixed string (a pointer to
+; [8-byte len][data][NUL], see string.asm) to fd in one syscall.
+; (The local symbol is `pStr` because `%assign string` would expand the
+; word "string" in every comment of this file.)
 ioWriteString:
-    ; args: fd, pStr
+    ; args: fd, pStr (the string pointer)
     argnum 2
     %assign fd arg(1)
     %assign pStr arg(2)

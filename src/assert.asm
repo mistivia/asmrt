@@ -1,9 +1,9 @@
 ; assert.asm -- assertion, custom ABI
 ;
-; assert(pStr, flag)
-;   flag false (0): write the length-prefixed string pStr (str.asm
-;     layout: [8-byte len][data][NUL]) to stderr, then terminate the
-;     process with exit code -1;
+; assert(string, flag)
+;   flag false (0): write the length-prefixed string (a pointer to
+;     [8-byte len][data][NUL], see string.asm) to stderr, then terminate
+;     the process with exit code -1;
 ;   flag true: do nothing, return normally.
 
 %include "asmrt.inc"
@@ -23,7 +23,7 @@ assert:
     jne .ok
 
     push 2               ; fd = stderr
-    push [rbp + msg]     ; pStr = msg (length-prefixed)
+    push [rbp + msg]     ; msg = the length-prefixed string pointer
     call ioWriteString
 
     push -1

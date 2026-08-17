@@ -330,7 +330,7 @@ entry:
     push errLast
     call checkNode
 
-    ; ---- 向前遍历: 5 -> 10 -> 20 -> 30 ----
+    ; ---- walk forward: 5 -> 10 -> 20 -> 30 ----
     push listA
     call listBegin
     mov [rbp + it], rax
@@ -364,7 +364,7 @@ entry:
     push errNext
     call checkNode
 
-    ; next 之后到达 end (vtail)
+    ; next reaches the end (vtail)
     push [rbp + it]
     call listNext
     mov [rbp + it], rax
@@ -377,7 +377,7 @@ entry:
     push rax
     call assert
 
-    ; ---- listPrev: 从 30 往回 -> 20 ----
+    ; ---- listPrev: back from 30 -> 20 ----
     push listA
     call listLast
     mov [rbp + it], rax
@@ -389,19 +389,19 @@ entry:
     push errPrev
     call checkNode
 
-    ; ---- listInsertBefore: 在 10 之前插入 15 (copy) -> [5, 15, 10, 20, 30] ----
+    ; ---- listInsertBefore: insert 15 before 10 (copy) -> [5, 15, 10, 20, 30] ----
     push listA
     call listBegin
     mov [rbp + it], rax          ; it = first(5)
     push [rbp + it]
     call listNext
-    mov [rbp + it], rax          ; it = 10 节点
+    mov [rbp + it], rax          ; it = the 10 node
     push listA
     push [rbp + it]
     push val15
     push 0              ; isMove=0: copy
     call listInsertBefore
-    mov [rbp + it], rax          ; 返回的节点就是新插入的 15
+    mov [rbp + it], rax          ; returned node is the freshly inserted 15
     push [rbp + it]
     push 15
     push errInsert
@@ -416,7 +416,7 @@ entry:
     push rax
     call assert
 
-    ; 重新从 begin 走第 2 个节点应该是 15
+    ; walk from begin again: the 2nd node should hold 15
     push listA
     call listBegin
     mov [rbp + it], rax
@@ -428,7 +428,7 @@ entry:
     push errInsert
     call checkNode
 
-    ; ---- listInsertAfter: 在 5 之后插入 7 (copy) -> [5, 7, 15, 10, 20, 30] ----
+    ; ---- listInsertAfter: insert 7 after 5 (copy) -> [5, 7, 15, 10, 20, 30] ----
     push listA
     call listBegin
     mov [rbp + it], rax          ; it = first(5)
@@ -437,7 +437,7 @@ entry:
     push val7
     push 0              ; isMove=0: copy
     call listInsertAfter
-    mov [rbp + it], rax          ; 返回的节点就是新插入的 7
+    mov [rbp + it], rax          ; returned node is the freshly inserted 7
 
     push listA
     call listLen
@@ -448,7 +448,7 @@ entry:
     push rax
     call assert
 
-    ; 第 2 个节点应该是 7
+    ; the 2nd node should hold 7
     push listA
     call listBegin
     mov [rbp + it], rax
@@ -460,19 +460,19 @@ entry:
     push errInsert
     call checkNode
 
-    ; ---- listInsertBefore: 在 7 之前移动 25 (move) -> [5, 25, 7, 15, 10, 20, 30] ----
+    ; ---- listInsertBefore: move 25 before 7 (move) -> [5, 25, 7, 15, 10, 20, 30] ----
     push listA
     call listBegin
     mov [rbp + it], rax          ; it = first(5)
     push [rbp + it]
     call listNext
-    mov [rbp + it], rax          ; it = 7 节点
+    mov [rbp + it], rax          ; it = the 7 node
     push listA
     push [rbp + it]
     push val25
     push 1              ; isMove=1: move
     call listInsertBefore
-    mov [rbp + it], rax          ; 返回的节点就是新插入的 25
+    mov [rbp + it], rax          ; returned node is the freshly inserted 25
     push [rbp + it]
     push 25
     push errInsert
@@ -487,7 +487,7 @@ entry:
     push rax
     call assert
 
-    ; ---- listSet: 把 7 设为 20 (copy) -> [5, 25, 20, 15, 10, 20, 30] ----
+    ; ---- listSet: set 7 to 20 (copy) -> [5, 25, 20, 15, 10, 20, 30] ----
     push listA
     call listBegin
     mov [rbp + it], rax
@@ -496,7 +496,7 @@ entry:
     mov [rbp + it], rax          ; it = first(5)->next = 25
     push [rbp + it]
     call listNext
-    mov [rbp + it], rax          ; it = 7 节点
+    mov [rbp + it], rax          ; it = the 7 node
     push listA
     push [rbp + it]
     push val20
@@ -507,8 +507,8 @@ entry:
     push errSet
     call checkNode
 
-    ; ---- listRemove: 移除 15 -> [5, 25, 20, 10, 20, 30] ----
-    ; 找到 15：begin -> 25 -> 20 -> 15
+    ; ---- listRemove: remove 15 -> [5, 25, 20, 10, 20, 30] ----
+    ; find 15: begin -> 25 -> 20 -> 15
     push listA
     call listBegin
     mov [rbp + it], rax
@@ -574,7 +574,7 @@ entry:
     push errPop
     call checkNode
 
-    ; ---- listPushBack: 追加 30 (move) -> [25, 20, 10, 20, 30] ----
+    ; ---- listPushBack: append 30 (move) -> [25, 20, 10, 20, 30] ----
     push listA
     push val30
     push 1              ; isMove=1: move
@@ -608,7 +608,7 @@ entry:
     push rax
     call assert
 
-    ; ---- 重新填充 [10, 20, 30] ----
+    ; ---- refill [10, 20, 30] ----
     push listA
     push val10
     push 0              ; isMove=0: copy
@@ -657,13 +657,13 @@ entry:
     push rax
     call assert
 
-    ; 修改 B 的第二项: B = [10, 25, 30]
+    ; change B's 2nd element: B = [10, 25, 30]
     push listB
     call listBegin
     mov [rbp + it], rax
     push [rbp + it]
     call listNext
-    mov [rbp + it], rax          ; it = B 的第二项
+    mov [rbp + it], rax          ; it = B's 2nd element
     push listB
     push [rbp + it]
     push val25
@@ -696,12 +696,12 @@ entry:
     push rax
     call assert
 
-    ; ---- listHash: A 和 (恢复后的) B hash 相同 ----
+    ; ---- listHash: A and (restored) B hash equal ----
     push listA
     call listHash
-    mov [rbp + it], rax          ; 复用 it 存 hashA
+    mov [rbp + it], rax          ; reuse it to stash hashA
 
-    ; 把 B 的第二项改回 20 -> B = [10, 20, 30]
+    ; restore B's 2nd element to 20 -> B = [10, 20, 30]
     push listB
     call listBegin
     mov rbx, rax
@@ -722,7 +722,7 @@ entry:
     push rax
     call assert
 
-    ; ---- listMove: A 转移到 B, A 被重置 ----
+    ; ---- listMove: A transfers to B, A is reset ----
     push listB
     push listA
     call listMove
@@ -748,8 +748,8 @@ entry:
     push rax
     call assert
 
-    ; ---- listSwap: A 和 B 交换 ----
-    ; 重新 init A
+    ; ---- listSwap: swap A and B ----
+    ; re-init A
     push listA
     push int64Meta
     call listInit
@@ -776,7 +776,7 @@ entry:
     push rax
     call assert
 
-    ; ---- listDrop 两个 list ----
+    ; ---- listDrop both lists ----
     push listA
     call listDrop
     push listB
@@ -803,7 +803,7 @@ entry:
     push rax
     call assert
 
-    ; ---- listMeta 字段检查 ----
+    ; ---- listMeta field checks ----
     cmp qword [listMeta + ValueMeta_objsize], sizeof_List
     sete al
     movzx rax, al

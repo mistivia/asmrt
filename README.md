@@ -37,14 +37,16 @@ make uninstall
 ## Layout
 
 ```
-src/asmrt.inc   shared header: ABI macros + extern declarations for every runtime function
+src/asmrt.inc   shared header: ABI macros + shared struct definitions + extern declarations for every runtime function
 src/main.asm    process entry point (main -> entry), rtExit
-src/assert.asm  assert(msg, flag)
-src/io.asm      file I/O syscalls
+src/assert.asm  assert(string, flag) -- writes the length-prefixed string to stderr on failure
+src/io.asm      file I/O syscalls + ioWriteNum/ioWriteChar/ioWriteString
 src/fs.asm      filesystem syscalls
 src/mem.asm     malloc/free/realloc wrappers, plus native memcpy/memmove/memset-alikes
-src/str.asm     NUL-terminated string helpers
+src/string.asm  length-prefixed string module (see the string.asm section below)
 src/utils.asm   generic sort (qsort-style recursive quicksort) + fnv64 hash
+src/vec.asm     generic vector container (value semantics + trait callbacks)
+src/list.asm    generic doubly-linked list container (value semantics + trait callbacks)
 tests/          one test_*.asm per module, run via `make test`
 ```
 
@@ -80,6 +82,7 @@ with `ret N`. All of them are `global` and declared `extern` in
 | `ioSeek(fd, offset, whence) -> newOffset` | `sys_lseek`; `whence`: 0=SEEK_SET, 1=SEEK_CUR, 2=SEEK_END |
 | `ioWriteNum(fd, num) -> bytesWritten` | writes `num`'s base-10 ASCII representation (signed, no trailing newline) |
 | `ioWriteChar(fd, ch) -> bytesWritten` | writes the single byte `ch` |
+| `ioWriteString(fd, string) -> bytesWritten` | writes a length-prefixed string (see string.asm) in one syscall |
 
 **fs.asm**
 
@@ -106,14 +109,115 @@ with `ret N`. All of them are `global` and declared `extern` in
 
 | Function | Description |
 |---|---|
-| `assert(msg, flag)` | if `flag` is false (0), writes `msg` to stderr and terminates with exit code -1; otherwise returns normally |
+| `assert(string, flag)` | if `flag` is false (0), writes the length-prefixed string `string` to stderr and terminates with exit code -1; otherwise returns normally |
 
-**str.asm**
+**string.asm**
+
+A string is just a pointer (8 bytes) to a length-prefixed buffer:
+`string -> [8-byte len][data bytes][NUL]`, where `len` counts characters
+and excludes the trailing NUL. A literal is written as
+`name dq (name_end - name_start)` + `name_start: db "..."` +
+`name_end: db 0`. Heap strings are one `8 + len + 1` allocation, created
+by `stringFromCStr`/`stringFromRaw`/... and released with `stringDrop`.
+The string pointer IS the value: `stringMeta` has objsize = 8 and
+vec/list of strings stores one string per element. Container ValueMeta
+callbacks receive the *element address* (a pointer to the 8-byte slot
+inside the container) and deref it once to get the string.
 
 | Function | Description |
 |---|---|
-| `strLen(s) -> length` | length of a NUL-terminated string, excluding the trailing NUL |
-| `strEq(a, b) -> 1/0` | 1 if the two NUL-terminated strings are equal, 0 otherwise |
+| `stringLen(string) -> len` | character count, excluding the trailing NUL |
+| `stringEq(pSlotA, pSlotB) -> 1/0` | same len + byte-for-byte equal; element addresses |
+| `stringCmp(pSlotA, pSlotB) -> <0/0/>0` | byte order first, length on tie; element addresses |
+| `stringInit(pObj)` | initialize an empty string in place (>= 9 bytes of storage) |
+| `stringFromCStr(pCStr) -> string` | heap string copied from a NUL-terminated C string |
+| `stringFromRaw(pBuf, n) -> string` | heap string from `n` raw bytes |
+| `stringCopy(pDstSlot, pSrcSlot)` | deep-copy src element's string into dst element |
+| `stringMove(pDstSlot, pSrcSlot)` | transfer ownership, zero the src element |
+| `stringDrop(pSlot)` | free the heap string an element points to, zero the element |
+| `stringCStr(string) -> pData` | pointer to the NUL-terminated data bytes (`string+8`) |
+| `stringAt(string, index) -> ch` | character at `index`; 0 when out of range |
+| `stringHash(string) -> hash` | FNV-1a over the chars |
+| `stringSlotHash(pSlot) -> hash` | `stringMeta`'s `.hash` callback (element address) |
+| `stringSubstring(string, start, endIdx) -> string` | chars `[start, endIdx)`, clamped to `[0, len]` |
+| `stringConcat(pA, pB) -> string` | `a` followed by `b` |
+| `stringStartsWith(string, pPrefixStr) -> 1/0` | prefix check (string argument) |
+| `stringEndsWith(string, pSuffixStr) -> 1/0` | suffix check (string argument) |
+| `stringFind(string, pSubStr) -> index or -1` | first occurrence of `sub` |
+| `stringCount(string, pSubStr) -> count` | non-overlapping occurrences |
+| `stringLower(string) -> string` | A-Z -> a-z |
+| `stringUpper(string) -> string` | a-z -> A-Z |
+| `stringCapitalize(string) -> string` | first char upper, rest lower |
+| `stringStrip(string) -> string` | trim ASCII whitespace at both ends |
+| `stringLStrip(string) -> string` | trim leading whitespace |
+| `stringRStrip(string) -> string` | trim trailing whitespace |
+| `stringRemovePrefix(string, pPrefixStr) -> string` | copy minus prefix when it matches |
+| `stringRemoveSuffix(string, pSuffixStr) -> string` | copy minus suffix when it matches |
+| `stringSplit(pVec, string, pSepStr) -> pVec` | split on `sep` (empty sep -> whole string as one element) |
+| `stringSplitLines(pVec, string) -> pVec` | split on `\n`, strip a trailing `\r` |
+| `stringJoin(pVec, pSepStr) -> string` | concatenate string elements with `sep` between them |
+| `stringMeta` | `ValueMeta` describing a string element (objsize 8) |
+
+**vec.asm**
+
+| Function | Description |
+|---|---|
+| `vecInit(pVec, pMeta) -> 0` | zero the vec and attach the ValueMeta |
+| `vecWithCapacity(pVec, pMeta, capacity) -> 0` | like vecInit, but pre-allocate room |
+| `vecReserve(pVec, additional)` | grow capacity to fit `len + additional` |
+| `vecPush(pVec, pElem, isMove)` | append a copy of *pElem (or move it in when isMove != 0) |
+| `vecPop(pVec, pOut) -> 1/0` | copy last elem to *pOut (pOut may be NULL) |
+| `vecGet(pVec, index) -> pElem` | pointer to element, NULL if out of bounds |
+| `vecSet(pVec, index, pElem, isMove)` | replace elem at index (copy or move) |
+| `vecFirst(pVec) -> pElem` | first element, NULL if empty |
+| `vecLast(pVec) -> pElem` | last element, NULL if empty |
+| `vecLen(pVec) -> len` | element count |
+| `vecIsEmpty(pVec) -> 1/0` | len == 0 |
+| `vecClear(pVec)` | drop all elems, keep the buffer |
+| `vecTruncate(pVec, len)` | drop elems from `len` onward |
+| `vecDrop(pVec)` | drop all elems, free the buffer, reset the vec |
+| `vecSwapElement(pVec, a, b)` | byte-swap two elements |
+| `vecSwap(pA, pB)` | swap two whole vec headers |
+| `vecInsert(pVec, index, pElem, isMove)` | insert elem at index (0..len) |
+| `vecRemove(pVec, index, pOut)` | copy removed elem to *pOut (may be NULL) |
+| `vecAsPtr(pVec) -> pData` | raw data pointer (may be NULL) |
+| `vecCopy(pDst, pSrc)` | deep copy src into dst |
+| `vecMove(pDst, pSrc)` | transfer ownership, reset pSrc |
+| `vecSort(pVec)` | in-place sort via meta->cmp |
+| `vecCmp(pA, pB) -> -1/0/1` | lexicographic compare |
+| `vecHash(pVec) -> hash` | FNV-1a over element hashes |
+| `vecMeta` | `ValueMeta` instance describing struct Vec itself |
+
+**list.asm**
+
+| Function | Description |
+|---|---|
+| `listInit(pList, pMeta) -> 0` | allocate sentinel nodes, attach the ValueMeta |
+| `listDrop(pList)` | drop every elem, free all nodes incl. sentinels, reset the list |
+| `listClear(pList)` | drop every elem, keep the sentinels |
+| `listCopy(pDst, pSrc)` | deep copy src into dst |
+| `listMove(pDst, pSrc)` | transfer ownership, reset pSrc |
+| `listSwap(pA, pB)` | swap two whole list headers |
+| `listInsertBefore(pList, pIter, pElem, isMove) -> pNode` | insert before pIter (copy or move) |
+| `listInsertAfter(pList, pIter, pElem, isMove) -> pNode` | insert after pIter (copy or move) |
+| `listRemove(pList, pIter)` | drop elem, unlink and free the node |
+| `listSet(pList, pIter, pElem, isMove)` | replace elem at pIter (copy or move) |
+| `listBegin(pList) -> pNode` | first data node (vtail if empty) |
+| `listLast(pList) -> pNode` | last data node, NULL if empty |
+| `listEnd(pList) -> pNode` | the vtail sentinel |
+| `listNext(pIter) -> pNode` | next node |
+| `listPrev(pIter) -> pNode` | previous data node (never vhead) |
+| `listGet(pIter) -> pElem` | the node's element (NULL if pIter is NULL) |
+| `listLen(pList) -> len` | element count |
+| `listIsEmpty(pList) -> 1/0` | len == 0 |
+| `listPushBack(pList, pElem, isMove) -> pNode` | append (copy or move) |
+| `listPushFront(pList, pElem, isMove) -> pNode` | prepend (copy or move) |
+| `listPopBack(pList)` | remove the last element |
+| `listPopFront(pList)` | remove the first element |
+| `listEq(pA, pB) -> 1/0` | same len + element-wise eq via meta |
+| `listCmp(pA, pB) -> -1/0/1` | lexicographic compare |
+| `listHash(pList) -> hash` | FNV-1a over element hashes |
+| `listMeta` | `ValueMeta` instance describing struct List itself |
 
 **utils.asm**
 

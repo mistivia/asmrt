@@ -179,7 +179,7 @@ extern ioSeek
 extern ioWriteNum
 ; ioWriteChar(fd, ch) -> bytesWritten
 extern ioWriteChar
-; ioWriteString(fd, pStr) -> bytesWritten ; write a length-prefixed string
+; ioWriteString(fd, string) -> bytesWritten ; write a length-prefixed string
 extern ioWriteString
 
 ; fs.asm
@@ -215,77 +215,79 @@ extern memSwap
 ; to stderr and exit(-1)
 extern assert
 
-; str.asm
+; string.asm
 ;
 ; String layout (this module's convention):
-;   pStr -> [ 8-byte len ][ data bytes ... ][ NUL ]
-; where len counts chars, excluding the trailing NUL.  A string can be
-; a static literal (built with `dq len` + `db "..",0`) or a heap object
-; allocated by stringFromN/CStr/... and released with stringDrop.
-; PStr-slot arguments (pDst/pSrc/pOut below) are pointers to an 8-byte
-; slot holding a pStr -- the same shape ValueMeta callbacks expect, so
-; a vec/list of strings uses stringMeta (size=8).
-; stringLen(pStr) -> len ; chars, excluding the trailing NUL
+;   string -> [ 8-byte len ][ data bytes ... ][ NUL ]
+; where len counts chars, excluding the trailing NUL.  A string is a
+; pointer (8 bytes) to that buffer; it can be a static literal
+; (built with `dq len` + `db "..",0`) or a heap object allocated by
+; stringFromRaw/CStr/... and released with stringDrop.
+; The string pointer IS the value: a vec/list of strings stores one
+; string per element and uses stringMeta (objsize = 8).  The ValueMeta
+; callbacks receive the address of an element (a pointer to the 8-byte
+; slot inside the container) and deref it once to get the string.
+; stringLen(string) -> len ; chars, excluding the trailing NUL
 extern stringLen
-; stringEq(pA, pB) -> 1/0 ; pStr slots; same len + byte-equal
+; stringEq(pA, pB) -> 1/0 ; element addresses; same len + byte-equal
 extern stringEq
-; stringCmp(pA, pB) -> <0/0/>0 ; pStr slots; byte order, then length
+; stringCmp(pA, pB) -> <0/0/>0 ; element addresses; byte order, then length
 extern stringCmp
-; stringInit(pStr) ; empty string; pStr needs >= 9 usable bytes
+; stringInit(pObj) ; empty string; pObj needs >= 9 usable bytes
 extern stringInit
-; stringFromCStr(pOut, pCStr) -> pStr ; alloc + copy a NUL-terminated C string
+; stringFromCStr(pCStr) -> string ; alloc + copy a NUL-terminated C string
 extern stringFromCStr
-; stringFromN(pOut, pBuf, n) -> pStr ; alloc + copy exactly n bytes
-extern stringFromN
-; stringCopy(pDst, pSrc) ; deep-copy src slot's string into dst slot
+; stringFromRaw(pBuf, n) -> string ; alloc + copy exactly n bytes
+extern stringFromRaw
+; stringCopy(pDst, pSrc) ; deep-copy src element's string into dst element
 extern stringCopy
-; stringMove(pDst, pSrc) ; transfer ownership, zero the src slot
+; stringMove(pDst, pSrc) ; transfer ownership, zero the src element
 extern stringMove
-; stringDrop(pStrSlot) ; free the heap string a slot points to
+; stringDrop(pSlot) ; free the heap string an element points to, zero it
 extern stringDrop
-; stringCStr(pStr) -> pData ; pointer to the bytes (pStr+8)
+; stringCStr(string) -> pData ; pointer to the bytes (string+8)
 extern stringCStr
-; stringAt(pStr, index) -> ch ; 0 if out of range
+; stringAt(string, index) -> ch ; 0 if out of range
 extern stringAt
-; stringHash(pStr) -> hash ; FNV-1a over the chars
+; stringHash(string) -> hash ; FNV-1a over the chars
 extern stringHash
-; stringSlotHash(pSlot) -> hash ; stringMeta's .hash callback (slot ptr)
+; stringSlotHash(pSlot) -> hash ; stringMeta's .hash callback (element addr)
 extern stringSlotHash
-; stringSubstring(pOut, pStr, start, end) -> pStr ; clamped, start..end
+; stringSubstring(string, start, endIdx) -> string ; clamped, start..endIdx
 extern stringSubstring
-; stringConcat(pOut, pA, pB) -> pStr ; a followed by b
+; stringConcat(pA, pB) -> string ; a followed by b
 extern stringConcat
-; stringStartsWith(pStr, pPrefixStr) -> 1/0
+; stringStartsWith(string, pPrefixStr) -> 1/0
 extern stringStartsWith
-; stringEndsWith(pStr, pSuffixStr) -> 1/0
+; stringEndsWith(string, pSuffixStr) -> 1/0
 extern stringEndsWith
-; stringFind(pStr, pSubStr) -> index or -1 ; first occurrence
+; stringFind(string, pSubStr) -> index or -1 ; first occurrence
 extern stringFind
-; stringCount(pStr, pSubStr) -> count ; non-overlapping occurrences
+; stringCount(string, pSubStr) -> count ; non-overlapping occurrences
 extern stringCount
-; stringLower(pOut, pStr) -> pStr ; A-Z -> a-z
+; stringLower(string) -> string ; A-Z -> a-z
 extern stringLower
-; stringUpper(pOut, pStr) -> pStr ; a-z -> A-Z
+; stringUpper(string) -> string ; a-z -> A-Z
 extern stringUpper
-; stringCapitalize(pOut, pStr) -> pStr ; first upper, rest lower
+; stringCapitalize(string) -> string ; first upper, rest lower
 extern stringCapitalize
-; stringStrip(pOut, pStr) -> pStr ; trim ASCII whitespace both ends
+; stringStrip(string) -> string ; trim ASCII whitespace both ends
 extern stringStrip
-; stringLStrip(pOut, pStr) -> pStr ; trim leading whitespace
+; stringLStrip(string) -> string ; trim leading whitespace
 extern stringLStrip
-; stringRStrip(pOut, pStr) -> pStr ; trim trailing whitespace
+; stringRStrip(string) -> string ; trim trailing whitespace
 extern stringRStrip
-; stringRemovePrefix(pOut, pStr, pPrefixStr) -> pStr ; copy sans prefix when it matches
+; stringRemovePrefix(string, pPrefixStr) -> string ; copy sans prefix when it matches
 extern stringRemovePrefix
-; stringRemoveSuffix(pOut, pStr, pSuffixStr) -> pStr ; copy sans suffix when it matches
+; stringRemoveSuffix(string, pSuffixStr) -> string ; copy sans suffix when it matches
 extern stringRemoveSuffix
-; stringSplit(pVec, pStr, pSepStr) -> pVec ; split on sep (empty -> whole string)
+; stringSplit(pVec, string, pSepStr) -> pVec ; split on sep (empty -> whole string)
 extern stringSplit
-; stringSplitLines(pVec, pStr) -> pVec ; split on \n, strip trailing \r
+; stringSplitLines(pVec, string) -> pVec ; split on \n, strip trailing \r
 extern stringSplitLines
-; stringJoin(pOut, pVec, pSepStr) -> pStr ; concatenate pStr elements
+; stringJoin(pVec, pSepStr) -> string ; concatenate string elements
 extern stringJoin
-; stringMeta ; ValueMeta describing a pStr slot element (objsize 8)
+; stringMeta ; ValueMeta describing a string element (objsize 8)
 extern stringMeta
 
 ; utils.asm

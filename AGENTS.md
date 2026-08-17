@@ -12,7 +12,7 @@
 
 ## 命名约定
 
-- **变量**（参数、局部变量、全局变量）和**函数名**用 `camelCase`：`msg`、`flag`、`printMsg`、`strLen`。
+- **变量**（参数、局部变量、全局变量）和**函数名**用 `camelCase`：`msg`、`flag`、`printMsg`、`stringLen`。
 - **结构体等类型名**用 `CamelCase`（PascalCase）：`Point`、`FileStat`。
 - **指针参数/指针返回值在签名注释中以 `p` 前缀命名**：`pVec`、`pMeta`、`pBuf`、`pPath`……（`asmrt.inc` 中每个 `extern` 上方都有带签名的注释，命名一眼能看出哪个参数是地址）。
 
@@ -93,7 +93,7 @@ resetOffset
 incOffset 4
 
 incOffset 4 ; padding
-%assign sizof_Tiny offset
+%assign sizeof_Tiny offset
 ```
 
 跨模块共享的结构体（如 `ValueMeta`、`Vec`）统一声明在 `asmrt.inc` 的
@@ -212,13 +212,14 @@ printNum:
 ```
 src/asmrt.inc   共享头文件：ABI 宏 + 公共结构体定义 + 所有运行时函数的 extern 声明
 src/main.asm    进程入口（main -> entry）、rtExit
-src/assert.asm  assert(msg, flag)
+src/assert.asm  assert(string, flag)——失败时向 stderr 写长度前缀字符串
 src/io.asm      文件 I/O syscalls（ioOpen/ioClose/ioRead/ioWrite/ioSeek/...）
 src/fs.asm      文件系统 syscalls（fsStat/fsFstat/fsMkdir/fsRmdir/fsUnlink）
 src/mem.asm     malloc/free/realloc 包装 + 原生 memcpy/memmove/memset 类似物
-src/str.asm     NUL 结尾字符串辅助（strLen/strEq）
+src/string.asm  长度前缀字符串模块（stringLen/stringFromCStr/stringSplit/...）
 src/utils.asm   通用工具：sort（qsort 风格递归快速排序）+ fnv64（FNV-1a 64 位哈希）
 src/vec.asm     vector数据结构模块（vec）
+src/list.asm    双向链表数据结构模块（list）
 tests/          每个模块一个 test_*.asm，`make test` 编译并运行
 ```
 
@@ -236,8 +237,8 @@ tests/          每个模块一个 test_*.asm，`make test` 编译并运行
   `main` push argc/argv/envp 后调用，entry 的返回值即进程退出码。
 - `make install PREFIX=/usr/local`：把 `libasmrt.a` 装到 `$(PREFIX)/lib`，
   `asmrt.inc` 装到 `$(PREFIX)/include/nasm`。
-- **注意**：Makefile 没有把 `asmrt.inc` 列入依赖。修改 `.inc` 后必须
-  `make clean && make`，否则会得到 "Nothing to be done"。
+- **注意**：Makefile 已将 `asmrt.inc` 列入每个 `.o` 的依赖，修改
+  `.inc` 后 `make` 会自动重新编译受影响的模块。
 
 ## 数据结构约定
 
@@ -268,6 +269,84 @@ extern 调用它）。
   （`size = Vec_size`，`cmp = vecCmp` ...），供嵌套容器（vec of vec）使用。
 - 内部 helper（如 `elemAddr`）非 `global`，也不出现在 `asmrt.inc` 的
   extern 声明里；只有公共 API 才导出。
+
+## List模块（list.asm）
+
+与 vec 同样的"值语义 + trait 回调"模型的双向链表。`listMeta` 描述
+`struct List` 自身，供嵌套容器使用。
+
+```
+listInit, listDrop, listClear,
+listCopy, listMove, listSwap,
+listInsertBefore, listInsertAfter, listRemove, listSet,
+listBegin, listLast, listEnd, listNext, listPrev, listGet,
+listLen, listIsEmpty,
+listPushBack, listPushFront, listPopBack, listPopFront,
+listEq, listCmp, listHash, listMeta
+```
+
+约定：
+
+- list 的节点分配/释放走 `memAlloc`/`memFree`，字节搬运走 `memSwap`，
+  不需要 `hexalign`。
+- `listMeta` 是 `.data` 里的一个 `ValueMeta` 实例，描述 `List` 自身，
+  供嵌套容器（list of list）使用。
+- 所有插入/替换接口带 `isMove` 参数：`isMove != 0` 走 `ValueMeta.move`，
+  否则 `ValueMeta.copy`。
+- 内部 helper（如 `newNode`、`nodeData`）非 `global`，也不在
+  `asmrt.inc` 的 extern 声明里。
+
+## 字符串模块（string.asm）
+
+字符串就是一个指针（8 字节），指向带长度前缀的缓冲区：
+
+```
+string -> [ 8-byte len ][ data bytes ... ][ NUL ]
+```
+
+`len` 统计字符数，**不包含**末尾的 NUL。字面量这样写：
+
+```
+s1 dq (s1_end - s1_start)
+s1_start: db "hello"
+s1_end: db 0
+```
+
+堆字符串是一次 `8 + len + 1` 字节的分配，由 `stringFromCStr`/
+`stringFromRaw`/... 创建，用 `stringDrop` 释放。
+
+**string 指针就是值本身**：`stringMeta` 的 objsize = 8，vec/list<string>
+每个元素直接存一个 string 指针。容器的 ValueMeta 回调收到的是**元素地址**
+（指向容器内那个 8 字节槽）——`stringEq`/`stringCmp`/`stringCopy`/
+`stringMove`/`stringDrop`/`stringSlotHash` 都是这个约定：先解引用一次拿到
+string，再操作。
+
+```
+stringLen, stringEq, stringCmp,
+stringInit, stringFromCStr, stringFromRaw,
+stringCopy, stringMove, stringDrop,
+stringCStr, stringAt, stringHash, stringSlotHash,
+stringSubstring, stringConcat,
+stringStartsWith, stringEndsWith, stringFind, stringCount,
+stringLower, stringUpper, stringCapitalize,
+stringStrip, stringLStrip, stringRStrip,
+stringRemovePrefix, stringRemoveSuffix,
+stringSplit, stringSplitLines, stringJoin,
+stringMeta
+```
+
+约定：
+
+- 堆字符串分配/释放走 `memAlloc`/`memFree`，字节搬运走 `memCopy`，
+  不需要 `hexalign`。
+- **构造/变换函数不取 out 指针**：`stringFromRaw`、`stringSubstring`、
+  `stringConcat`、`stringLower/Upper/Capitalize`、`stringStrip`
+  系列、`stringRemovePrefix/Suffix`、`stringJoin` 全部在 `rax` 返回
+  新字符串（符合自定义 ABI 的返回值约定），没有 `pOut` 之类二重指针。
+- 只有 `stringSplit`/`stringSplitLines` 需要调用方传入 `pVec` 来存放
+  切出的元素。
+- `ioWriteString(fd, string)` 一次 sys_write 输出整个长度前缀字符串。
+- `assert` 接受长度前缀字符串，失败时经 `ioWriteString` 写 stderr。
 
 ## 注意事项
 

@@ -1,15 +1,15 @@
 ; test_str.asm -- length-prefixed string module tests
 ;
-; String layout: pStr -> [8-byte len][data bytes][NUL], len counts chars
+; String layout: string -> [8-byte len][data bytes][NUL], len counts chars
 ; (excluding the trailing NUL).  stringEq/stringCmp/stringCopy/... take
-; pStr *slots* (8-byte slots holding a pStr pointer), matching the
+; string *slots* (8-byte slots holding a string pointer), matching the
 ; ValueMeta callback convention; stringLen/stringAt/stringHash/... take
-; the pStr pointer itself.
+; the string pointer itself.
 
 %include "asmrt.inc"
 
 section .data
-    ; length-prefixed string literals
+; length-prefixed string literals
 s1 dq (s1_end - s1_start)
     s1_start: db "hello"
     s1_end: db 0
@@ -50,7 +50,7 @@ sLines dq (sLines_end - sLines_start)
     sLines_start: db "one", 10, "two", 10, "three"
     sLines_end: db 0
 
-    ; error messages
+; error messages
 errLen dq (errLen_end - errLen_start)
     errLen_start: db "stringLen wrong"
     errLen_end: db 0
@@ -160,7 +160,7 @@ errFromCStr dq (errFromCStr_end - errFromCStr_start)
     errFromCStr_end: db 0
 
 errFromN dq (errFromN_end - errFromN_start)
-    errFromN_start: db "stringFromN wrong"
+    errFromN_start: db "stringFromRaw wrong"
     errFromN_end: db 0
 
 errCopy dq (errCopy_end - errCopy_start)
@@ -200,28 +200,28 @@ section .text
 ; helper: assertEqualStr(expectedPStr, gotSlotPtr, errMsg)
 ;   checks stringLen(elem) == stringLen(expected) and bytes match
 checkStr:
-    ; args: pExpected, pSlot, errMsg
+; args: pExpected, pSlot, errMsg
     argnum 3
     %assign pExpected arg(1)
     %assign pSlot arg(2)
     %assign pErr arg(3)
     begin
-    ; local variables
+; local variables
     resetOffset
-    ; i 8 bytes
+; i 8 bytes
     decOffset 8
     %assign i offset
-    ; expCh 8 bytes
+; expCh 8 bytes
     decOffset 8
     %assign expCh offset
-    ; endlocal
+; endlocal
     sub rsp, (-offset)
 
-    ; lengths must match
+; lengths must match
     push [rbp + pExpected]
     call stringLen
     mov rbx, rax                ; expected len
-    ; pSlot 是槽（存 pStr 指针），先解引用
+; pSlot is a slot (holds a string pointer), deref it first
     mov rax, [rbp + pSlot]
     mov rax, [rax]
     push rax
@@ -233,7 +233,7 @@ checkStr:
     push rax
     call assert
 
-    ; byte-by-byte match
+; byte-by-byte match
     mov qword [rbp + i], 0
 .loop:
     mov rbx, [rbp + pExpected]
@@ -244,8 +244,8 @@ checkStr:
     push [rbp + pExpected]
     push [rbp + i]
     call stringAt
-    mov [rbp + expCh], rax     ; 寄存器不可跨 call 存变量，先落栈
-    ; pSlot 是 slot（存 pStr 指针），先解引用一次
+    mov [rbp + expCh], rax     ; regs are clobbered by calls, stash on stack
+; pSlot is a slot (holds a string pointer), deref it first
     mov rax, [rbp + pSlot]
     mov rax, [rax]
     push rax
@@ -267,15 +267,15 @@ checkStr:
 
 entry:
     begin
-    ; local variables
+; local variables
     resetOffset
-    ; hashTmp 8 bytes
+; hashTmp 8 bytes
     decOffset 8
     %assign hashTmp offset
-    ; endlocal
+; endlocal
     sub rsp, (-offset)
 
-    ; ---- stringLen ----
+; ---- stringLen ----
     push s1
     call stringLen
     cmp rax, 5
@@ -294,7 +294,7 @@ entry:
     push rax
     call assert
 
-    ; ---- slots for eq/cmp ----
+; ---- slots for eq/cmp ----
     mov rax, s1
     mov [slot1], rax
     mov rax, s2
@@ -302,7 +302,7 @@ entry:
     mov rax, s3
     mov [slot3], rax
 
-    ; ---- stringEq ----
+; ---- stringEq ----
     push slot2
     push slot1
     call stringEq
@@ -323,7 +323,7 @@ entry:
     push rax
     call assert
 
-    ; ---- stringCmp ----
+; ---- stringCmp ----
     push slot2
     push slot1
     call stringCmp
@@ -344,7 +344,7 @@ entry:
     push rax
     call assert
 
-    ; ---- stringAt ----
+; ---- stringAt ----
     push s1
     push 0
     call stringAt
@@ -365,7 +365,7 @@ entry:
     push rax
     call assert
 
-    ; out of range -> 0
+; out of range -> 0
     push s1
     push 5
     call stringAt
@@ -376,8 +376,8 @@ entry:
     push rax
     call assert
 
-    ; ---- stringHash ----
-    ; hash(s1) must equal fnv64(s1_start, 5, FNV_OFFSET_BASIS)
+; ---- stringHash ----
+; hash(s1) must equal fnv64(s1_start, 5, FNV_OFFSET_BASIS)
     push s1
     call stringHash
     mov [rbp + hashTmp], rax
@@ -394,46 +394,46 @@ entry:
     push rax
     call assert
 
-    ; ---- stringSubstring ----
-    ; substring(sHelloW, 0, 5) == "hello"
-    push outSlot
+; ---- stringSubstring ----
+; substring(sHelloW, 0, 5) == "hello"
     push sHelloW
     push 0
     push 5
     call stringSubstring
+    mov [outSlot], rax
     push s1
     push outSlot
     push errSub1
     call checkStr
 
-    ; substring(sHelloW, 6, 11) == "world"
-    push outSlot2
+; substring(sHelloW, 6, 11) == "world"
     push sHelloW
     push 6
     push 11
     call stringSubstring
+    mov [outSlot2], rax
     push s3
     push outSlot2
     push errSub2
     call checkStr
 
-    ; clamp: substring(sHelloW, -1, 100) == whole
-    push outSlot3
+; clamp: substring(sHelloW, -1, 100) == whole
     push sHelloW
     push -1
     push 100
     call stringSubstring
+    mov [outSlot3], rax
     push sHelloW
     push outSlot3
     push errSub3
     call checkStr
 
-    ; ---- stringConcat ----
-    ; concat(s1, s3) == "helloworld"
-    push outSlot
+; ---- stringConcat ----
+; concat(s1, s3) == "helloworld"
     push s1
     push s3
     call stringConcat
+    mov [outSlot], rax
     mov rax, [outSlot]
     mov rax, [rax]
     cmp rax, 10
@@ -443,8 +443,8 @@ entry:
     push rax
     call assert
 
-    ; ---- stringStartsWith / stringEndsWith ----
-    ; sHelloW starts with "hello"
+; ---- stringStartsWith / stringEndsWith ----
+; sHelloW starts with "hello"
     push sHelloW
     push s1
     call stringStartsWith
@@ -455,7 +455,7 @@ entry:
     push rax
     call assert
 
-    ; sHelloW does NOT start with s3 ("world")
+; sHelloW does NOT start with s3 ("world")
     push sHelloW
     push s3
     call stringStartsWith
@@ -466,7 +466,7 @@ entry:
     push rax
     call assert
 
-    ; sHelloW ends with s3
+; sHelloW ends with s3
     push sHelloW
     push s3
     call stringEndsWith
@@ -477,8 +477,8 @@ entry:
     push rax
     call assert
 
-    ; ---- stringFind / stringCount ----
-    ; find("hello", "ll") == 2
+; ---- stringFind / stringCount ----
+; find("hello", "ll") == 2
     push s1
     push sGetLl   ; "ll"
     call stringFind
@@ -489,7 +489,7 @@ entry:
     push rax
     call assert
 
-    ; find("hello", "world") == -1
+; find("hello", "world") == -1
     push s1
     push s3
     call stringFind
@@ -500,7 +500,7 @@ entry:
     push rax
     call assert
 
-    ; count("hello", "l") == 2
+; count("hello", "l") == 2
     push s1
     push sGetL    ; "l"
     call stringCount
@@ -511,79 +511,79 @@ entry:
     push rax
     call assert
 
-    ; ---- stringLower / stringUpper / stringCapitalize ----
-    push outSlot
+; ---- stringLower / stringUpper / stringCapitalize ----
     push sCap
     call stringLower
+    mov [outSlot], rax
     push sCapLower  ; "hello"
     push outSlot
     push errLower
     call checkStr
 
-    push outSlot
     push sCap
     call stringUpper
+    mov [outSlot], rax
     push sCapUpper  ; "HELLO"
     push outSlot
     push errUpper
     call checkStr
 
-    push outSlot
     push sCap
     call stringCapitalize
+    mov [outSlot], rax
     push sCapCap    ; "Hello"
     push outSlot
     push errCap
     call checkStr
 
-    ; ---- stringStrip / stringLStrip / stringRStrip ----
-    push outSlot
+; ---- stringStrip / stringLStrip / stringRStrip ----
     push sWs
     call stringStrip
+    mov [outSlot], rax
     push sTrimmed   ; "trim me"
     push outSlot
     push errStrip
     call checkStr
 
-    push outSlot
     push sWs
     call stringLStrip
+    mov [outSlot], rax
     push sLTrimmed  ; "trim me  "
     push outSlot
     push errLStrip
     call checkStr
 
-    push outSlot
     push sWs
     call stringRStrip
+    mov [outSlot], rax
     push sRTrimmed  ; "  trim me"
     push outSlot
     push errRStrip
     call checkStr
 
-    ; ---- stringRemovePrefix / stringRemoveSuffix ----
-    ; removeprefix("hello world", "hello") == " world"
-    push outSlot
+; ---- stringRemovePrefix / stringRemoveSuffix ----
+; removeprefix("hello world", "hello") == " world"
     push sHelloW
     push s1
     call stringRemovePrefix
+    mov [outSlot], rax
     push sRemPref   ; " world"
     push outSlot
     push errRemPref
     call checkStr
 
-    ; removesuffix("hello world", "world") == "hello "
-    push outSlot
+; removesuffix("hello world", "world") == "hello "
     push sHelloW
     push s3
     call stringRemoveSuffix
+    mov [outSlot], rax
     push sRemSuf    ; "hello "
     push outSlot
     push errRemSuf
     call checkStr
 
-    ; ---- stringSplit ----
-    ; split("a,b,c", ",") -> 3 elems each with len 1
+; ---- stringSplit ----
+; split("a,b,c", ",") -> 3 elems each with len 1
     push vecA
     push sCSV
     push sepComma
@@ -597,7 +597,7 @@ entry:
     push rax
     call assert
 
-    ; elem[0] == "a"
+; elem[0] == "a"
     push vecA
     push 0
     call vecGet
@@ -606,8 +606,8 @@ entry:
     push errSplit
     call checkStr
 
-    ; ---- stringSplitLines ----
-    ; splitlines("one\ntwo\nthree") -> 3 elems
+; ---- stringSplitLines ----
+; splitlines("one\ntwo\nthree") -> 3 elems
     push vecA
     push sLines
     call stringSplitLines
@@ -620,32 +620,32 @@ entry:
     push rax
     call assert
 
-    ; ---- stringJoin ----
-    ; join(["a","b","c"], ",") == "a,b,c" -- re-split so vecA holds the
-    ; split pieces again (stringSplitLines overwrote it above)
+; ---- stringJoin ----
+; join(["a","b","c"], ",") == "a,b,c" -- re-split so vecA holds the
+; split pieces again (stringSplitLines overwrote it above)
     push vecA
     push sCSV
     push sepComma
     call stringSplit
-    push outSlot
     push vecA
     push sepComma
     call stringJoin
+    mov [outSlot], rax
     push sCSV
     push outSlot
     push errJoin
     call checkStr
 
-    ; ---- stringFromCStr / stringFromN / stringDrop ----
-    ; from_c_str("hello") == s1
-    push outSlot
+; ---- stringFromCStr / stringFromRaw / stringDrop ----
+; from_c_str("hello") == s1
     push s1_start
     call stringFromCStr
+    mov [outSlot], rax
     push s1
     push outSlot
     push errFromCStr
     call checkStr
-    ; cleanup
+; cleanup
     push outSlot
     call stringDrop
     cmp qword [outSlot], 0
@@ -655,11 +655,11 @@ entry:
     push rax
     call assert
 
-    ; from_n(s1_start, 3) == "hel"
-    push outSlot
+; from_n(s1_start, 3) == "hel"
     push s1_start
     push 3
-    call stringFromN
+    call stringFromRaw
+    mov [outSlot], rax
     push sGetHel   ; "hel"
     push outSlot
     push errFromN
@@ -667,8 +667,8 @@ entry:
     push outSlot
     call stringDrop
 
-    ; ---- stringCopy / stringMove (slot semantics) ----
-    ; copy slot2 (s2 "hello") into outSlot
+; ---- stringCopy / stringMove (slot semantics) ----
+; copy slot2 (s2 "hello") into outSlot
     push outSlot
     push slot2
     call stringCopy
@@ -676,7 +676,7 @@ entry:
     push outSlot
     push errCopy
     call checkStr
-    ; move outSlot into outSlot2
+; move outSlot into outSlot2
     push outSlot2
     push outSlot
     call stringMove
@@ -690,13 +690,13 @@ entry:
     push outSlot2
     push errMove
     call checkStr
-    ; cleanup
+; cleanup
     push outSlot2
     call stringDrop
 
-    ; ---- stringInit ----
-    ; stringInit 就地初始化一个 pStr 对象（需要 ≥9 字节存储），
-    ; 而不是写 slot -- 所以用独立的 initBuf
+; ---- stringInit ----
+; stringInit initializes a string object in place (needs a >=9-byte
+; buffer), it does not write a slot -- so use a dedicated initBuf
     push initBuf
     call stringInit
     cmp qword [initBuf], 0
@@ -712,7 +712,7 @@ entry:
     push rax
     call assert
 
-    ; ---- stringMeta shape ----
+; ---- stringMeta shape ----
     cmp qword [stringMeta + ValueMeta_objsize], 8
     sete al
     movzx rax, al
@@ -720,7 +720,7 @@ entry:
     push rax
     call assert
 
-    ; cleanup split/splitlines vecs
+; cleanup split/splitlines vecs
     push vecA
     call vecDrop
 

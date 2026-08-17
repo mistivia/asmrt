@@ -1,7 +1,7 @@
 ; test_preasm.asm -- preasm/postasm should save and restore every register exactly
 ;
 ; Set every general-purpose register to a distinct known value, then
-; after preasm make one custom-ABI call (strLen, which by convention
+; after preasm make one custom-ABI call (stringLen, which by convention
 ; clobbers every register except rax), then postasm, and verify every
 ; register was restored to exactly what it was before the call.
 

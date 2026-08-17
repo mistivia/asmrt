@@ -9,8 +9,8 @@
 ;
 ; memCopy/memMove/memFill/memSwap don't call into libc at all --
 ; copying/filling/swapping bytes doesn't need an allocator, so they're
-; written directly in the custom ABI, the same way str.asm implements
-; strLen/strEq itself instead of wrapping libc's. copyForward (the
+; written directly in the custom ABI, the same way string.asm implements
+; stringLen/stringEq itself instead of wrapping libc's. copyForward (the
 ; shared 8-bytes-at-a-time-then-a-tail loop used by both memCopy and
 ; memMove's non-overlapping case) is internal, not `global`, while
 ; memSwap is the public byte-swap helper shared with utils.asm's sort.
@@ -203,7 +203,7 @@ memFill:
 ; byte-at-a-time tail for whatever's left (size isn't guaranteed to be a
 ; multiple of 8 -- e.g. a 4-byte int32 element). No call happens inside
 ; either loop, so rax/rbx/rcx/rdx/r8/r9b are pure scratch for that
-; stretch, same as strEq's loop in str.asm.
+; stretch, same as stringEq's loop in string.asm.
 ; caller pushes in order: push addrA; push addrB; push size
 memSwap:
     argnum 3
