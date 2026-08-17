@@ -1,8 +1,8 @@
-; test_preasmcall.asm -- preasmcall/postasmcall should save and restore every register exactly
+; test_preasm.asm -- preasm/postasm should save and restore every register exactly
 ;
 ; Set every general-purpose register to a distinct known value, then
-; after preasmcall make one custom-ABI call (strLen, which by convention
-; clobbers every register except rax), then postasmcall, and verify every
+; after preasm make one custom-ABI call (strLen, which by convention
+; clobbers every register except rax), then postasm, and verify every
 ; register was restored to exactly what it was before the call.
 
 %include "asmrt.inc"
@@ -25,20 +25,20 @@ section .data
     expR14 dq 0xDDDDDDDDDDDDDDDD
     expR15 dq 0xEEEEEEEEEEEEEEEE
 
-    errRax db "preasmcall/postasmcall failed to protect rax", 0
-    errRbx db "preasmcall/postasmcall failed to protect rbx", 0
-    errRcx db "preasmcall/postasmcall failed to protect rcx", 0
-    errRdx db "preasmcall/postasmcall failed to protect rdx", 0
-    errRsi db "preasmcall/postasmcall failed to protect rsi", 0
-    errRdi db "preasmcall/postasmcall failed to protect rdi", 0
-    errR8  db "preasmcall/postasmcall failed to protect r8", 0
-    errR9  db "preasmcall/postasmcall failed to protect r9", 0
-    errR10 db "preasmcall/postasmcall failed to protect r10", 0
-    errR11 db "preasmcall/postasmcall failed to protect r11", 0
-    errR12 db "preasmcall/postasmcall failed to protect r12", 0
-    errR13 db "preasmcall/postasmcall failed to protect r13", 0
-    errR14 db "preasmcall/postasmcall failed to protect r14", 0
-    errR15 db "preasmcall/postasmcall failed to protect r15", 0
+    errRax db "preasm/postasm failed to protect rax", 0
+    errRbx db "preasm/postasm failed to protect rbx", 0
+    errRcx db "preasm/postasm failed to protect rcx", 0
+    errRdx db "preasm/postasm failed to protect rdx", 0
+    errRsi db "preasm/postasm failed to protect rsi", 0
+    errRdi db "preasm/postasm failed to protect rdi", 0
+    errR8  db "preasm/postasm failed to protect r8", 0
+    errR9  db "preasm/postasm failed to protect r9", 0
+    errR10 db "preasm/postasm failed to protect r10", 0
+    errR11 db "preasm/postasm failed to protect r11", 0
+    errR12 db "preasm/postasm failed to protect r12", 0
+    errR13 db "preasm/postasm failed to protect r13", 0
+    errR14 db "preasm/postasm failed to protect r14", 0
+    errR15 db "preasm/postasm failed to protect r15", 0
 
 section .bss
     actRax resq 1
@@ -76,12 +76,12 @@ proc entry
     mov r14, [expR14]
     mov r15, [expR15]
 
-    preasmcall
+    preasm
     push probe
     call strLen          ; custom-ABI call, rewrites every register to something else
-    postasmcall
+    postasm
 
-    ; move every register to memory right after postasmcall, before the
+    ; move every register to memory right after postasm, before the
     ; upcoming assert calls (themselves register-clobbering calls) wipe
     ; out the values we still need to check
     mov [actRax], rax

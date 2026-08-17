@@ -77,47 +77,47 @@
     sub  rsp, rax
 %endmacro
 
-; preasmcall/postasmcall: push/pop every register (rax included), for
+; preasm/postasm: save/restore every register (rax included), for
 ; calling into a custom-ABI function from inside a real-ABI callback
 ; (e.g. a C function-pointer callback) without clobbering what the
 ; real-ABI caller expects to survive. Stash any needed return value to
-; memory before postasmcall -- it restores rax too.
-%macro preasmcall 0
-    push rax
-    push rbx
-    push rcx
-    push rdx
-    push rbp
-    push rsi
-    push rdi
-    push r8
-    push r9
-    push r10
-    push r11
-    push r12
-    push r13
-    push r14
-    push r15
-    sub  rsp, 8   ; 15 registers is odd, pad one slot to keep 16-byte alignment
+; memory before postasm -- it restores rax too.
+%macro preasm 0
+    sub  rsp, 128 ; 16 slots = 15 registers + 1 pad slot, keeps 16-byte alignment
+    mov [rsp+0],   rax
+    mov [rsp+8],   rbx
+    mov [rsp+16],  rcx
+    mov [rsp+24],  rdx
+    mov [rsp+32],  rbp
+    mov [rsp+40],  rsi
+    mov [rsp+48],  rdi
+    mov [rsp+56],  r8
+    mov [rsp+64],  r9
+    mov [rsp+72],  r10
+    mov [rsp+80],  r11
+    mov [rsp+88],  r12
+    mov [rsp+96],  r13
+    mov [rsp+104], r14
+    mov [rsp+112], r15
 %endmacro
 
-%macro postasmcall 0
-    add  rsp, 8
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rdi
-    pop rsi
-    pop rbp
-    pop rdx
-    pop rcx
-    pop rbx
-    pop rax
+%macro postasm 0
+    mov r15, [rsp+112]
+    mov r14, [rsp+104]
+    mov r13, [rsp+96]
+    mov r12, [rsp+88]
+    mov r11, [rsp+80]
+    mov r10, [rsp+72]
+    mov r9,  [rsp+64]
+    mov r8,  [rsp+56]
+    mov rdi, [rsp+48]
+    mov rsi, [rsp+40]
+    mov rbp, [rsp+32]
+    mov rdx, [rsp+24]
+    mov rcx, [rsp+16]
+    mov rbx, [rsp+8]
+    mov rax, [rsp+0]
+    add  rsp, 128
 %endmacro
 
 ; ---- shared struct definitions ----
