@@ -12,7 +12,7 @@ section .text
 
 ; caller pushes in order: push msg; push flag (first argument pushed first)
 assert:
-    ;; args: msg, flag
+    ; args: msg, flag
     argnum 2
     %assign msg arg(1)
     %assign flag arg(2)

@@ -26,12 +26,12 @@ section .text
 
 entry:
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; fd needs to survive multiple calls, so it must live on the stack, not just in a register
+    ; fd needs to survive multiple calls, so it must live on the stack, not just in a register
     decOffset 8
     %assign fd offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     push path

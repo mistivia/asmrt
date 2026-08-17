@@ -71,7 +71,7 @@ section .text
 ; No call inside, so rax/rbx/rcx are pure scratch for this stretch.
 ; caller pushes in order: push self; push index
 elemAddr:
-    ;; args: self, index
+    ; args: self, index
     argnum 2
     %assign self arg(1)
     %assign index arg(2)
@@ -93,7 +93,7 @@ elemAddr:
 
 ; vecInit(self, meta) -> 0.  Zero the vec and attach the ValueMeta.
 vecInit:
-    ;; args: self, meta
+    ; args: self, meta
     argnum 2
     %assign self arg(1)
     %assign meta arg(2)
@@ -115,7 +115,7 @@ vecInit:
 ; pre-allocates room for `capacity` elements (data stays NULL when
 ; capacity is 0, matching cbase).
 vecWithCapacity:
-    ;; args: self, meta, capacity
+    ; args: self, meta, capacity
     argnum 3
     %assign self arg(1)
     %assign meta arg(2)
@@ -161,15 +161,15 @@ vecReserve:
     %assign additional arg(2)
 
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; needed 8 bytes
+    ; needed 8 bytes
     decOffset 8
     %assign needed offset
-    ;; newCap 8 bytes
+    ; newCap 8 bytes
     decOffset 8
     %assign newCap offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + self]
@@ -223,7 +223,7 @@ vecDrop:
     %assign self arg(1)
 
     begin
-    ;; local variables
+    ; local variables
     resetOffset
     
     decOffset 8
@@ -264,16 +264,16 @@ vecDrop:
 vecClear:
     begin
 
-    ;; args: self
+    ; args: self
     argnum 1
     %assign self arg(1)
 
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; i 8 bytes
+    ; i 8 bytes
     decOffset 8
     %assign i offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov qword [rbp + i], 0
@@ -302,17 +302,17 @@ vecClear:
 vecTruncate:
     begin
 
-    ;; args: self, len
+    ; args: self, len
     argnum 2
     %assign self arg(1)
     %assign len arg(2)
 
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; i 8 bytes
+    ; i 8 bytes
     decOffset 8
     %assign i offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + self]
@@ -348,7 +348,7 @@ vecTruncate:
 
 ; vecGet(self, index) -> ptr to element, or NULL if out of bounds
 vecGet:
-    ;; args: self, index
+    ; args: self, index
     argnum 2
     %assign self arg(1)
     %assign index arg(2)
@@ -372,7 +372,7 @@ vecGet:
 
 ; vecFirst(self) -> ptr to first element, or NULL if empty
 vecFirst:
-    ;; args: self
+    ; args: self
     argnum 1
     %assign self arg(1)
     begin
@@ -391,7 +391,7 @@ vecFirst:
 
 ; vecLast(self) -> ptr to last element, or NULL if empty
 vecLast:
-    ;; args: self
+    ; args: self
     argnum 1
     %assign self arg(1)
     begin
@@ -414,7 +414,7 @@ vecLast:
 
 ; vecLen(self) -> len
 vecLen:
-    ;; args: self
+    ; args: self
     argnum 1
     %assign self arg(1)
     begin
@@ -427,7 +427,7 @@ vecLen:
 
 ; vecIsEmpty(self) -> 1 if len == 0, else 0
 vecIsEmpty:
-    ;; args: self
+    ; args: self
     argnum 1
     %assign self arg(1)
     begin
@@ -442,7 +442,7 @@ vecIsEmpty:
 
 ; vecAsPtr(self) -> raw data pointer (may be NULL)
 vecAsPtr:
-    ;; args: self
+    ; args: self
     argnum 1
     %assign self arg(1)
     begin
@@ -457,19 +457,19 @@ vecAsPtr:
 ; the old one, copy the new one in (or move when isMove != 0).  No-op
 ; when index is out of bounds.
 vecSet:
-    ;; args: self, index, elem, isMove
+    ; args: self, index, elem, isMove
     argnum 4
     %assign self arg(1)
     %assign index arg(2)
     %assign elem arg(3)
     %assign isMove arg(4)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; dst 8 bytes
+    ; dst 8 bytes
     decOffset 8
     %assign dst offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + self]
@@ -509,18 +509,18 @@ vecSet:
 ; vecPush(self, elem, isMove) -- append a copy of elem, or move it in
 ; when isMove != 0.
 vecPush:
-    ;; args: self, elem, isMove
+    ; args: self, elem, isMove
     argnum 3
     %assign self arg(1)
     %assign elem arg(2)
     %assign isMove arg(3)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; dst 8 bytes
+    ; dst 8 bytes
     decOffset 8
     %assign dst offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     push [rbp + self]
@@ -557,17 +557,17 @@ vecPush:
 ; non-NULL the popped element is copied into *out.  The element slot is
 ; *not* dropped (ownership moves to the caller), matching cbase.
 vecPop:
-    ;; args: self, out
+    ; args: self, out
     argnum 2
     %assign self arg(1)
     %assign out arg(2)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; src 8 bytes
+    ; src 8 bytes
     decOffset 8
     %assign src offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + self]
@@ -610,22 +610,22 @@ vecPop:
 ; (0..len inclusive).  isMove != 0 moves elem in (ValueMeta_move),
 ; otherwise a copy is made (ValueMeta_copy).  No-op when index > len.
 vecInsert:
-    ;; args: self, index, elem, isMove
+    ; args: self, index, elem, isMove
     argnum 4
     %assign self arg(1)
     %assign index arg(2)
     %assign elem arg(3)
     %assign isMove arg(4)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; dst 8 bytes
+    ; dst 8 bytes
     decOffset 8
     %assign dst offset
-    ;; shiftDst 8 bytes
+    ; shiftDst 8 bytes
     decOffset 8
     %assign shiftDst offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + self]
@@ -698,18 +698,18 @@ vecInsert:
 ; *out first (ownership moves to the caller; the slot is not dropped),
 ; matching cbase.  No-op when index >= len.
 vecRemove:
-    ;; args: self, index, out
+    ; args: self, index, out
     argnum 3
     %assign self arg(1)
     %assign index arg(2)
     %assign out arg(3)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; removed 8 bytes
+    ; removed 8 bytes
     decOffset 8
     %assign removed offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + self]
@@ -778,24 +778,24 @@ vecRemove:
 ; No temporary buffer or heap allocation needed.  No-op for
 ; out-of-bounds or a == b.
 vecSwapElement:
-    ;; args: self, a, b
+    ; args: self, a, b
     argnum 3
     %assign self arg(1)
     %assign a arg(2)
     %assign b arg(3)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; pa 8 bytes
+    ; pa 8 bytes
     decOffset 8
     %assign pa offset
-    ;; pb 8 bytes
+    ; pb 8 bytes
     decOffset 8
     %assign pb offset
-    ;; size 8 bytes
+    ; size 8 bytes
     decOffset 8
     %assign size offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + a]
@@ -832,19 +832,19 @@ vecSwapElement:
     end
     ret 24
 
-; vecSwap(a, b) -- swap two whole vec headers (32 bytes each).
+; vecSwap(a, b) -- swap two whole vec headers
 vecSwap:
-    ;; args: a, b
+    ; args: a, b
     argnum 2
     %assign a arg(1)
     %assign b arg(2)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; tmpVec: Vec
+    ; tmpVec: Vec
     decOffset sizeof_Vec
     %assign tmpVec offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     lea rax, [rbp + tmpVec]
@@ -871,7 +871,7 @@ vecSwap:
 ; sort() with meta->cmp as the comparator (same custom-ABI callback
 ; contract sort() expects).
 vecSort:
-    ;; args: self
+    ; args: self
     argnum 1
     %assign self arg(1)
     begin
@@ -905,23 +905,23 @@ vecSort:
 ; vecCopy(dst, src) -- deep copy src into dst.  No-op when dst == src.
 ; dst is re-initialized with src's meta and capacity == src->len.
 vecCopy:
-    ;; args: dst, src
+    ; args: dst, src
     argnum 2
     %assign dst arg(1)
     %assign src arg(2)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; i 8 bytes
+    ; i 8 bytes
     decOffset 8
     %assign i offset
-    ;; srcElem 8 bytes
+    ; srcElem 8 bytes
     decOffset 8
     %assign srcElem offset
-    ;; dstElem 8 bytes
+    ; dstElem 8 bytes
     decOffset 8
     %assign dstElem offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + dst]
@@ -975,7 +975,7 @@ vecCopy:
 ; vecMove(dst, src) -- transfer ownership of src's buffer to dst and
 ; reset src.  No-op when dst == src.
 vecMove:
-    ;; args: dst, src
+    ; args: dst, src
     argnum 2
     %assign dst arg(1)
     %assign src arg(2)
@@ -1010,23 +1010,23 @@ vecMove:
 ; vecEq(a, b) -> 1 if both vecs have the same length and every pair of
 ; elements compares equal via a's meta->eq, else 0.
 vecEq:
-    ;; args: a, b
+    ; args: a, b
     argnum 2
     %assign a arg(1)
     %assign b arg(2)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; i 8 bytes
+    ; i 8 bytes
     decOffset 8
     %assign i offset
-    ;; ea 8 bytes
+    ; ea 8 bytes
     decOffset 8
     %assign ea offset
-    ;; eb 8 bytes
+    ; eb 8 bytes
     decOffset 8
     %assign eb offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + a]
@@ -1075,26 +1075,26 @@ vecEq:
 ; vecCmp(a, b) -> lexicographic order: -1/0/1.  Elements are compared
 ; with a's meta->cmp; shorter vec is less when all shared elements tie.
 vecCmp:
-    ;; args: a, b
+    ; args: a, b
     argnum 2
     %assign a arg(1)
     %assign b arg(2)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; minLen 8 bytes
+    ; minLen 8 bytes
     decOffset 8
     %assign minLen offset
-    ;; i 8 bytes
+    ; i 8 bytes
     decOffset 8
     %assign i offset
-    ;; ea 8 bytes
+    ; ea 8 bytes
     decOffset 8
     %assign ea offset
-    ;; eb 8 bytes
+    ; eb 8 bytes
     decOffset 8
     %assign eb offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + a]
@@ -1157,22 +1157,22 @@ vecCmp:
 ; each element's meta->hash is folded through fnv64, exactly like
 ; cbase's vec_hash.
 vecHash:
-    ;; args: self
+    ; args: self
     argnum 1
     %assign self arg(1)
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; hash 8 bytes
+    ; hash 8 bytes
     decOffset 8
     %assign hash offset
-    ;; i 8 bytes
+    ; i 8 bytes
     decOffset 8
     %assign i offset
-    ;; elemHash 8 bytes
+    ; elemHash 8 bytes
     decOffset 8
     %assign elemHash offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, FNV_OFFSET_BASIS

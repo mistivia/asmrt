@@ -37,7 +37,7 @@ main:
 ; rtExit(code) -> does not return
 ; Caller pushes code
 rtExit:
-    ;; args: code
+    ; args: code
     argnum 1
     %assign code arg(1)
     begin

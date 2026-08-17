@@ -10,7 +10,7 @@ section .text
 
 ; strLen(s) -> length, excluding the trailing NUL
 strLen:
-    ;; args: s
+    ; args: s
     argnum 1
     %assign s arg(1)
 
@@ -33,7 +33,7 @@ strLen:
 
 ; strEq(a, b) -> 1 if the two strings are equal, 0 otherwise
 strEq:
-    ;; args: a, b
+    ; args: a, b
     argnum 2
     %assign a arg(1)
     %assign b arg(2)

@@ -61,13 +61,13 @@ sort:
     %assign cmpFn arg(4)
 
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; partition point, returned by partition(); must
+    ; partition point, returned by partition(); must
     decOffset 8
     %assign p offset
                      ; survive the call, so it lives on the stack
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + nmemb]
@@ -126,15 +126,15 @@ partition:
     %assign cmpFn arg(4)
 
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; boundary: [0, i] are known < pivot so far
+    ; boundary: [0, i] are known < pivot so far
     decOffset 8
     %assign i offset
-    ;; scan cursor over [0, nmemb-1)
+    ; scan cursor over [0, nmemb-1)
     decOffset 8
     %assign j offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov qword [rbp + i], -1
@@ -223,22 +223,22 @@ partition:
 %define FNV_PRIME 0x100000001b3
 
 fnv64:
-    ;; args: data, dataSize, input
+    ; args: data, dataSize, input
     argnum 3
     %assign data arg(1)
     %assign dataSize arg(2)
     %assign input arg(3)
 
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; hash 8 bytes
+    ; hash 8 bytes
     decOffset 8
     %assign hash offset
-    ;; i 8 bytes
+    ; i 8 bytes
     decOffset 8
     %assign i offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov rax, [rbp + input]

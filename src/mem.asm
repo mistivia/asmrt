@@ -31,7 +31,7 @@ section .text
 
 ; memAlloc(size) -> ptr, NULL on failure
 memAlloc:
-    ;; args: size
+    ; args: size
     argnum 1
     %assign size arg(1)
     begin
@@ -59,7 +59,7 @@ memFree:
 
 ; memReloc(ptr, size) -> new ptr, NULL on failure (ptr is left untouched by libc on failure)
 memReloc:
-    ;; args: ptr, size
+    ; args: ptr, size
     argnum 2
     %assign ptr  arg(1)
     %assign size arg(2)
@@ -78,7 +78,7 @@ memReloc:
 ; overlap -- for possibly-overlapping regions use memMove instead.
 ; caller pushes in order: push dest; push src; push n
 memCopy:
-    ;; args: dest, src, n
+    ; args: dest, src, n
     argnum 3
     %assign dest arg(1)
     %assign src  arg(2)
@@ -99,7 +99,7 @@ memCopy:
 ; dest > src, so a byte is never overwritten before it's read.
 ; caller pushes in order: push dest; push src; push n
 memMove:
-    ;; args: dest, src, n
+    ; args: dest, src, n
     argnum 3
     %assign dest arg(1)
     %assign src  arg(2)
@@ -247,7 +247,7 @@ memSwap:
 ; inside either loop, so rax/rbx/rcx/r8 are pure scratch throughout.
 ; caller pushes in order: push dest; push src; push n
 copyForward:
-    ;; args: dest, src, n
+    ; args: dest, src, n
     argnum 3
     %assign dest arg(1)
     %assign src  arg(2)

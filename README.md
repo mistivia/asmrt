@@ -144,7 +144,7 @@ section .text
     global entry
 
 entry:
-    ;; args: argc, argv, envp
+    ; args: argc, argv, envp
     argnum 3
     %assign argc arg(1)
     %assign argv arg(2)

@@ -13,21 +13,21 @@ section .text
 
 entry:
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; default size 8, at rbp-8
+    ; default size 8, at rbp-8
     decOffset 8
     %assign a offset
-    ;; default size 8, at rbp-16
+    ; default size 8, at rbp-16
     decOffset 8
     %assign b offset
-    ;; default size 8, at rbp-24
+    ; default size 8, at rbp-24
     decOffset 8
     %assign c offset
-    ;; struct-sized, at rbp-40
+    ; struct-sized, at rbp-40
     decOffset 16)
     %assign d offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov qword [rbp + a], 111

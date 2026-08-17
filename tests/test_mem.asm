@@ -48,12 +48,12 @@ checkRange:
     %assign n arg(3)
 
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; k 8 bytes
+    ; k 8 bytes
     decOffset 8
     %assign k offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov qword [rbp + k], 0
@@ -85,12 +85,12 @@ checkRange:
 
 entry:
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; ptr crosses multiple calls, must live on the stack
+    ; ptr crosses multiple calls, must live on the stack
     decOffset 8
     %assign ptr offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     push 16

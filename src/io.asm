@@ -20,7 +20,7 @@ section .text
 
 ; ioOpen(path, flags, mode) -> fd
 ioOpen:
-    ;; args: path, flags, mode
+    ; args: path, flags, mode
     argnum 3
     %assign path arg(1)
     %assign flags arg(2)
@@ -38,7 +38,7 @@ ioOpen:
 
 ; ioClose(fd) -> result
 ioClose:
-    ;; args: fd
+    ; args: fd
     argnum 1
     %assign fd arg(1)
     begin
@@ -52,7 +52,7 @@ ioClose:
 
 ; ioRead(fd, buf, count) -> bytes read
 ioRead:
-    ;; args: fd, buf, count
+    ; args: fd, buf, count
     argnum 3
     %assign fd arg(1)
     %assign buf arg(2)
@@ -70,7 +70,7 @@ ioRead:
 
 ; ioWrite(fd, buf, count) -> bytes written
 ioWrite:
-    ;; args: fd, buf, count
+    ; args: fd, buf, count
     argnum 3
     %assign fd arg(1)
     %assign buf arg(2)
@@ -90,13 +90,13 @@ ioWrite:
 ; Writes the base-10 ASCII representation of the signed integer num to fd,
 ; with a leading '-' for negative values; no trailing newline.
 ioWriteNum:
-    ;; args: fd, num
+    ; args: fd, num
     argnum 2
     %assign fd arg(1)
     %assign num arg(2)
     begin
 
-    ;; local variables
+    ; local variables
     resetOffset
 
     decOffset 32
@@ -142,18 +142,18 @@ ioWriteNum:
 ; ioWriteChar(fd, ch) -> bytes written, same as ioWrite's return value
 ; Writes the single byte ch (low 8 bits of the pushed value) to fd.
 ioWriteChar:
-    ;; args: fd, ch
+    ; args: fd, ch
     argnum 2
     %assign fd arg(1)
     %assign ch arg(2)
     begin
 
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; char buf -- one-byte scratch buffer for ioWrite's source
+    ; char buf -- one-byte scratch buffer for ioWrite's source
     decOffset 8
     %assign buf offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     mov al, [rbp + ch]
@@ -171,7 +171,7 @@ ioWriteChar:
 ; ioSeek(fd, offset, whence) -> new file offset
 ; whence: 0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END
 ioSeek:
-    ;; args: fd, offset, whence
+    ; args: fd, offset, whence
     argnum 3
     %assign fd arg(1)
     %assign offset arg(2)

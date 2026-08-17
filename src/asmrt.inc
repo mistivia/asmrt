@@ -8,7 +8,7 @@
 ;
 ; Params and locals are declared with plain %assign offsets, e.g.:
 ;
-;   ;; args: x, y, z
+;   ; args: x, y, z
 ;   argnum 3
 ;   %assign x arg(1)
 ;   %assign y arg(2)
@@ -105,7 +105,7 @@ default rel
 
 %define arg(i) (16 + (__argnum - i) * 8)
 
-;; struct ValueMeta
+; struct ValueMeta
 resetOffset
 
 %assign ValueMeta_objsize offset
@@ -133,9 +133,9 @@ incOffset 8
 incOffset 8
 
 %assign sizeof_ValueMeta offset
-;; end struct ValueMeta
+; end struct ValueMeta
 
-;; struct Vec
+; struct Vec
 resetOffset
 
 %assign Vec_data offset
@@ -151,7 +151,7 @@ incOffset 8
 incOffset 8
 
 %assign sizeof_Vec offset
-;; end struct Vec
+; end struct Vec
 
 ; ---- runtime exported symbols ----
 ;

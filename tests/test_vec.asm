@@ -62,7 +62,7 @@ section .text
 ; ---- int64 trait callbacks (custom ABI, same as sort's comparators) ----
 
 int64Drop:
-    ;; args: self
+    ; args: self
     argnum 1
     %assign self arg(1)
     begin
@@ -71,7 +71,7 @@ int64Drop:
     ret 8
 
 int64Cmp:
-    ;; args: a, b
+    ; args: a, b
     argnum 2
     %assign a arg(1)
     %assign b arg(2)
@@ -85,7 +85,7 @@ int64Cmp:
     ret 16
 
 int64Eq:
-    ;; args: a, b
+    ; args: a, b
     argnum 2
     %assign a arg(1)
     %assign b arg(2)
@@ -101,7 +101,7 @@ int64Eq:
     ret 16
 
 int64Hash:
-    ;; args: self
+    ; args: self
     argnum 1
     %assign self arg(1)
     begin
@@ -111,7 +111,7 @@ int64Hash:
     ret 8
 
 int64Copy:
-    ;; args: dst, src
+    ; args: dst, src
     argnum 2
     %assign dst arg(1)
     %assign src arg(2)
@@ -124,7 +124,7 @@ int64Copy:
     ret 16
 
 int64Move:
-    ;; args: dst, src
+    ; args: dst, src
     argnum 2
     %assign dst arg(1)
     %assign src arg(2)
@@ -138,7 +138,7 @@ int64Move:
 
 ; ---- helper: assert vecGet(vecPtr, idx) == expect ----
 checkInt64:
-    ;; args: vecPtr, idx, expect, errMsg
+    ; args: vecPtr, idx, expect, errMsg
     argnum 4
     %assign vecPtr arg(1)
     %assign idx arg(2)
@@ -160,12 +160,12 @@ checkInt64:
 
 entry:
     begin
-    ;; local variables
+    ; local variables
     resetOffset
-    ;; tmp 8 bytes
+    ; tmp 8 bytes
     decOffset 8
     %assign tmp offset
-    ;; endlocal
+    ; endlocal
     sub rsp, (-offset)
 
     ; ---- fnv64 sanity ----

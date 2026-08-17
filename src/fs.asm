@@ -18,7 +18,7 @@ section .text
 
 ; fsStat(path, statBuf) -> result
 fsStat:
-    ;; args: path, buf
+    ; args: path, buf
     argnum 2
     %assign path arg(1)
     %assign buf arg(2)
@@ -34,7 +34,7 @@ fsStat:
 
 ; fsFstat(fd, statBuf) -> result
 fsFstat:
-    ;; args: fd, buf
+    ; args: fd, buf
     argnum 2
     %assign fd arg(1)
     %assign buf arg(2)
@@ -50,7 +50,7 @@ fsFstat:
 
 ; fsMkdir(path, mode) -> result
 fsMkdir:
-    ;; args: path, mode
+    ; args: path, mode
     argnum 2
     %assign path arg(1)
     %assign mode arg(2)

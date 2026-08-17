@@ -45,7 +45,7 @@
 例如，对于f(x, y, z):
 
 ```asm
-;; args: x, y, z
+; args: x, y, z
 argnum 3
 %assign x arg(1)
 %assign y arg(2)
@@ -66,7 +66,7 @@ struct Sample {
 这样实现：
 
 ```asm
-;; struct Sample
+; struct Sample
 resetOffset
 
 %assign Sample_x offset
@@ -86,13 +86,13 @@ incOffset 8
 **硬性规定不变：`Type_size` 必须是 8 的整数倍。** 字段本身凑不满时手动补一个padding:
 
 ```asm
-;; struct Tiny
+; struct Tiny
 resetOffset
 
 %assign Tiny_x offset
 incOffset 4
 
-incOffset 4 ;; padding
+incOffset 4 ; padding
 %assign sizof_Tiny offset
 ```
 
@@ -105,15 +105,15 @@ incOffset 4 ;; padding
 例如栈上有变量 i64 x，和Sample s
 
 ```asm
-;; local variables
+; local variables
 resetOffset
-;; int64_t x
+; int64_t x
 decOffset 8
 %assign x offset
-;; Sample s
+; Sample s
 decOffset Sample_size
 %assign s offset
-;; endlocal
+; endlocal
 sub rsp, (-offset)
 ```
 
@@ -158,13 +158,13 @@ entry:
     ret 24
 
 fibo:
-    ;; args: x
+    ; args: x
     argnum 1
     %assign x arg(1)
 
     begin
     resetOffset
-    ;; int64_t acc
+    ; int64_t acc
     decOffset 8
     %assign acc offset
 
@@ -192,12 +192,12 @@ fibo:
     ret 8
 
 printNum:
-    ;; args x
+    ; args x
     argnum 1
     %assign x arg(1)
     begin
     ; 没有局部变量，不需要 endlocal——对齐交给下面的 hexalign 动态处理
-    hexalign ;; align to 16 byte before calling C function
+    hexalign ; align to 16 byte before calling C function
     mov rdi, printMsg
     mov rsi, [rbp + x]
     xor rax, rax         ; printf 是变参函数，rax 需清零表示 0 个向量寄存器参数
