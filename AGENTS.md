@@ -241,7 +241,7 @@ src/fs.asm      文件系统 syscalls（fsStat/fsFstat/fsMkdir/fsRmdir/fsUnlink�
 src/mem.asm     malloc/free/realloc 包装 + 原生 memcpy/memmove/memset 类似物
 src/str.asm     NUL 结尾字符串辅助（strLen/strEq）
 src/utils.asm   通用工具：sort（qsort 风格递归快速排序）+ fnv64（FNV-1a 64 位哈希）
-src/ds.asm      数据结构模块（vec，镜像 ckit/cbase/cbase.h）
+src/vec.asm     vector数据结构模块（vec）
 tests/          每个模块一个 test_*.asm，`make test` 编译并运行
 ```
 
@@ -262,11 +262,14 @@ tests/          每个模块一个 test_*.asm，`make test` 编译并运行
 - **注意**：Makefile 没有把 `asmrt.inc` 列入依赖。修改 `.inc` 后必须
   `make clean && make`，否则会得到 "Nothing to be done"。
 
-## 数据结构模块（ds.asm）
+## 数据结构约定
 
-镜像 ckit/cbase/cbase.h 的 `struct vec` / `struct value_meta`，实现
-"值语义 + trait 回调"的通用动态数组。导出符号命名沿用 cbase 的
-`vec_*`，但按本仓库约定写成 camelCase：
+`ValueMeta` 的 6 个 trait 回调（`drop`/`cmp`/`eq`/`hash`/`copy`/`move`）
+全部是**自定义 ABI 函数**：参数 push 传，返回值在 rax、callee 用 `ret N` 清栈。
+
+## Vector模块（vec.asm）
+
+实现"值语义 + trait 回调"的通用动态数组。
 
 ```
 vecInit, vecWithCapacity, vecReserve, vecPushCp, vecPushMv,
@@ -281,9 +284,6 @@ extern 调用它）。
 
 约定：
 
-- `ValueMeta` 的 6 个 trait 回调（`drop`/`cmp`/`eq`/`hash`/`copy`/`move`）
-  全部是**自定义 ABI 函数**，签名与 sort 的比较器一致：参数 push 传、
-  返回值在 rax、callee 用 `ret N` 清栈。
 - vec 的内存分配/释放/扩容走 `memAlloc`/`memFree`/`memReloc`，字节搬运走
   `memCopy`/`memMove`——这些包装内部已处理真实 ABI 与栈对齐，vec 自身
   不需要 `hexalign`。

@@ -233,7 +233,7 @@ extern sort
 ; fnv64(pData, dataSize, input) -> hash ; FNV-1a 64-bit
 extern fnv64
 
-; ds.asm
+; vec.asm
 ; vecInit(pVec, pMeta) -> 0 ; zero the vec, attach the ValueMeta
 extern vecInit
 ; vecWithCapacity(pVec, pMeta, capacity) -> 0 ; pre-allocate room

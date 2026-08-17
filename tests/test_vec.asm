@@ -1,4 +1,4 @@
-; test_ds.asm -- vec + fnv64 tests
+; test_vec.asm -- vec + fnv64 tests
 
 %include "asmrt.inc"
 

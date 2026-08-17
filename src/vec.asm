@@ -1,4 +1,4 @@
-; ds.asm -- data structures module, mirroring ckit's cbase/cbase.h
+; vec.asm -- data structures module, mirroring ckit's cbase/cbase.h
 ;
 ; Only the generic vec is implemented so far.  It follows the same
 ; shape as cbase's struct vec: a growable array whose element type is
