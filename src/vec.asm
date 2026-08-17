@@ -13,8 +13,8 @@
 ; here (the wrappers handle their own real-ABI alignment).
 ;
 ; Naming follows cbase's vec_* C functions (vecInit/vecWithCapacity/
-; vecPushCp/...), except every asmrt symbol is camelCase (vecInit,
-; vecWithCapacity, vecPushCp, ...).  The exported vecMeta ValueMeta
+; vecPush/...), except every asmrt symbol is camelCase (vecInit,
+; vecWithCapacity, vecPush, ...).  The exported vecMeta ValueMeta
 ; describes struct Vec itself, for nested containers (e.g. a vec of
 ; vecs).
 
@@ -36,12 +36,10 @@ section .text
     global vecInit
     global vecWithCapacity
     global vecReserve
-    global vecPushCp
-    global vecPushMv
+    global vecPush
     global vecPop
     global vecGet
-    global vecSetCp
-    global vecSetMv
+    global vecSet
     global vecFirst
     global vecLast
     global vecLen
@@ -52,8 +50,7 @@ section .text
     global vecSwapElement
     global vecSwap
     global vecEq
-    global vecInsertCp
-    global vecInsertMv
+    global vecInsert
     global vecRemove
     global vecAsPtr
     global vecCopy
@@ -384,10 +381,11 @@ proc vecAsPtr
     end
     ret 8
 
-; vecSetCp(self, index, elem) -- replace element at index: drop the old
-; one, copy the new one in.  No-op when index is out of bounds.
-proc vecSetCp
-    args self, index, elem
+; vecSet(self, index, elem, isMove) -- replace element at index: drop
+; the old one, copy the new one in (or move when isMove != 0).  No-op
+; when index is out of bounds.
+proc vecSet
+    args self, index, elem, isMove
     local dst
     endlocal
 
@@ -408,50 +406,27 @@ proc vecSetCp
 
     mov rax, [%$self]
     mov rax, [rax + Vec.meta]
+    cmp qword [%$isMove], 0
+    jne .moveElem
     push [%$dst]
     push [%$elem]
     call [rax + ValueMeta.copy]
-.done:
-
-    end
-    ret 24
-
-; vecSetMv(self, index, elem) -- like vecSetCp, but moves the element in.
-proc vecSetMv
-    args self, index, elem
-    local dst
-    endlocal
-
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$index], rbx
-    jae .done
-
-    push [%$self]
-    push [%$index]
-    call elemAddr
-    mov [%$dst], rax
-
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    push [%$dst]
-    call [rax + ValueMeta.drop]
-
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
+    jmp .done
+.moveElem:
     push [%$dst]
     push [%$elem]
     call [rax + ValueMeta.move]
 .done:
 
     end
-    ret 24
+    ret 32
 
 ; ---- push / pop ----
 
-; vecPushCp(self, elem) -- append a copy of elem.
-proc vecPushCp
-    args self, elem
+; vecPush(self, elem, isMove) -- append a copy of elem, or move it in
+; when isMove != 0.
+proc vecPush
+    args self, elem, isMove
     local dst
     endlocal
 
@@ -468,44 +443,22 @@ proc vecPushCp
 
     mov rax, [%$self]
     mov rax, [rax + Vec.meta]
+    cmp qword [%$isMove], 0
+    jne .moveElem
     push [%$dst]
     push [%$elem]
     call [rax + ValueMeta.copy]
-
-    mov rax, [%$self]
-    inc qword [rax + Vec.len]
-
-    end
-    ret 16
-
-; vecPushMv(self, elem) -- append elem by moving it.
-proc vecPushMv
-    args self, elem
-    local dst
-    endlocal
-
-    push [%$self]
-    push 1
-    call vecReserve
-
-    push [%$self]
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    push rbx
-    call elemAddr
-    mov [%$dst], rax
-
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
+    jmp .finish
+.moveElem:
     push [%$dst]
     push [%$elem]
     call [rax + ValueMeta.move]
-
+.finish:
     mov rax, [%$self]
     inc qword [rax + Vec.len]
 
     end
-    ret 16
+    ret 24
 
 ; vecPop(self, out) -> 1 if an element was popped, else 0.  When out is
 ; non-NULL the popped element is copied into *out.  The element slot is
@@ -551,10 +504,11 @@ proc vecPop
 
 ; ---- insert / remove ----
 
-; vecInsertCp(self, index, elem) -- insert a copy of elem at index
-; (0..len inclusive).  No-op when index > len.
-proc vecInsertCp
-    args self, index, elem
+; vecInsert(self, index, elem, isMove) -- insert elem at index
+; (0..len inclusive).  isMove != 0 moves elem in (ValueMeta.move),
+; otherwise a copy is made (ValueMeta.copy).  No-op when index > len.
+proc vecInsert
+    args self, index, elem, isMove
     local dst
     local shiftDst
     endlocal
@@ -606,80 +560,23 @@ proc vecInsertCp
 
     mov rax, [%$self]
     mov rax, [rax + Vec.meta]
+    cmp qword [%$isMove], 0
+    jne .moveElem
     push [%$dst]
     push [%$elem]
     call [rax + ValueMeta.copy]
-
-    mov rax, [%$self]
-    inc qword [rax + Vec.len]
-.done:
-
-    end
-    ret 24
-
-; vecInsertMv(self, index, elem) -- like vecInsertCp, but moves elem in.
-proc vecInsertMv
-    args self, index, elem
-    local dst
-    local shiftDst
-    endlocal
-
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$index], rbx
-    ja .done
-
-    push [%$self]
-    push 1
-    call vecReserve
-
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$index], rbx
-    jae .noShift
-
-    mov rbx, [%$index]
-    inc rbx
-    push [%$self]
-    push rbx
-    call elemAddr
-    mov [%$shiftDst], rax
-
-    push [%$self]
-    push [%$index]
-    call elemAddr
-    mov rbx, rax
-
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    mov rdx, [rax + ValueMeta.size]
-    mov rax, [%$self]
-    mov rax, [rax + Vec.len]
-    sub rax, [%$index]
-    imul rax, rdx
-
-    push [%$shiftDst]
-    push rbx
-    push rax
-    call memMove
-.noShift:
-    push [%$self]
-    push [%$index]
-    call elemAddr
-    mov [%$dst], rax
-
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
+    jmp .finish
+.moveElem:
     push [%$dst]
     push [%$elem]
     call [rax + ValueMeta.move]
-
+.finish:
     mov rax, [%$self]
     inc qword [rax + Vec.len]
 .done:
 
     end
-    ret 24
+    ret 32
 
 ; vecRemove(self, index, out) -- remove the element at index, shifting
 ; the tail down.  When out is non-NULL, copy the removed element into

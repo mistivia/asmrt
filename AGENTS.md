@@ -272,10 +272,10 @@ tests/          每个模块一个 test_*.asm，`make test` 编译并运行
 实现"值语义 + trait 回调"的通用动态数组。
 
 ```
-vecInit, vecWithCapacity, vecReserve, vecPushCp, vecPushMv,
-vecPop, vecGet, vecSetCp, vecSetMv, vecFirst, vecLast, vecLen,
+vecInit, vecWithCapacity, vecReserve, vecPush,
+vecPop, vecGet, vecSet, vecFirst, vecLast, vecLen,
 vecIsEmpty, vecClear, vecTruncate, vecDrop, vecSwapElement, vecSwap,
-vecEq, vecInsertCp, vecInsertMv, vecRemove, vecAsPtr, vecCopy, vecMove,
+vecEq, vecInsert, vecRemove, vecAsPtr, vecCopy, vecMove,
 vecSort, vecCmp, vecHash, vecMeta
 ```
 

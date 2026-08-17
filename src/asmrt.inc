@@ -240,18 +240,14 @@ extern vecInit
 extern vecWithCapacity
 ; vecReserve(pVec, additional) ; grow to fit len+additional
 extern vecReserve
-; vecPushCp(pVec, pElem) ; append a copy of *pElem
-extern vecPushCp
-; vecPushMv(pVec, pElem) ; append by moving *pElem
-extern vecPushMv
+; vecPush(pVec, pElem, isMove) ; append a copy of *pElem, or move it in when isMove != 0
+extern vecPush
 ; vecPop(pVec, pOut) -> 1/0 ; copy last elem to *pOut (pOut may be NULL)
 extern vecPop
 ; vecGet(pVec, index) -> pElem ; NULL if out of bounds
 extern vecGet
-; vecSetCp(pVec, index, pElem) ; replace elem at index with a copy
-extern vecSetCp
-; vecSetMv(pVec, index, pElem) ; replace elem at index by move
-extern vecSetMv
+; vecSet(pVec, index, pElem, isMove) ; replace elem at index with a copy, or by move when isMove != 0
+extern vecSet
 ; vecFirst(pVec) -> pElem ; NULL if empty
 extern vecFirst
 ; vecLast(pVec) -> pElem ; NULL if empty
@@ -272,10 +268,9 @@ extern vecSwapElement
 extern vecSwap
 ; vecEq(pA, pB) -> 1/0 ; same len, element-wise eq via meta
 extern vecEq
-; vecInsertCp(pVec, index, pElem) ; insert a copy at index (0..len)
-extern vecInsertCp
-; vecInsertMv(pVec, index, pElem) ; insert by move at index (0..len)
-extern vecInsertMv
+; vecInsert(pVec, index, pElem, isMove) ; insert elem at index (0..len);
+; isMove != 0 moves elem in (ValueMeta.move), otherwise copies
+extern vecInsert
 ; vecRemove(pVec, index, pOut) ; copy removed elem to *pOut (may be NULL)
 extern vecRemove
 ; vecAsPtr(pVec) -> pData ; raw data pointer (may be NULL)

@@ -26,16 +26,16 @@ section .data
     val9  dq 9
 
     errInit       db "vecWithCapacity failed", 0
-    errPushLen    db "vecPushCp len wrong", 0
-    errPushVal    db "vecPushCp value wrong", 0
+    errPushLen    db "vecPush len wrong", 0
+    errPushVal    db "vecPush value wrong", 0
     errGet        db "vecGet wrong", 0
     errGetOob     db "vecGet OOB should be NULL", 0
     errFirst      db "vecFirst wrong", 0
     errLast       db "vecLast wrong", 0
     errIsEmpty    db "vecIsEmpty wrong", 0
-    errSet        db "vecSetCp wrong", 0
+    errSet        db "vecSet wrong", 0
     errPop        db "vecPop wrong", 0
-    errInsert     db "vecInsertCp wrong", 0
+    errInsert     db "vecInsert wrong", 0
     errRemove     db "vecRemove wrong", 0
     errSort       db "vecSort wrong", 0
     errTruncate   db "vecTruncate wrong", 0
@@ -180,16 +180,19 @@ proc entry
     push rax
     call assert
 
-    ; ---- vecPushCp x3: [10, 20, 30] ----
+    ; ---- vecPush x3: [10, 20, 30] ----
     push vecA
     push val10
-    call vecPushCp
+    push 0          ; isMove=0: copy
+    call vecPush
     push vecA
     push val20
-    call vecPushCp
+    push 0          ; isMove=0: copy
+    call vecPush
     push vecA
     push val30
-    call vecPushCp
+    push 0          ; isMove=0: copy
+    call vecPush
 
     push vecA
     call vecLen
@@ -250,11 +253,12 @@ proc entry
     push rax
     call assert
 
-    ; ---- vecSetCp(1, 25): [10, 25, 30] ----
+    ; ---- vecSet(1, 25): [10, 25, 30] ----
     push vecA
     push 1
     push val25
-    call vecSetCp
+    push 0          ; isMove=0: copy
+    call vecSet
 
     push vecA
     push 1
@@ -294,11 +298,12 @@ proc entry
     push rax
     call assert
 
-    ; ---- vecInsertCp(1, 15): [10, 15, 25] ----
+    ; ---- vecInsert(1, 15, copy): [10, 15, 25] ----
     push vecA
     push 1
     push val15
-    call vecInsertCp
+    push 0               ; isMove=0: copy
+    call vecInsert
 
     push vecA
     call vecLen
@@ -345,13 +350,16 @@ proc entry
     ; ---- push 5, 1, 4 -> [10, 25, 5, 1, 4]; vecSort -> [1, 4, 5, 10, 25] ----
     push vecA
     push val5
-    call vecPushCp
+    push 0          ; isMove=0: copy
+    call vecPush
     push vecA
     push val1
-    call vecPushCp
+    push 0          ; isMove=0: copy
+    call vecPush
     push vecA
     push val4
-    call vecPushCp
+    push 0          ; isMove=0: copy
+    call vecPush
 
     push vecA
     call vecSort
@@ -412,10 +420,12 @@ proc entry
     ; ---- push 7, 3 -> [7, 3]; vecSwapElement(0,1) -> [3, 7] ----
     push vecA
     push val7
-    call vecPushCp
+    push 0          ; isMove=0: copy
+    call vecPush
     push vecA
     push val3
-    call vecPushCp
+    push 0          ; isMove=0: copy
+    call vecPush
 
     push vecA
     push 0
@@ -469,7 +479,8 @@ proc entry
     ; ---- append 9 to B -> [3, 7, 9]; vecCmp(A, B) == -1 ----
     push vecB
     push val9
-    call vecPushCp
+    push 0          ; isMove=0: copy
+    call vecPush
 
     push vecA
     push vecB
