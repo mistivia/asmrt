@@ -92,8 +92,8 @@ ioWrite:
 ioWriteNum:
     ;; args: fd, num
     %assign N 2
-    %assign fd (16 + (N-1) * 8)
-    %assign num (16 + (N-2) * 8)
+    %assign fd arg(1)
+    %assign num arg(2)
     begin
 
     ;; local variables
@@ -144,8 +144,8 @@ ioWriteNum:
 ioWriteChar:
     ;; args: fd, ch
     %assign N 2
-    %assign fd (16 + (N-1) * 8)
-    %assign ch (16 + (N-2) * 8)
+    %assign fd arg(1)
+    %assign ch arg(2)
     begin
 
     ;; local variables
