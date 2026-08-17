@@ -83,9 +83,9 @@ memCopy:
     %assign n    arg(3)
     begin
 
-    push [rbp + dest]
-    push [rbp + src]
-    push [rbp + n]
+    push qword [rbp + dest]
+    push qword [rbp + src]
+    push qword [rbp + n]
     call copyForward
     end
     ret 24
@@ -136,9 +136,9 @@ memMove:
     jmp .exit
 
 .forward:
-    push [rbp + dest]
-    push [rbp + src]
-    push [rbp + n]
+    push qword [rbp + dest]
+    push qword [rbp + src]
+    push qword [rbp + n]
     call copyForward     ; already returns dest in rax
 
 .exit:

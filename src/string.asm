@@ -274,9 +274,9 @@ stringFromCStr:
     %assign pCStr arg(1)
     begin
 
-    push [rbp + pCStr]
+    push qword [rbp + pCStr]
     call cStrLen                ; rax = strlen
-    push [rbp + pCStr]
+    push qword [rbp + pCStr]
     push rax
     call stringFromRaw            ; rax = the new string
     end
@@ -297,7 +297,7 @@ stringFromRaw:
     ; endlocal
     sub rsp, (-offset)
 
-    push [rbp + n]
+    push qword [rbp + n]
     call allocStr
     mov [rbp + pStr], rax
 
@@ -305,8 +305,8 @@ stringFromRaw:
     mov rax, [rbp + pStr]
     add rax, 8
     push rax
-    push [rbp + pBuf]
-    push [rbp + n]
+    push qword [rbp + pBuf]
+    push qword [rbp + n]
     call memCopy
 
     ; trailing NUL
@@ -565,7 +565,7 @@ stringConcat:
     mov rax, [rbp + pA]
     add rax, 8
     push rax
-    push [rbp + la]
+    push qword [rbp + la]
     call memCopy
 
     ; copy B's bytes
@@ -1060,7 +1060,7 @@ stringStrip:
     mov rbx, [rbp + start]
     movzx rax, byte [rax + 8 + rbx]
     mov [rbp + ch], rax
-    push [rbp + ch]
+    push qword [rbp + ch]
     call isSpace
     test rax, rax
     jz .doneScan
@@ -1076,7 +1076,7 @@ stringStrip:
     mov rbx, [rbp + e]
     movzx rax, byte [rax + 7 + rbx]     ; data[e-1]
     mov [rbp + ch], rax
-    push [rbp + ch]
+    push qword [rbp + ch]
     call isSpace
     test rax, rax
     jz .slice
@@ -1084,9 +1084,9 @@ stringStrip:
     jmp .rstrip
 .slice:
     ; result = substring(start, e)
-    push [rbp + pStr]
-    push [rbp + start]
-    push [rbp + e]
+    push qword [rbp + pStr]
+    push qword [rbp + start]
+    push qword [rbp + e]
     call stringSubstring
     end
     ret 8
@@ -1118,7 +1118,7 @@ stringLStrip:
     mov rbx, [rbp + start]
     movzx rax, byte [rax + 8 + rbx]
     mov [rbp + ch], rax
-    push [rbp + ch]
+    push qword [rbp + ch]
     call isSpace
     test rax, rax
     jz .slice
@@ -1126,8 +1126,8 @@ stringLStrip:
     jmp .lstrip
 .slice:
     ; result = substring(start, len)
-    push [rbp + pStr]
-    push [rbp + start]
+    push qword [rbp + pStr]
+    push qword [rbp + start]
     mov rax, [rbp + pStr]
     mov rax, [rax]
     push rax
@@ -1162,7 +1162,7 @@ stringRStrip:
     mov rbx, [rbp + e]
     movzx rax, byte [rax + 7 + rbx]     ; data[e-1]
     mov [rbp + ch], rax
-    push [rbp + ch]
+    push qword [rbp + ch]
     call isSpace
     test rax, rax
     jz .slice
@@ -1170,9 +1170,9 @@ stringRStrip:
     jmp .rstrip
 .slice:
     ; result = substring(0, e)
-    push [rbp + pStr]
+    push qword [rbp + pStr]
     push 0
-    push [rbp + e]
+    push qword [rbp + e]
     call stringSubstring
     end
     ret 8
@@ -1188,8 +1188,8 @@ stringRemovePrefix:
     %assign pPrefixStr arg(2)
     begin
 
-    push [rbp + pStr]
-    push [rbp + pPrefixStr]
+    push qword [rbp + pStr]
+    push qword [rbp + pPrefixStr]
     call stringStartsWith
     test rax, rax
     jz .copyAll
@@ -1199,7 +1199,7 @@ stringRemovePrefix:
     mov rax, [rax]              ; plen
     mov rbx, [rbp + pStr]
     mov rbx, [rbx]              ; len
-    push [rbp + pStr]
+    push qword [rbp + pStr]
     push rax
     push rbx
     call stringSubstring
@@ -1208,7 +1208,7 @@ stringRemovePrefix:
     ; just deep-copy the whole string
     mov rax, [rbp + pStr]
     mov rbx, [rax]              ; len
-    push [rbp + pStr]
+    push qword [rbp + pStr]
     add rax, 8
     push rax
     push rbx
@@ -1226,8 +1226,8 @@ stringRemoveSuffix:
     %assign pSuffixStr arg(2)
     begin
 
-    push [rbp + pStr]
-    push [rbp + pSuffixStr]
+    push qword [rbp + pStr]
+    push qword [rbp + pSuffixStr]
     call stringEndsWith
     test rax, rax
     jz .copyAll
@@ -1238,7 +1238,7 @@ stringRemoveSuffix:
     mov rbx, [rbp + pStr]
     mov rbx, [rbx]              ; len
     sub rbx, rax                ; len - slen
-    push [rbp + pStr]
+    push qword [rbp + pStr]
     push 0
     push rbx
     call stringSubstring
@@ -1247,7 +1247,7 @@ stringRemoveSuffix:
     ; just deep-copy the whole string
     mov rax, [rbp + pStr]
     mov rbx, [rax]              ; len
-    push [rbp + pStr]
+    push qword [rbp + pStr]
     add rax, 8
     push rax
     push rbx
@@ -1284,7 +1284,7 @@ stringSplit:
     ; endlocal
     sub rsp, (-offset)
 
-    push [rbp + pVec]
+    push qword [rbp + pVec]
     push stringMeta
     call vecInit
 
@@ -1296,14 +1296,14 @@ stringSplit:
     jne .normal
 
     ; empty separator: whole string is one element
-    push [rbp + pStr]
+    push qword [rbp + pStr]
     push 0
     mov rax, [rbp + pStr]
     mov rax, [rax]              ; len
     push rax
     call stringSubstring        ; rax = the whole string
     mov [rbp + part], rax
-    push [rbp + pVec]
+    push qword [rbp + pVec]
     lea rax, [rbp + part]
     push rax
     push 1                      ; isMove=1
@@ -1339,12 +1339,12 @@ stringSplit:
     jmp .matchLoop
 .matchAtI:
     ; slice [start, i) -> push as a string element
-    push [rbp + pStr]
-    push [rbp + start]
-    push [rbp + i]
+    push qword [rbp + pStr]
+    push qword [rbp + start]
+    push qword [rbp + i]
     call stringSubstring
     mov [rbp + part], rax
-    push [rbp + pVec]
+    push qword [rbp + pVec]
     lea rax, [rbp + part]
     push rax
     push 1                      ; isMove=1
@@ -1362,12 +1362,12 @@ stringSplit:
     ; slice [start, len)
     mov rax, [rbp + pStr]
     mov rax, [rax]              ; len
-    push [rbp + pStr]
-    push [rbp + start]
+    push qword [rbp + pStr]
+    push qword [rbp + start]
     push rax
     call stringSubstring
     mov [rbp + part], rax
-    push [rbp + pVec]
+    push qword [rbp + pVec]
     lea rax, [rbp + part]
     push rax
     push 1                      ; isMove=1
@@ -1399,7 +1399,7 @@ stringSplitLines:
     ; endlocal
     sub rsp, (-offset)
 
-    push [rbp + pVec]
+    push qword [rbp + pVec]
     push stringMeta
     call vecInit
 
@@ -1428,12 +1428,12 @@ stringSplitLines:
     jne .noCr
     dec qword [rbp + i]
 .noCr:
-    push [rbp + pStr]
-    push [rbp + start]
-    push [rbp + i]
+    push qword [rbp + pStr]
+    push qword [rbp + start]
+    push qword [rbp + i]
     call stringSubstring
     mov [rbp + part], rax
-    push [rbp + pVec]
+    push qword [rbp + pVec]
     lea rax, [rbp + part]
     push rax
     push 1                      ; isMove=1
@@ -1441,12 +1441,12 @@ stringSplitLines:
     jmp .lineDone
 .emptyLine:
     ; empty line -> push the empty string
-    push [rbp + pStr]
+    push qword [rbp + pStr]
     push 0
     push 0
     call stringSubstring        ; start=0, end=0 -> empty
     mov [rbp + part], rax
-    push [rbp + pVec]
+    push qword [rbp + pVec]
     lea rax, [rbp + part]
     push rax
     push 1
@@ -1484,12 +1484,12 @@ stringSplitLines:
     mov rax, [rax]
     mov [rbp + i], rax
 .tailSlice:
-    push [rbp + pStr]
-    push [rbp + start]
-    push [rbp + i]
+    push qword [rbp + pStr]
+    push qword [rbp + start]
+    push qword [rbp + i]
     call stringSubstring
     mov [rbp + part], rax
-    push [rbp + pVec]
+    push qword [rbp + pVec]
     lea rax, [rbp + part]
     push rax
     push 1
@@ -1534,7 +1534,7 @@ stringJoin:
     mov rax, [rax]
     mov [rbp + sepLen], rax
 
-    push [rbp + pVec]
+    push qword [rbp + pVec]
     call vecLen
     mov [rbp + count], rax
 
@@ -1546,8 +1546,8 @@ stringJoin:
     cmp rax, [rbp + count]
     jae .lenDone
 
-    push [rbp + pVec]
-    push [rbp + i]
+    push qword [rbp + pVec]
+    push qword [rbp + i]
     call vecGet                 ; rax = element address
     mov rax, [rax]              ; string
     mov rax, [rax]              ; len
@@ -1564,7 +1564,7 @@ stringJoin:
     inc qword [rbp + i]
     jmp .lenLoop
 .lenDone:
-    push [rbp + total]
+    push qword [rbp + total]
     call allocStr
     mov [rbp + pResult], rax
 
@@ -1575,8 +1575,8 @@ stringJoin:
     cmp rax, [rbp + count]
     jae .finish
 
-    push [rbp + pVec]
-    push [rbp + i]
+    push qword [rbp + pVec]
+    push qword [rbp + i]
     call vecGet                 ; rax = element address
     mov rax, [rax]              ; string
     mov rbx, [rax]              ; len
@@ -1591,8 +1591,8 @@ stringJoin:
     call memCopy
 
     ; advance pos by this element's length
-    push [rbp + pVec]
-    push [rbp + i]
+    push qword [rbp + pVec]
+    push qword [rbp + i]
     call vecGet
     mov rax, [rax]              ; string
     mov rax, [rax]              ; len
@@ -1611,7 +1611,7 @@ stringJoin:
     mov rax, [rbp + pSepStr]
     add rax, 8                  ; sep data
     push rax
-    push [rbp + sepLen]
+    push qword [rbp + sepLen]
     call memCopy
     mov rax, [rbp + pos]
     add rax, [rbp + sepLen]

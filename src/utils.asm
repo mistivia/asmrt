@@ -74,18 +74,18 @@ sort:
     cmp rax, 2
     jl .done                ; 0 or 1 elements -- already sorted, nothing to do
 
-    push [rbp + base]
-    push [rbp + nmemb]
-    push [rbp + size]
-    push [rbp + cmpFn]
+    push qword [rbp + base]
+    push qword [rbp + nmemb]
+    push qword [rbp + size]
+    push qword [rbp + cmpFn]
     call partition
     mov [rbp + p], rax
 
     ; left part: the p elements before the pivot -- same base, shrunk nmemb
-    push [rbp + base]
-    push [rbp + p]
-    push [rbp + size]
-    push [rbp + cmpFn]
+    push qword [rbp + base]
+    push qword [rbp + p]
+    push qword [rbp + size]
+    push qword [rbp + cmpFn]
     call sort
 
     ; right part: everything after the pivot -- base moves past it, nmemb shrinks to match
@@ -101,8 +101,8 @@ sort:
     sub rax, rbx
     push rax                  ; new nmemb = nmemb - (p+1)
 
-    push [rbp + size]
-    push [rbp + cmpFn]
+    push qword [rbp + size]
+    push qword [rbp + cmpFn]
     call sort
 
 .done:
@@ -179,7 +179,7 @@ partition:
     add rax, [rbp + base]
     push rax                       ; addrB = elem[j]
 
-    push [rbp + size]
+    push qword [rbp + size]
     call memSwap
 
 .noSwap:
@@ -205,7 +205,7 @@ partition:
     add rax, [rbp + base]
     push rax                       ; addrB = elem[nmemb-1]
 
-    push [rbp + size]
+    push qword [rbp + size]
     call memSwap
 
     mov rax, [rbp + i]                  ; return the pivot's final index

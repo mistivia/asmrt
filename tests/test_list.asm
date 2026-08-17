@@ -174,8 +174,8 @@ int64Copy:
     %assign dst arg(1)
     %assign src arg(2)
     begin
-    push [rbp + dst]
-    push [rbp + src]
+    push qword [rbp + dst]
+    push qword [rbp + src]
     push 8
     call memCopy
     end
@@ -187,8 +187,8 @@ int64Move:
     %assign dst arg(1)
     %assign src arg(2)
     begin
-    push [rbp + dst]
-    push [rbp + src]
+    push qword [rbp + dst]
+    push qword [rbp + src]
     push 8
     call memCopy
     end
@@ -202,13 +202,13 @@ checkNode:
     %assign expect arg(2)
     %assign errMsg arg(3)
     begin
-    push [rbp + node]
+    push qword [rbp + node]
     call listGet
     mov rbx, [rax]
     cmp rbx, [rbp + expect]
     sete al
     movzx rax, al
-    push [rbp + errMsg]
+    push qword [rbp + errMsg]
     push rax
     call assert
     end
@@ -316,7 +316,7 @@ entry:
     push listA
     call listBegin
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 5
     push errBegin
     call checkNode
@@ -325,7 +325,7 @@ entry:
     push listA
     call listLast
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 30
     push errLast
     call checkNode
@@ -335,37 +335,37 @@ entry:
     call listBegin
     mov [rbp + it], rax
 
-    push [rbp + it]
+    push qword [rbp + it]
     push 5
     push errGet
     call checkNode
 
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 10
     push errNext
     call checkNode
 
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 20
     push errNext
     call checkNode
 
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 30
     push errNext
     call checkNode
 
     ; next reaches the end (vtail)
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax
     push listA
@@ -381,10 +381,10 @@ entry:
     push listA
     call listLast
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     call listPrev
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 20
     push errPrev
     call checkNode
@@ -393,16 +393,16 @@ entry:
     push listA
     call listBegin
     mov [rbp + it], rax          ; it = first(5)
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax          ; it = the 10 node
     push listA
-    push [rbp + it]
+    push qword [rbp + it]
     push val15
     push 0              ; isMove=0: copy
     call listInsertBefore
     mov [rbp + it], rax          ; returned node is the freshly inserted 15
-    push [rbp + it]
+    push qword [rbp + it]
     push 15
     push errInsert
     call checkNode
@@ -420,10 +420,10 @@ entry:
     push listA
     call listBegin
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 15
     push errInsert
     call checkNode
@@ -433,7 +433,7 @@ entry:
     call listBegin
     mov [rbp + it], rax          ; it = first(5)
     push listA
-    push [rbp + it]
+    push qword [rbp + it]
     push val7
     push 0              ; isMove=0: copy
     call listInsertAfter
@@ -452,10 +452,10 @@ entry:
     push listA
     call listBegin
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 7
     push errInsert
     call checkNode
@@ -464,16 +464,16 @@ entry:
     push listA
     call listBegin
     mov [rbp + it], rax          ; it = first(5)
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax          ; it = the 7 node
     push listA
-    push [rbp + it]
+    push qword [rbp + it]
     push val25
     push 1              ; isMove=1: move
     call listInsertBefore
     mov [rbp + it], rax          ; returned node is the freshly inserted 25
-    push [rbp + it]
+    push qword [rbp + it]
     push 25
     push errInsert
     call checkNode
@@ -491,18 +491,18 @@ entry:
     push listA
     call listBegin
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax          ; it = first(5)->next = 25
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax          ; it = the 7 node
     push listA
-    push [rbp + it]
+    push qword [rbp + it]
     push val20
     push 0              ; isMove=0: copy
     call listSet
-    push [rbp + it]
+    push qword [rbp + it]
     push 20
     push errSet
     call checkNode
@@ -512,17 +512,17 @@ entry:
     push listA
     call listBegin
     mov [rbp + it], rax
-    push [rbp + it]              ; 5
+    push qword [rbp + it]              ; 5
     call listNext
     mov [rbp + it], rax          ; 25
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax          ; 20
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax          ; 15
     push listA
-    push [rbp + it]
+    push qword [rbp + it]
     call listRemove
 
     push listA
@@ -549,7 +549,7 @@ entry:
     push listA
     call listBegin
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 25
     push errPop
     call checkNode
@@ -569,7 +569,7 @@ entry:
     push listA
     call listLast
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 20
     push errPop
     call checkNode
@@ -582,7 +582,7 @@ entry:
     push listA
     call listLast
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     push 30
     push errPop
     call checkNode
@@ -661,11 +661,11 @@ entry:
     push listB
     call listBegin
     mov [rbp + it], rax
-    push [rbp + it]
+    push qword [rbp + it]
     call listNext
     mov [rbp + it], rax          ; it = B's 2nd element
     push listB
-    push [rbp + it]
+    push qword [rbp + it]
     push val25
     push 0              ; isMove=0: copy
     call listSet

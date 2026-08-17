@@ -185,7 +185,7 @@ listDrop:
     call [rax + ValueMeta_drop]
 .free:
     ; release the node
-    push [rbp + cur]
+    push qword [rbp + cur]
     call memFree
 
     ; keep walking
@@ -246,7 +246,7 @@ listClear:
     call [rax + ValueMeta_drop]
 
     ; release this node
-    push [rbp + cur]
+    push qword [rbp + cur]
     call memFree
 
     ; continue until everything before vtail is gone
@@ -292,7 +292,7 @@ listCopy:
     mov rax, [rbp + pSrc]
     mov rax, [rax + List_pValueMeta]
     ; start clean with the same element meta as the source
-    push [rbp + pDst]
+    push qword [rbp + pDst]
     push rax
     call listInit
 
@@ -310,7 +310,7 @@ listCopy:
     mov rax, [rbp + it]
     add rax, sizeof_ListNodeBase
     ; append a copy of this element
-    push [rbp + pDst]
+    push qword [rbp + pDst]
     push rax
     push 0              ; isMove=0: copy
     call listPushBack
@@ -368,8 +368,8 @@ listSwap:
     begin
 
     ; trade the two headers (and thereby their whole contents)
-    push [rbp + pA]
-    push [rbp + pB]
+    push qword [rbp + pA]
+    push qword [rbp + pB]
     push sizeof_List
     call memSwap
     end
@@ -422,7 +422,7 @@ listInsertBefore:
     ; keep a copy, or take ownership by moving, as requested
     add rax, sizeof_ListNodeBase
     push rax
-    push [rbp + pElem]
+    push qword [rbp + pElem]
     mov rax, [rbp + pList]
     mov rax, [rax + List_pValueMeta]
     cmp qword [rbp + isMove], 0
@@ -498,7 +498,7 @@ listInsertAfter:
     ; keep a copy, or take ownership by moving, as requested
     add rax, sizeof_ListNodeBase
     push rax
-    push [rbp + pElem]
+    push qword [rbp + pElem]
     mov rax, [rbp + pList]
     mov rax, [rax + List_pValueMeta]
     cmp qword [rbp + isMove], 0
@@ -563,7 +563,7 @@ listRemove:
     mov [rcx + ListNode_prev], rbx
 
     ; release the node itself
-    push [rbp + pIter]
+    push qword [rbp + pIter]
     call memFree
 
     ; keep the length in sync
@@ -606,7 +606,7 @@ listSet:
     mov rax, [rbp + pIter]
     add rax, sizeof_ListNodeBase
     push rax
-    push [rbp + pElem]
+    push qword [rbp + pElem]
     mov rax, [rbp + pList]
     mov rax, [rax + List_pValueMeta]
     cmp qword [rbp + isMove], 0
@@ -773,10 +773,10 @@ listPushBack:
     ; append: insert right before vtail
     mov rax, [rbp + pList]
     mov rax, [rax + List_vtail]
-    push [rbp + pList]
+    push qword [rbp + pList]
     push rax
-    push [rbp + pElem]
-    push [rbp + isMove]
+    push qword [rbp + pElem]
+    push qword [rbp + isMove]
     call listInsertBefore
     end
     ret 24
@@ -795,10 +795,10 @@ listPushFront:
     ; prepend: insert right after vhead
     mov rax, [rbp + pList]
     mov rax, [rax + List_vhead]
-    push [rbp + pList]
+    push qword [rbp + pList]
     push rax
-    push [rbp + pElem]
-    push [rbp + isMove]
+    push qword [rbp + pElem]
+    push qword [rbp + isMove]
     call listInsertAfter
     end
     ret 24
@@ -814,7 +814,7 @@ listPopBack:
     mov rax, [rbp + pList]
     mov rax, [rax + List_vtail]
     mov rax, [rax + ListNode_prev]
-    push [rbp + pList]
+    push qword [rbp + pList]
     push rax
     call listRemove
     end
@@ -831,7 +831,7 @@ listPopFront:
     mov rax, [rbp + pList]
     mov rax, [rax + List_vhead]
     mov rax, [rax + ListNode_next]
-    push [rbp + pList]
+    push qword [rbp + pList]
     push rax
     call listRemove
     end
@@ -1044,7 +1044,7 @@ listHash:
     lea rax, [rbp + elemHash]
     push rax
     push 8
-    push [rbp + hash]
+    push qword [rbp + hash]
     call fnv64
     mov [rbp + hash], rax
 

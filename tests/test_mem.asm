@@ -143,7 +143,7 @@ entry:
     push rax
     call assert
 
-    push [rbp + ptr]
+    push qword [rbp + ptr]
     push 32
     call memReloc
     mov [rbp + ptr], rax
@@ -177,7 +177,7 @@ entry:
     push rax
     call assert
 
-    push [rbp + ptr]
+    push qword [rbp + ptr]
     call memFree
 
     ; memCopy(dest, src, n) -- params pushed in declaration order: dest, src, n

@@ -23,7 +23,7 @@ assert:
     jne .ok
 
     push 2               ; fd = stderr
-    push [rbp + msg]     ; msg = the length-prefixed string pointer
+    push qword [rbp + msg]     ; msg = the length-prefixed string pointer
     call ioWriteString
 
     push -1

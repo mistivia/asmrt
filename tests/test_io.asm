@@ -65,7 +65,7 @@ entry:
     push rax
     call assert
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push msg
     push msgLen
     call ioWrite
@@ -78,7 +78,7 @@ entry:
     call assert
 
     ; leave fd open, use ioSeek to rewind to the start and read again, to verify seek works
-    push [rbp + fd]
+    push qword [rbp + fd]
     push 0              ; offset
     push 0              ; whence SEEK_SET
     call ioSeek
@@ -90,7 +90,7 @@ entry:
     push rax
     call assert
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push readBuf
     push msgLen
     call ioRead
@@ -102,7 +102,7 @@ entry:
     push rax
     call assert
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     call ioClose
 
     push path
@@ -111,7 +111,7 @@ entry:
     call ioOpen
     mov [rbp + fd], rax
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push readBuf
     push msgLen
     call ioRead
@@ -123,7 +123,7 @@ entry:
     push rax
     call assert
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     call ioClose
 
     xor rcx, rcx
@@ -158,44 +158,44 @@ entry:
     push rax
     call assert
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push 42
     call ioWriteNum
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push ','
     call ioWriteChar
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push -7
     call ioWriteNum
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push ','
     call ioWriteChar
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push 0
     call ioWriteNum
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push ','
     call ioWriteChar
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push 'A'
     call ioWriteChar
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push 10
     call ioWriteChar
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push 0              ; offset
     push 0              ; whence SEEK_SET
     call ioSeek
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push readBuf
     push numExpectLen
     call ioRead
@@ -207,7 +207,7 @@ entry:
     push rax
     call assert
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     call ioClose
 
     xor rcx, rcx

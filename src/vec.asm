@@ -233,8 +233,8 @@ vecDrop:
     mov rbx, [rax + Vec_len]
     cmp [rbp + i], rbx
     jae .freeData
-    push [rbp + self]
-    push [rbp + i]
+    push qword [rbp + self]
+    push qword [rbp + i]
     call elemAddr
     mov rbx, [rbp + self]
     mov rbx, [rbx + Vec_meta]
@@ -277,8 +277,8 @@ vecClear:
     mov rbx, [rax + Vec_len]
     cmp [rbp + i], rbx
     jae .done
-    push [rbp + self]
-    push [rbp + i]
+    push qword [rbp + self]
+    push qword [rbp + i]
     call elemAddr
     mov rbx, [rbp + self]
     mov rbx, [rbx + Vec_meta]
@@ -321,8 +321,8 @@ vecTruncate:
     mov rbx, [rax + Vec_len]
     cmp [rbp + i], rbx
     jae .setLen
-    push [rbp + self]
-    push [rbp + i]
+    push qword [rbp + self]
+    push qword [rbp + i]
     call elemAddr
     mov rbx, [rbp + self]
     mov rbx, [rbx + Vec_meta]
@@ -352,8 +352,8 @@ vecGet:
     cmp [rbp + index], rbx
     jae .oob
 
-    push [rbp + self]
-    push [rbp + index]
+    push qword [rbp + self]
+    push qword [rbp + index]
     call elemAddr
     jmp .done
 .oob:
@@ -464,27 +464,27 @@ vecSet:
     cmp [rbp + index], rbx
     jae .done
 
-    push [rbp + self]
-    push [rbp + index]
+    push qword [rbp + self]
+    push qword [rbp + index]
     call elemAddr
     mov [rbp + dst], rax
 
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
-    push [rbp + dst]
+    push qword [rbp + dst]
     call [rax + ValueMeta_drop]
 
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
     cmp qword [rbp + isMove], 0
     jne .moveElem
-    push [rbp + dst]
-    push [rbp + elem]
+    push qword [rbp + dst]
+    push qword [rbp + elem]
     call [rax + ValueMeta_copy]
     jmp .done
 .moveElem:
-    push [rbp + dst]
-    push [rbp + elem]
+    push qword [rbp + dst]
+    push qword [rbp + elem]
     call [rax + ValueMeta_move]
 .done:
     end
@@ -509,11 +509,11 @@ vecPush:
     ; endlocal
     sub rsp, (-offset)
 
-    push [rbp + self]
+    push qword [rbp + self]
     push 1
     call vecReserve
 
-    push [rbp + self]
+    push qword [rbp + self]
     mov rax, [rbp + self]
     mov rbx, [rax + Vec_len]
     push rbx
@@ -524,13 +524,13 @@ vecPush:
     mov rax, [rax + Vec_meta]
     cmp qword [rbp + isMove], 0
     jne .moveElem
-    push [rbp + dst]
-    push [rbp + elem]
+    push qword [rbp + dst]
+    push qword [rbp + elem]
     call [rax + ValueMeta_copy]
     jmp .finish
 .moveElem:
-    push [rbp + dst]
-    push [rbp + elem]
+    push qword [rbp + dst]
+    push qword [rbp + elem]
     call [rax + ValueMeta_move]
 .finish:
     mov rax, [rbp + self]
@@ -565,15 +565,15 @@ vecPop:
     cmp qword [rbp + out], 0
     je .noOut
 
-    push [rbp + self]
+    push qword [rbp + self]
     mov rax, [rbp + self]
     mov rbx, [rax + Vec_len]
     push rbx
     call elemAddr
     mov [rbp + src], rax
 
-    push [rbp + out]
-    push [rbp + src]
+    push qword [rbp + out]
+    push qword [rbp + src]
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
     mov rbx, [rax + ValueMeta_objsize]
@@ -617,7 +617,7 @@ vecInsert:
     cmp [rbp + index], rbx
     ja .done
 
-    push [rbp + self]
+    push qword [rbp + self]
     push 1
     call vecReserve
 
@@ -629,13 +629,13 @@ vecInsert:
     ; shift [index, len) up one slot: memMove(data+(index+1)*size, data+index*size, (len-index)*size)
     mov rbx, [rbp + index]
     inc rbx
-    push [rbp + self]
+    push qword [rbp + self]
     push rbx
     call elemAddr
     mov [rbp + shiftDst], rax
 
-    push [rbp + self]
-    push [rbp + index]
+    push qword [rbp + self]
+    push qword [rbp + index]
     call elemAddr
     mov rbx, rax                ; src
 
@@ -647,13 +647,13 @@ vecInsert:
     sub rax, [rbp + index]
     imul rax, rdx               ; n bytes
 
-    push [rbp + shiftDst]
+    push qword [rbp + shiftDst]
     push rbx
     push rax
     call memMove
 .noShift:
-    push [rbp + self]
-    push [rbp + index]
+    push qword [rbp + self]
+    push qword [rbp + index]
     call elemAddr
     mov [rbp + dst], rax
 
@@ -661,13 +661,13 @@ vecInsert:
     mov rax, [rax + Vec_meta]
     cmp qword [rbp + isMove], 0
     jne .moveElem
-    push [rbp + dst]
-    push [rbp + elem]
+    push qword [rbp + dst]
+    push qword [rbp + elem]
     call [rax + ValueMeta_copy]
     jmp .finish
 .moveElem:
-    push [rbp + dst]
-    push [rbp + elem]
+    push qword [rbp + dst]
+    push qword [rbp + elem]
     call [rax + ValueMeta_move]
 .finish:
     mov rax, [rbp + self]
@@ -702,15 +702,15 @@ vecRemove:
 
     cmp qword [rbp + out], 0
     je .noOut
-    push [rbp + self]
-    push [rbp + index]
+    push qword [rbp + self]
+    push qword [rbp + index]
     call elemAddr
     mov [rbp + removed], rax
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
     mov rbx, [rax + ValueMeta_objsize]
-    push [rbp + out]
-    push [rbp + removed]
+    push qword [rbp + out]
+    push qword [rbp + removed]
     push rbx
     call memCopy
 .noOut:
@@ -721,15 +721,15 @@ vecRemove:
     jae .noShift
 
     ; dest = elemAddr(self, index)
-    push [rbp + self]
-    push [rbp + index]
+    push qword [rbp + self]
+    push qword [rbp + index]
     call elemAddr
     mov [rbp + removed], rax
 
     ; src = elemAddr(self, index+1)
     mov rbx, [rbp + index]
     inc rbx
-    push [rbp + self]
+    push qword [rbp + self]
     push rbx
     call elemAddr
 
@@ -743,7 +743,7 @@ vecRemove:
     dec rcx
     imul rdx, rcx
 
-    push [rbp + removed]
+    push qword [rbp + removed]
     push rax
     push rdx
     call memMove
@@ -795,19 +795,19 @@ vecSwapElement:
     mov rax, [rax + ValueMeta_objsize]
     mov [rbp + size], rax
 
-    push [rbp + self]
-    push [rbp + a]
+    push qword [rbp + self]
+    push qword [rbp + a]
     call elemAddr
     mov [rbp + pa], rax
 
-    push [rbp + self]
-    push [rbp + b]
+    push qword [rbp + self]
+    push qword [rbp + b]
     call elemAddr
     mov [rbp + pb], rax
 
-    push [rbp + pa]
-    push [rbp + pb]
-    push [rbp + size]
+    push qword [rbp + pa]
+    push qword [rbp + pb]
+    push qword [rbp + size]
     call memSwap
 .done:
     end
@@ -830,16 +830,16 @@ vecSwap:
 
     lea rax, [rbp + tmpVec]
     push rax
-    push [rbp + a]
+    push qword [rbp + a]
     push sizeof_Vec
     call memCopy
 
-    push [rbp + a]
-    push [rbp + b]
+    push qword [rbp + a]
+    push qword [rbp + b]
     push sizeof_Vec
     call memCopy
 
-    push [rbp + b]
+    push qword [rbp + b]
     lea rax, [rbp + tmpVec]
     push rax
     push sizeof_Vec
@@ -909,7 +909,7 @@ vecCopy:
 
     mov rax, [rbp + src]
     mov rax, [rax + Vec_meta]
-    push [rbp + dst]
+    push qword [rbp + dst]
     push rax
     mov rax, [rbp + src]
     mov rax, [rax + Vec_len]
@@ -923,20 +923,20 @@ vecCopy:
     cmp [rbp + i], rbx
     jae .setLen
 
-    push [rbp + src]
-    push [rbp + i]
+    push qword [rbp + src]
+    push qword [rbp + i]
     call elemAddr
     mov [rbp + srcElem], rax
 
-    push [rbp + dst]
-    push [rbp + i]
+    push qword [rbp + dst]
+    push qword [rbp + i]
     call elemAddr
     mov [rbp + dstElem], rax
 
     mov rax, [rbp + dst]
     mov rax, [rax + Vec_meta]
-    push [rbp + dstElem]
-    push [rbp + srcElem]
+    push qword [rbp + dstElem]
+    push qword [rbp + srcElem]
     call [rax + ValueMeta_copy]
 
     inc qword [rbp + i]
@@ -1019,20 +1019,20 @@ vecEq:
     cmp [rbp + i], rbx
     jae .eq
 
-    push [rbp + a]
-    push [rbp + i]
+    push qword [rbp + a]
+    push qword [rbp + i]
     call elemAddr
     mov [rbp + ea], rax
 
-    push [rbp + b]
-    push [rbp + i]
+    push qword [rbp + b]
+    push qword [rbp + i]
     call elemAddr
     mov [rbp + eb], rax
 
     mov rax, [rbp + a]
     mov rax, [rax + Vec_meta]
-    push [rbp + ea]
-    push [rbp + eb]
+    push qword [rbp + ea]
+    push qword [rbp + eb]
     call [rax + ValueMeta_eq]
     test rax, rax
     jz .notEq
@@ -1089,20 +1089,20 @@ vecCmp:
     cmp rax, [rbp + minLen]
     jae .compareLens
 
-    push [rbp + a]
-    push [rbp + i]
+    push qword [rbp + a]
+    push qword [rbp + i]
     call elemAddr
     mov [rbp + ea], rax
 
-    push [rbp + b]
-    push [rbp + i]
+    push qword [rbp + b]
+    push qword [rbp + i]
     call elemAddr
     mov [rbp + eb], rax
 
     mov rax, [rbp + a]
     mov rax, [rax + Vec_meta]
-    push [rbp + ea]
-    push [rbp + eb]
+    push qword [rbp + ea]
+    push qword [rbp + eb]
     call [rax + ValueMeta_cmp]
     test rax, rax
     jnz .done
@@ -1160,8 +1160,8 @@ vecHash:
     cmp [rbp + i], rbx
     jae .done
 
-    push [rbp + self]
-    push [rbp + i]
+    push qword [rbp + self]
+    push qword [rbp + i]
     call elemAddr
     mov rbx, [rbp + self]
     mov rbx, [rbx + Vec_meta]
@@ -1172,7 +1172,7 @@ vecHash:
     lea rax, [rbp + elemHash]
     push rax
     push 8
-    push [rbp + hash]
+    push qword [rbp + hash]
     call fnv64
     mov [rbp + hash], rax
 

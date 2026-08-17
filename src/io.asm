@@ -128,7 +128,7 @@ ioWriteNum:
     lea rax, [rbp + buf + 32]
     sub rax, rbx                ; rax = number of bytes written into buf
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push rbx
     push rax
     call ioWrite
@@ -177,7 +177,7 @@ ioWriteChar:
     mov [rbp + buf], al
     lea rax, [rbp + buf]
 
-    push [rbp + fd]
+    push qword [rbp + fd]
     push rax
     push 1
     call ioWrite

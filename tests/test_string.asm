@@ -218,7 +218,7 @@ checkStr:
     sub rsp, (-offset)
 
 ; lengths must match
-    push [rbp + pExpected]
+    push qword [rbp + pExpected]
     call stringLen
     mov rbx, rax                ; expected len
 ; pSlot is a slot (holds a string pointer), deref it first
@@ -229,7 +229,7 @@ checkStr:
     cmp rax, rbx
     sete al
     movzx rax, al
-    push [rbp + pErr]
+    push qword [rbp + pErr]
     push rax
     call assert
 
@@ -241,20 +241,20 @@ checkStr:
     cmp [rbp + i], rbx
     jae .done
 
-    push [rbp + pExpected]
-    push [rbp + i]
+    push qword [rbp + pExpected]
+    push qword [rbp + i]
     call stringAt
     mov [rbp + expCh], rax     ; regs are clobbered by calls, stash on stack
 ; pSlot is a slot (holds a string pointer), deref it first
     mov rax, [rbp + pSlot]
     mov rax, [rax]
     push rax
-    push [rbp + i]
+    push qword [rbp + i]
     call stringAt
     cmp rax, [rbp + expCh]
     sete al
     movzx rax, al
-    push [rbp + pErr]
+    push qword [rbp + pErr]
     push rax
     call assert
 

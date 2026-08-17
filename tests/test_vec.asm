@@ -187,8 +187,8 @@ int64Copy:
     %assign dst arg(1)
     %assign src arg(2)
     begin
-    push [rbp + dst]
-    push [rbp + src]
+    push qword [rbp + dst]
+    push qword [rbp + src]
     push 8
     call memCopy
     end
@@ -200,8 +200,8 @@ int64Move:
     %assign dst arg(1)
     %assign src arg(2)
     begin
-    push [rbp + dst]
-    push [rbp + src]
+    push qword [rbp + dst]
+    push qword [rbp + src]
     push 8
     call memCopy
     end
@@ -216,14 +216,14 @@ checkInt64:
     %assign expect arg(3)
     %assign errMsg arg(4)
     begin
-    push [rbp + vecPtr]
-    push [rbp + idx]
+    push qword [rbp + vecPtr]
+    push qword [rbp + idx]
     call vecGet
     mov rbx, [rax]
     cmp rbx, [rbp + expect]
     sete al
     movzx rax, al
-    push [rbp + errMsg]
+    push qword [rbp + errMsg]
     push rax
     call assert
     end
