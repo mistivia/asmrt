@@ -107,49 +107,35 @@ default rel
 
 ; struct ValueMeta
 resetOffset
-
 %assign ValueMeta_objsize offset
 incOffset 8
-
 %assign ValueMeta_align offset
 incOffset 8
-
 %assign ValueMeta_drop offset
 incOffset 8
-
 %assign ValueMeta_cmp offset
 incOffset 8
-
 %assign ValueMeta_eq offset
 incOffset 8
-
 %assign ValueMeta_hash offset
 incOffset 8
-
 %assign ValueMeta_copy offset
 incOffset 8
-
 %assign ValueMeta_move offset
 incOffset 8
-
 %assign sizeof_ValueMeta offset
 ; end struct ValueMeta
 
 ; struct Vec
 resetOffset
-
 %assign Vec_data offset
 incOffset 8
-
 %assign Vec_len offset
 incOffset 8
-
 %assign Vec_capacity offset
 incOffset 8
-
 %assign Vec_meta offset
 incOffset 8
-
 %assign sizeof_Vec offset
 ; end struct Vec
 
