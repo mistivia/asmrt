@@ -16,7 +16,7 @@
 - **结构体等类型名**用 `CamelCase`（PascalCase）：`Point`、`FileStat`。
 - **指针参数/指针返回值在签名注释中以 `p` 前缀命名**：`pVec`、`pMeta`、`pBuf`、`pPath`……（`asmrt.inc` 中每个 `extern` 上方都有带签名的注释，命名一眼能看出哪个参数是地址）。
 
-## begin / end：建帧、收尾，兼管理变量作用域
+## begin / end：建帧、收尾
 
 ```asm
 %macro begin 0
@@ -75,7 +75,7 @@ struct Sample {
 %assign Sample_y offset
 %assign offset (offset + 4)
 ;; i64 z
-%assign Sample_y offset
+%assign Sample_z offset
 %assign offset (offset + 8)
 ;; endstruct
 %assign Sample_size offset
@@ -140,8 +140,8 @@ myCallback:
     ; ... 按自定义 ABI 规则 push 参数 ...
     call someAsmrtFunc
     postasm
-    ; 需要用到 someAsmrtFunc 的返回值的话，必须在 postasmcall 之前
-    ; 把 rax 存到内存里——postasmcall 会把 rax 也恢复成调用前的值
+    ; 需要用到 someAsmrtFunc 的返回值的话，必须在 postasm 之前
+    ; 把 rax 存到内存里——postasm 会把 rax 也恢复成调用前的值
     ret
 ```
 
@@ -210,7 +210,7 @@ printNum:
 ## 项目布局
 
 ```
-src/asmrt.inc   共享头文件：ABI 宏 + 公共 struc + 所有运行时函数的 extern 声明
+src/asmrt.inc   共享头文件：ABI 宏 + 公共结构体定义 + 所有运行时函数的 extern 声明
 src/main.asm    进程入口（main -> entry）、rtExit
 src/assert.asm  assert(msg, flag)
 src/io.asm      文件 I/O syscalls（ioOpen/ioClose/ioRead/ioWrite/ioSeek/...）
@@ -278,4 +278,4 @@ extern 调用它）。
 
 - 适合纯自研代码内部（函数间互相调用只走这套约定），把"要不要保存寄存器"这个问题直接消灭。
 - 一旦调用外部库（libc、系统调用等标准 ABI 代码），按真实 ABI 把参数放进对应寄存器即可，不需要额外的寄存器保护；调用点前放一句 `hexalign` 处理栈对齐。
-- 代价：所有变量读写都要走一次内存访问（`[%$name]`），比全寄存器分配慢很多；仅适合教学/实验/把心智负担降到最低优先于性能的场景。
+- 代价：所有变量读写都要走一次内存访问（`[rbp + name]`），比全寄存器分配慢很多；仅适合教学/实验/把心智负担降到最低优先于性能的场景。
