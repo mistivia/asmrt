@@ -16,16 +16,16 @@ entry:
     ;; local variables
     resetOffset
     ;; default size 8, at rbp-8
-    %assign offset (offset - 8)
+    decOffset 8
     %assign a offset
     ;; default size 8, at rbp-16
-    %assign offset (offset - 8)
+    decOffset 8
     %assign b offset
     ;; default size 8, at rbp-24
-    %assign offset (offset - 8)
+    decOffset 8
     %assign c offset
     ;; struct-sized, at rbp-40
-    %assign offset (offset - 16)
+    decOffset 16)
     %assign d offset
     ;; endlocal
     sub rsp, (-offset)

@@ -64,7 +64,7 @@ sort:
     ;; local variables
     resetOffset
     ;; partition point, returned by partition(); must
-    %assign offset (offset - 8)
+    decOffset 8
     %assign p offset
                      ; survive the call, so it lives on the stack
     ;; endlocal
@@ -128,10 +128,10 @@ partition:
     ;; local variables
     resetOffset
     ;; boundary: [0, i] are known < pivot so far
-    %assign offset (offset - 8)
+    decOffset 8
     %assign i offset
     ;; scan cursor over [0, nmemb-1)
-    %assign offset (offset - 8)
+    decOffset 8
     %assign j offset
     ;; endlocal
     sub rsp, (-offset)
@@ -229,10 +229,10 @@ fnv64:
     ;; local variables
     resetOffset
     ;; hash 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign hash offset
     ;; i 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign i offset
     ;; endlocal
     sub rsp, (-offset)

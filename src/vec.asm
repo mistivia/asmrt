@@ -164,10 +164,10 @@ vecReserve:
     ;; local variables
     resetOffset
     ;; needed 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign needed offset
     ;; newCap 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign newCap offset
     ;; endlocal
     sub rsp, (-offset)
@@ -227,7 +227,7 @@ vecDrop:
     ;; local variables
     resetOffset
     ;; i 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign i offset
     ;; endlocal
     sub rsp, (-offset)
@@ -272,7 +272,7 @@ vecClear:
     ;; local variables
     resetOffset
     ;; i 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign i offset
     ;; endlocal
     sub rsp, (-offset)
@@ -311,7 +311,7 @@ vecTruncate:
     ;; local variables
     resetOffset
     ;; i 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign i offset
     ;; endlocal
     sub rsp, (-offset)
@@ -468,7 +468,7 @@ vecSet:
     ;; local variables
     resetOffset
     ;; dst 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign dst offset
     ;; endlocal
     sub rsp, (-offset)
@@ -519,7 +519,7 @@ vecPush:
     ;; local variables
     resetOffset
     ;; dst 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign dst offset
     ;; endlocal
     sub rsp, (-offset)
@@ -566,7 +566,7 @@ vecPop:
     ;; local variables
     resetOffset
     ;; src 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign src offset
     ;; endlocal
     sub rsp, (-offset)
@@ -621,10 +621,10 @@ vecInsert:
     ;; local variables
     resetOffset
     ;; dst 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign dst offset
     ;; shiftDst 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign shiftDst offset
     ;; endlocal
     sub rsp, (-offset)
@@ -708,7 +708,7 @@ vecRemove:
     ;; local variables
     resetOffset
     ;; removed 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign removed offset
     ;; endlocal
     sub rsp, (-offset)
@@ -788,13 +788,13 @@ vecSwapElement:
     ;; local variables
     resetOffset
     ;; pa 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign pa offset
     ;; pb 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign pb offset
     ;; size 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign size offset
     ;; endlocal
     sub rsp, (-offset)
@@ -843,7 +843,7 @@ vecSwap:
     ;; local variables
     resetOffset
     ;; tmpVec 32 bytes
-    %assign offset (offset - 32)
+    decOffset 32)
     %assign tmpVec offset
     ;; endlocal
     sub rsp, (-offset)
@@ -914,13 +914,13 @@ vecCopy:
     ;; local variables
     resetOffset
     ;; i 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign i offset
     ;; srcElem 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign srcElem offset
     ;; dstElem 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign dstElem offset
     ;; endlocal
     sub rsp, (-offset)
@@ -1019,13 +1019,13 @@ vecEq:
     ;; local variables
     resetOffset
     ;; i 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign i offset
     ;; ea 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign ea offset
     ;; eb 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign eb offset
     ;; endlocal
     sub rsp, (-offset)
@@ -1084,16 +1084,16 @@ vecCmp:
     ;; local variables
     resetOffset
     ;; minLen 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign minLen offset
     ;; i 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign i offset
     ;; ea 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign ea offset
     ;; eb 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign eb offset
     ;; endlocal
     sub rsp, (-offset)
@@ -1165,13 +1165,13 @@ vecHash:
     ;; local variables
     resetOffset
     ;; hash 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign hash offset
     ;; i 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign i offset
     ;; elemHash 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign elemHash offset
     ;; endlocal
     sub rsp, (-offset)

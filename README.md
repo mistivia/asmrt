@@ -190,7 +190,7 @@ to `begin`):
 |---|---|
 | `begin` / `end` | set up / tear down the standard stack frame |
 | `%assign param (16 + (N-i) * 8)` | declare the `i`-th of `N` parameters; use as `[rbp + param]` |
-| `%assign offset (offset - size)` / `%assign local offset` | declare a local of `size` bytes; use as `[rbp + local]`; end these with `sub rsp, (-offset)` |
+| `decOffset size)` / `%assign local offset` | declare a local of `size` bytes; use as `[rbp + local]`; end these with `sub rsp, (-offset)` |
 | `hexalign` | pad the stack to 16-byte alignment right before a real-ABI call (e.g. libc), no paired "undo" needed |
 | `preasm` / `postasm` | save/restore every register around a custom-ABI call made from inside a real-ABI callback (e.g. a function pointer handed to a C library) |
 

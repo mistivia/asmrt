@@ -163,7 +163,7 @@ entry:
     ;; local variables
     resetOffset
     ;; tmp 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign tmp offset
     ;; endlocal
     sub rsp, (-offset)

@@ -108,10 +108,10 @@ resetOffset
 ;; local variables
 resetOffset
 ;; int64_t x
-%assign offset (offset - 8)
+decOffset 8
 %assign x offset
 ;; Sample s
-%assign offset (offset - Sample_size)
+decOffset Sample_size
 %assign s offset
 ;; endlocal
 sub rsp, (-offset)
@@ -165,7 +165,7 @@ fibo:
     ;; local acc
     resetOffset
     ;; int64_t acc
-    %assign offset (offset - 8)
+    decOffset 8
     %assign acc offset
     ;; endlocal
     sub rsp, (-offset)

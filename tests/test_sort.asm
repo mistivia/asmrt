@@ -56,7 +56,7 @@ entry:
     ;; local variables
     resetOffset
     ;; idx 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign idx offset
     ;; endlocal
     sub rsp, (-offset)

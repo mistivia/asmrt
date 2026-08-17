@@ -89,8 +89,12 @@
     %assign offset 0
 %endmacro
 
-%macro fwdOffset 1
+%macro incOffset 1
     %assign offset (offset + %1)
+%endmacro
+
+%macro decOffset 1
+    %assign offset (offset - %1)
 %endmacro
 
 %macro argnum 1
@@ -99,75 +103,53 @@
 
 %define arg(i) (16 + (__argnum - i) * 8)
 
-; ---- shared struct definitions ----
-
-; ValueMeta: mirrors cbase/cbase.h's `struct value_meta`, the type-info
-; bundle every generic cbase container carries.  The C prototype uses
-; int/int for size/align, but under this runtime every field is kept as
-; a full qword so the struct is uniformly 8-aligned and 64 bytes total.
-;
-;   int                objsize; ; +0
-;   int                align;   ; +8
-;   drop_fn            drop;    ; +16
-;   cmp_fn             cmp;     ; +24
-;   eq_fn              eq;      ; +32
-;   hash_fn            hash;    ; +40
-;   copy_fn            copy;    ; +48
-;   move_fn            move;    ; +56
-;                                        total 64, all fields 8-aligned
 ;; struct ValueMeta
 resetOffset
-;; qword size
-%assign ValueMeta_objsize offset
-fwdOffset 8
-;; qword align
-%assign ValueMeta_align offset
-fwdOffset 8
-;; qword drop
-%assign ValueMeta_drop offset
-fwdOffset 8
-;; qword cmp
-%assign ValueMeta_cmp offset
-fwdOffset 8
-;; qword eq
-%assign ValueMeta_eq offset
-fwdOffset 8
-;; qword hash
-%assign ValueMeta_hash offset
-fwdOffset 8
-;; qword copy
-%assign ValueMeta_copy offset
-fwdOffset 8
-;; qword move
-%assign ValueMeta_move offset
-fwdOffset 8
-;; endstruct
-%assign ValueMeta_size offset
 
-; Vec: mirrors cbase/cbase.h's `struct vec`, a generic growable
-; array.  All four fields are qwords, so the struct is 32 bytes and
-; 8-aligned.
-;
-;   void *data;     ; +0
-;   size_t len;     ; +8
-;   size_t capacity ; +16
-;   struct value_meta *meta ; +24
+%assign ValueMeta_objsize offset
+incOffset 8
+
+%assign ValueMeta_align offset
+incOffset 8
+
+%assign ValueMeta_drop offset
+incOffset 8
+
+%assign ValueMeta_cmp offset
+incOffset 8
+
+%assign ValueMeta_eq offset
+incOffset 8
+
+%assign ValueMeta_hash offset
+incOffset 8
+
+%assign ValueMeta_copy offset
+incOffset 8
+
+%assign ValueMeta_move offset
+incOffset 8
+
+%assign sizeof_ValueMeta offset
+;; end struct ValueMeta
+
 ;; struct Vec
 resetOffset
-;; qword data
+
 %assign Vec_data offset
-fwdOffset 8
-;; qword len
+incOffset 8
+
 %assign Vec_len offset
-fwdOffset 8
-;; qword capacity
+incOffset 8
+
 %assign Vec_capacity offset
-fwdOffset 8
-;; qword meta
+incOffset 8
+
 %assign Vec_meta offset
-fwdOffset 8
-;; endstruct
+incOffset 8
+
 %assign Vec_size offset
+;; end struct Vec
 
 ; ---- runtime exported symbols ----
 ;

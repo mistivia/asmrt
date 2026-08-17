@@ -29,7 +29,7 @@ entry:
     ;; local variables
     resetOffset
     ;; fd needs to survive multiple calls, so it must live on the stack, not just in a register
-    %assign offset (offset - 8)
+    decOffset 8
     %assign fd offset
     ;; endlocal
     sub rsp, (-offset)

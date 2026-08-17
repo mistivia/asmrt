@@ -51,7 +51,7 @@ checkRange:
     ;; local variables
     resetOffset
     ;; k 8 bytes
-    %assign offset (offset - 8)
+    decOffset 8
     %assign k offset
     ;; endlocal
     sub rsp, (-offset)
@@ -88,7 +88,7 @@ entry:
     ;; local variables
     resetOffset
     ;; ptr crosses multiple calls, must live on the stack
-    %assign offset (offset - 8)
+    decOffset 8
     %assign ptr offset
     ;; endlocal
     sub rsp, (-offset)
