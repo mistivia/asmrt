@@ -775,8 +775,9 @@ vecRemove:
 
 ; ---- swap / reorder ----
 
-; vecSwapElement(self, a, b) -- byte-swap two elements via a temporary
-; buffer of meta->size bytes.  No-op for out-of-bounds or a == b.
+; vecSwapElement(self, a, b) -- byte-swap two elements via memSwap.
+; No temporary buffer or heap allocation needed.  No-op for
+; out-of-bounds or a == b.
 vecSwapElement:
     ;; args: self, a, b
     %assign N 3
@@ -786,9 +787,6 @@ vecSwapElement:
     begin
     ;; local variables
     %assign offset 0
-    ;; tmp 8 bytes
-    %assign offset (offset - 8)
-    %assign tmp offset
     ;; pa 8 bytes
     %assign offset (offset - 8)
     %assign pa offset
@@ -815,9 +813,6 @@ vecSwapElement:
     mov rax, [rax + Vec_meta]
     mov rax, [rax + ValueMeta_size]
     mov [rbp + size], rax
-    push rax
-    call memAlloc
-    mov [rbp + tmp], rax
 
     push [rbp + self]
     push [rbp + a]
@@ -829,21 +824,10 @@ vecSwapElement:
     call elemAddr
     mov [rbp + pb], rax
 
-    push [rbp + tmp]
-    push [rbp + pa]
-    push [rbp + size]
-    call memCopy
     push [rbp + pa]
     push [rbp + pb]
     push [rbp + size]
-    call memCopy
-    push [rbp + pb]
-    push [rbp + tmp]
-    push [rbp + size]
-    call memCopy
-
-    push [rbp + tmp]
-    call memFree
+    call memSwap
 .done:
 
     end
