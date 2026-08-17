@@ -30,10 +30,10 @@ section .text
 
 ; memAlloc(size) -> ptr (rax), NULL on failure
 memAlloc:
-    begin
     ;; args: size
     %assign N 1
     %assign size (16 + (N-1) * 8)
+    begin
 
     hexalign
     mov rdi, [rbp + size]
@@ -44,10 +44,10 @@ memAlloc:
 
 ; memFree(ptr) -> rax is always 0; free() itself returns nothing
 memFree:
-    begin
     ;; args: ptr
     %assign N 1
     %assign ptr (16 + (N-1) * 8)
+    begin
 
     hexalign
     mov rdi, [rbp + ptr]
@@ -59,11 +59,11 @@ memFree:
 
 ; memReloc(ptr, size) -> new ptr (rax), NULL on failure (ptr is left untouched by libc on failure)
 memReloc:
-    begin
     ;; args: ptr, size
     %assign N 2
-    %assign ptr (16 + (N-1) * 8)
+    %assign ptr  (16 + (N-1) * 8)
     %assign size (16 + (N-2) * 8)
+    begin
 
     hexalign
     mov rdi, [rbp + ptr]
@@ -78,12 +78,12 @@ memReloc:
 ; overlap -- for possibly-overlapping regions use memMove instead.
 ; caller pushes in order: push dest; push src; push n
 memCopy:
-    begin
     ;; args: dest, src, n
     %assign N 3
     %assign dest (16 + (N-1) * 8)
-    %assign src (16 + (N-2) * 8)
-    %assign n (16 + (N-3) * 8)
+    %assign src  (16 + (N-2) * 8)
+    %assign n    (16 + (N-3) * 8)
+    begin
 
     push [rbp + dest]
     push [rbp + src]
@@ -99,12 +99,12 @@ memCopy:
 ; dest > src, so a byte is never overwritten before it's read.
 ; caller pushes in order: push dest; push src; push n
 memMove:
-    begin
     ;; args: dest, src, n
     %assign N 3
     %assign dest (16 + (N-1) * 8)
-    %assign src (16 + (N-2) * 8)
-    %assign n (16 + (N-3) * 8)
+    %assign src  (16 + (N-2) * 8)
+    %assign n    (16 + (N-3) * 8)
+    begin
 
     mov rax, [rbp + dest]
     mov rbx, [rbp + src]
@@ -158,12 +158,12 @@ memMove:
 ; either loop, so rax/rbx/r8/r10 are pure scratch throughout.
 ; caller pushes in order: push dest; push val; push n
 memFill:
-    begin
     ;; args: dest, val, n
     %assign N 3
     %assign dest (16 + (N-1) * 8)
-    %assign val (16 + (N-2) * 8)
-    %assign n (16 + (N-3) * 8)
+    %assign val  (16 + (N-2) * 8)
+    %assign n    (16 + (N-3) * 8)
+    begin
 
     mov rax, [rbp + val]
     and rax, 0xFF
@@ -206,12 +206,12 @@ memFill:
 ; inside either loop, so rax/rbx/rcx/r8 are pure scratch throughout.
 ; caller pushes in order: push dest; push src; push n
 copyForward:
-    begin
     ;; args: dest, src, n
     %assign N 3
     %assign dest (16 + (N-1) * 8)
-    %assign src (16 + (N-2) * 8)
-    %assign n (16 + (N-3) * 8)
+    %assign src  (16 + (N-2) * 8)
+    %assign n    (16 + (N-3) * 8)
+    begin
 
     mov rbx, [rbp + dest]
     mov rcx, [rbp + src]

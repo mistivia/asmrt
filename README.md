@@ -144,12 +144,12 @@ section .text
     global entry
 
 entry:
-    begin
     ;; args: argc, argv, envp
     %assign N 3
     %assign argc (16 + (N-1) * 8)
     %assign argv (16 + (N-2) * 8)
     %assign envp (16 + (N-3) * 8)
+    begin
 
     push 1
     push msg
@@ -182,8 +182,9 @@ gcc -no-pie hello.o build/libasmrt.a -o hello
   `[rbp + name]` — see [AGENTS.md](AGENTS.md) for the full convention.
 
 Macros and declaration style used in every function (write order:
-`name:` → `begin` → parameter `%assign`s → local `%assign`s → `endlocal`
-→ body → `end`):
+`name:` → parameter `%assign`s → `begin` → local `%assign`s → `endlocal`
+→ body → `end`; functions without parameters go straight from `name:`
+to `begin`):
 
 | Macro | Purpose |
 |---|---|

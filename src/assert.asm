@@ -12,11 +12,11 @@ section .text
 
 ; caller pushes in order: push msg; push flag (first argument pushed first)
 assert:
-    begin
     ;; args: msg, flag
     %assign N 2
     %assign msg (16 + (N-1) * 8)
     %assign flag (16 + (N-2) * 8)
+    begin
 
     cmp qword [rbp + flag], 0
     jne .ok

@@ -13,12 +13,12 @@ section .text
 ; sum3(p1, p2, p3) -> rax = p1*100 + p2*10 + p3, to check each param
 ; landed at the right offset (not just that the sum is right)
 sum3:
-    begin
     ;; args: p1, p2, p3
     %assign N 3
     %assign p1 (16 + (N-1) * 8)
     %assign p2 (16 + (N-2) * 8)
     %assign p3 (16 + (N-3) * 8)
+    begin
 
     mov rax, [rbp + p1]
     cmp rax, 1

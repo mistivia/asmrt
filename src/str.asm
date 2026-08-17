@@ -10,10 +10,10 @@ section .text
 
 ; strLen(s) -> length, excluding the trailing NUL (rax)
 strLen:
-    begin
     ;; args: s
     %assign N 1
     %assign s (16 + (N-1) * 8)
+    begin
 
     ; no call inside the loop, so rbx is just scratch for this stretch of
     ; code -- no need to save/restore it, the caller already assumes it's
@@ -33,11 +33,11 @@ strLen:
 
 ; strEq(a, b) -> 1 if the two strings are equal, 0 otherwise
 strEq:
-    begin
     ;; args: a, b
     %assign N 2
     %assign a (16 + (N-1) * 8)
     %assign b (16 + (N-2) * 8)
+    begin
 
     ; same as above: no call inside the loop, rbx/rcx are just scratch
 

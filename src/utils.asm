@@ -55,13 +55,13 @@ section .text
 
 ; caller pushes in order: push base; push nmemb; push size; push cmpFn
 sort:
-    begin
     ;; args: base, nmemb, size, cmpFn
     %assign N 4
     %assign base (16 + (N-1) * 8)
     %assign nmemb (16 + (N-2) * 8)
     %assign size (16 + (N-3) * 8)
     %assign cmpFn (16 + (N-4) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; partition point, returned by partition(); must
@@ -119,13 +119,13 @@ sort:
 ; handing it a narrower (base, nmemb) slice instead of extra indices.
 ; caller pushes in order: push base; push nmemb; push size; push cmpFn
 partition:
-    begin
     ;; args: base, nmemb, size, cmpFn
     %assign N 4
     %assign base (16 + (N-1) * 8)
     %assign nmemb (16 + (N-2) * 8)
     %assign size (16 + (N-3) * 8)
     %assign cmpFn (16 + (N-4) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; boundary: [0, i] are known < pivot so far
@@ -221,12 +221,12 @@ partition:
 ; stretch, same as strEq's loop in str.asm.
 ; caller pushes in order: push addrA; push addrB; push size
 swapElems:
-    begin
     ;; args: addrA, addrB, size
     %assign N 3
     %assign addrA (16 + (N-1) * 8)
     %assign addrB (16 + (N-2) * 8)
     %assign size (16 + (N-3) * 8)
+    begin
 
     mov rbx, [rbp + addrA]
     mov rcx, [rbp + addrB]
@@ -262,12 +262,12 @@ swapElems:
 ; seeded with input.  Mirrors cbase/cbase.h's fnv64.
 ; caller pushes in order: push data; push dataSize; push input
 fnv64:
-    begin
     ;; args: data, dataSize, input
     %assign N 3
     %assign data (16 + (N-1) * 8)
     %assign dataSize (16 + (N-2) * 8)
     %assign input (16 + (N-3) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; hash 8 bytes

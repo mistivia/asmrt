@@ -62,20 +62,20 @@ section .text
 ; ---- int64 trait callbacks (custom ABI, same as sort's comparators) ----
 
 int64Drop:
-    begin
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+    begin
     xor rax, rax
     end
     ret 8
 
 int64Cmp:
-    begin
     ;; args: a, b
     %assign N 2
     %assign a (16 + (N-1) * 8)
     %assign b (16 + (N-2) * 8)
+    begin
     mov rax, [rbp + a]
     mov rax, [rax]
     mov rbx, [rbp + b]
@@ -85,11 +85,11 @@ int64Cmp:
     ret 16
 
 int64Eq:
-    begin
     ;; args: a, b
     %assign N 2
     %assign a (16 + (N-1) * 8)
     %assign b (16 + (N-2) * 8)
+    begin
     mov rax, [rbp + a]
     mov rax, [rax]
     mov rbx, [rbp + b]
@@ -101,21 +101,21 @@ int64Eq:
     ret 16
 
 int64Hash:
-    begin
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+    begin
     mov rax, [rbp + self]
     mov rax, [rax]
     end
     ret 8
 
 int64Copy:
-    begin
     ;; args: dst, src
     %assign N 2
     %assign dst (16 + (N-1) * 8)
     %assign src (16 + (N-2) * 8)
+    begin
     push [rbp + dst]
     push [rbp + src]
     push 8
@@ -124,11 +124,11 @@ int64Copy:
     ret 16
 
 int64Move:
-    begin
     ;; args: dst, src
     %assign N 2
     %assign dst (16 + (N-1) * 8)
     %assign src (16 + (N-2) * 8)
+    begin
     push [rbp + dst]
     push [rbp + src]
     push 8
@@ -138,13 +138,13 @@ int64Move:
 
 ; ---- helper: assert vecGet(vecPtr, idx) == expect ----
 checkInt64:
-    begin
     ;; args: vecPtr, idx, expect, errMsg
     %assign N 4
     %assign vecPtr (16 + (N-1) * 8)
     %assign idx (16 + (N-2) * 8)
     %assign expect (16 + (N-3) * 8)
     %assign errMsg (16 + (N-4) * 8)
+    begin
     push [rbp + vecPtr]
     push [rbp + idx]
     call vecGet

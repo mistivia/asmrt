@@ -20,12 +20,12 @@ section .text
 
 ; ioOpen(path, flags, mode) -> fd
 ioOpen:
-    begin
     ;; args: path, flags, mode
     %assign N 3
     %assign path (16 + (N-1) * 8)
     %assign flags (16 + (N-2) * 8)
     %assign mode (16 + (N-3) * 8)
+    begin
 
     mov rdi, [rbp + path]
     mov rsi, [rbp + flags]
@@ -38,10 +38,10 @@ ioOpen:
 
 ; ioClose(fd) -> result (rax)
 ioClose:
-    begin
     ;; args: fd
     %assign N 1
     %assign fd (16 + (N-1) * 8)
+    begin
 
     mov rdi, [rbp + fd]
     mov rax, 3          ; sys_close
@@ -52,12 +52,12 @@ ioClose:
 
 ; ioRead(fd, buf, count) -> bytes read
 ioRead:
-    begin
     ;; args: fd, buf, count
     %assign N 3
     %assign fd (16 + (N-1) * 8)
     %assign buf (16 + (N-2) * 8)
     %assign count (16 + (N-3) * 8)
+    begin
 
     mov rdi, [rbp + fd]
     mov rsi, [rbp + buf]
@@ -70,12 +70,12 @@ ioRead:
 
 ; ioWrite(fd, buf, count) -> bytes written
 ioWrite:
-    begin
     ;; args: fd, buf, count
     %assign N 3
     %assign fd (16 + (N-1) * 8)
     %assign buf (16 + (N-2) * 8)
     %assign count (16 + (N-3) * 8)
+    begin
 
     mov rdi, [rbp + fd]
     mov rsi, [rbp + buf]
@@ -90,11 +90,11 @@ ioWrite:
 ; Writes the base-10 ASCII representation of the signed integer num to fd,
 ; with a leading '-' for negative values; no trailing newline.
 ioWriteNum:
-    begin
     ;; args: fd, num
     %assign N 2
     %assign fd (16 + (N-1) * 8)
     %assign num (16 + (N-2) * 8)
+    begin
 
     ;; local variables
     %assign offset 0
@@ -142,11 +142,11 @@ ioWriteNum:
 ; ioWriteChar(fd, ch) -> bytes written (rax), same as ioWrite's return value
 ; Writes the single byte ch (low 8 bits of the pushed value) to fd.
 ioWriteChar:
-    begin
     ;; args: fd, ch
     %assign N 2
     %assign fd (16 + (N-1) * 8)
     %assign ch (16 + (N-2) * 8)
+    begin
 
     ;; local variables
     %assign offset 0
@@ -171,12 +171,12 @@ ioWriteChar:
 ; ioSeek(fd, offset, whence) -> new file offset (rax)
 ; whence: 0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END
 ioSeek:
-    begin
     ;; args: fd, offset, whence
     %assign N 3
     %assign fd (16 + (N-1) * 8)
     %assign offset (16 + (N-2) * 8)
     %assign whence (16 + (N-3) * 8)
+    begin
 
     mov rdi, [rbp + fd]
     mov rsi, [rbp + offset]

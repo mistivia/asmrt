@@ -34,7 +34,7 @@
 
 **硬性规定：一个函数里 `begin`/`end` 必须各出现且只出现一次**。函数内如果有多个提前返回的出口，必须让它们都跳转到同一个 `end` 之前，不能各自各写一个 `end`。
 
-**每个函数体内的顺序固定为：`name:` -> `begin` → 声明参数→ 声明局部变量→ `endlocal` → 函数体 → `end`。
+**每个函数体内的顺序固定为：`name:` → 声明参数 → `begin` → 声明局部变量→ `endlocal` → 函数体 → `end`。** 没有参数的函数直接 `name:` -> `begin` 开始。
 
 ## 声明参数
 
@@ -158,11 +158,10 @@ entry:
     ret 24
 
 fibo:
-    begin
     ;; args: x
     %assign N 1
     %assign x (16 + (N-1) * 8)
-
+    begin
     ;; local acc
     %assign offset 0
     ;; int64_t acc
@@ -192,10 +191,12 @@ fibo:
     end
     ret 8
 
-proc printNum
-    args x
+printNum:
+    ;; args x
+    %assign N 1
+    %assign x (16 + (N-1) * 8)
+    begin
     ; 没有局部变量，不需要 endlocal——对齐交给下面的 hexalign 动态处理
-
     hexalign ;; align to 16 byte before calling C function
     mov rdi, printMsg
     mov rsi, [rbp + x]

@@ -37,10 +37,10 @@ main:
 ; rtExit(code) -> does not return
 ; Caller pushes code
 rtExit:
-    begin
     ;; args: code
     %assign N 1
     %assign code (16 + (N-1) * 8)
+    begin
 
     mov rdi, [rbp + code]
     mov rax, 60         ; sys_exit

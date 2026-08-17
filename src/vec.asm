@@ -71,11 +71,11 @@ section .text
 ; No call inside, so rax/rbx/rcx are pure scratch for this stretch.
 ; caller pushes in order: push self; push index
 elemAddr:
-    begin
     ;; args: self, index
     %assign N 2
     %assign self (16 + (N-1) * 8)
     %assign index (16 + (N-2) * 8)
+    begin
 
     mov rax, [rbp + self]
     mov rax, [rax + Vec_data]
@@ -93,11 +93,11 @@ elemAddr:
 
 ; vecInit(self, meta) -> 0.  Zero the vec and attach the ValueMeta.
 vecInit:
-    begin
     ;; args: self, meta
     %assign N 2
     %assign self (16 + (N-1) * 8)
     %assign meta (16 + (N-2) * 8)
+    begin
 
     mov rax, [rbp + self]
     mov qword [rax + Vec_data], 0
@@ -115,12 +115,12 @@ vecInit:
 ; pre-allocates room for `capacity` elements (data stays NULL when
 ; capacity is 0, matching cbase).
 vecWithCapacity:
-    begin
     ;; args: self, meta, capacity
     %assign N 3
     %assign self (16 + (N-1) * 8)
     %assign meta (16 + (N-2) * 8)
     %assign capacity (16 + (N-3) * 8)
+    begin
 
     mov rax, [rbp + self]
     mov qword [rax + Vec_data], 0
@@ -156,11 +156,11 @@ vecWithCapacity:
 ; vecReserve(self, additional) -- ensure capacity for len+additional
 ; elements, doubling from 4 as cbase does.
 vecReserve:
-    begin
     ;; args: self, additional
     %assign N 2
     %assign self (16 + (N-1) * 8)
     %assign additional (16 + (N-2) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; needed 8 bytes
@@ -219,10 +219,11 @@ vecReserve:
 ; vecDrop(self) -- drop every element (via meta->drop), free the buffer,
 ; and reset the vec in place.
 vecDrop:
-    begin
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+    begin
+
     ;; local variables
     %assign offset 0
     ;; i 8 bytes
@@ -263,9 +264,11 @@ vecDrop:
 ; vecClear(self) -- drop every element and set len to 0, keep buffer.
 vecClear:
     begin
+
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+
     ;; local variables
     %assign offset 0
     ;; i 8 bytes
@@ -299,10 +302,12 @@ vecClear:
 ; vecTruncate(self, len) -- drop elements from len onward, shrink len.
 vecTruncate:
     begin
+
     ;; args: self, len
     %assign N 2
     %assign self (16 + (N-1) * 8)
     %assign len (16 + (N-2) * 8)
+
     ;; local variables
     %assign offset 0
     ;; i 8 bytes
@@ -344,11 +349,11 @@ vecTruncate:
 
 ; vecGet(self, index) -> ptr to element, or NULL if out of bounds
 vecGet:
-    begin
     ;; args: self, index
     %assign N 2
     %assign self (16 + (N-1) * 8)
     %assign index (16 + (N-2) * 8)
+    begin
 
     mov rax, [rbp + self]
     mov rbx, [rax + Vec_len]
@@ -368,10 +373,10 @@ vecGet:
 
 ; vecFirst(self) -> ptr to first element, or NULL if empty
 vecFirst:
-    begin
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+    begin
 
     mov rax, [rbp + self]
     cmp qword [rax + Vec_len], 0
@@ -387,10 +392,10 @@ vecFirst:
 
 ; vecLast(self) -> ptr to last element, or NULL if empty
 vecLast:
-    begin
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+    begin
 
     mov rax, [rbp + self]
     cmp qword [rax + Vec_len], 0
@@ -410,10 +415,10 @@ vecLast:
 
 ; vecLen(self) -> len
 vecLen:
-    begin
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+    begin
 
     mov rax, [rbp + self]
     mov rax, [rax + Vec_len]
@@ -423,10 +428,10 @@ vecLen:
 
 ; vecIsEmpty(self) -> 1 if len == 0, else 0
 vecIsEmpty:
-    begin
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+    begin
 
     mov rax, [rbp + self]
     cmp qword [rax + Vec_len], 0
@@ -438,10 +443,10 @@ vecIsEmpty:
 
 ; vecAsPtr(self) -> raw data pointer (may be NULL)
 vecAsPtr:
-    begin
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+    begin
 
     mov rax, [rbp + self]
     mov rax, [rax + Vec_data]
@@ -453,13 +458,13 @@ vecAsPtr:
 ; the old one, copy the new one in (or move when isMove != 0).  No-op
 ; when index is out of bounds.
 vecSet:
-    begin
     ;; args: self, index, elem, isMove
     %assign N 4
     %assign self (16 + (N-1) * 8)
     %assign index (16 + (N-2) * 8)
     %assign elem (16 + (N-3) * 8)
     %assign isMove (16 + (N-4) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; dst 8 bytes
@@ -505,12 +510,12 @@ vecSet:
 ; vecPush(self, elem, isMove) -- append a copy of elem, or move it in
 ; when isMove != 0.
 vecPush:
-    begin
     ;; args: self, elem, isMove
     %assign N 3
     %assign self (16 + (N-1) * 8)
     %assign elem (16 + (N-2) * 8)
     %assign isMove (16 + (N-3) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; dst 8 bytes
@@ -553,11 +558,11 @@ vecPush:
 ; non-NULL the popped element is copied into *out.  The element slot is
 ; *not* dropped (ownership moves to the caller), matching cbase.
 vecPop:
-    begin
     ;; args: self, out
     %assign N 2
     %assign self (16 + (N-1) * 8)
     %assign out (16 + (N-2) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; src 8 bytes
@@ -606,13 +611,13 @@ vecPop:
 ; (0..len inclusive).  isMove != 0 moves elem in (ValueMeta_move),
 ; otherwise a copy is made (ValueMeta_copy).  No-op when index > len.
 vecInsert:
-    begin
     ;; args: self, index, elem, isMove
     %assign N 4
     %assign self (16 + (N-1) * 8)
     %assign index (16 + (N-2) * 8)
     %assign elem (16 + (N-3) * 8)
     %assign isMove (16 + (N-4) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; dst 8 bytes
@@ -694,12 +699,12 @@ vecInsert:
 ; *out first (ownership moves to the caller; the slot is not dropped),
 ; matching cbase.  No-op when index >= len.
 vecRemove:
-    begin
     ;; args: self, index, out
     %assign N 3
     %assign self (16 + (N-1) * 8)
     %assign index (16 + (N-2) * 8)
     %assign out (16 + (N-3) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; removed 8 bytes
@@ -773,12 +778,12 @@ vecRemove:
 ; vecSwapElement(self, a, b) -- byte-swap two elements via a temporary
 ; buffer of meta->size bytes.  No-op for out-of-bounds or a == b.
 vecSwapElement:
-    begin
     ;; args: self, a, b
     %assign N 3
     %assign self (16 + (N-1) * 8)
     %assign a (16 + (N-2) * 8)
     %assign b (16 + (N-3) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; tmp 8 bytes
@@ -846,11 +851,11 @@ vecSwapElement:
 
 ; vecSwap(a, b) -- swap two whole vec headers (32 bytes each).
 vecSwap:
-    begin
     ;; args: a, b
     %assign N 2
     %assign a (16 + (N-1) * 8)
     %assign b (16 + (N-2) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; tmpVec 32 bytes
@@ -883,10 +888,10 @@ vecSwap:
 ; sort() with meta->cmp as the comparator (same custom-ABI callback
 ; contract sort() expects).
 vecSort:
-    begin
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+    begin
 
     mov rax, [rbp + self]
     cmp qword [rax + Vec_len], 1
@@ -917,11 +922,11 @@ vecSort:
 ; vecCopy(dst, src) -- deep copy src into dst.  No-op when dst == src.
 ; dst is re-initialized with src's meta and capacity == src->len.
 vecCopy:
-    begin
     ;; args: dst, src
     %assign N 2
     %assign dst (16 + (N-1) * 8)
     %assign src (16 + (N-2) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; i 8 bytes
@@ -987,11 +992,11 @@ vecCopy:
 ; vecMove(dst, src) -- transfer ownership of src's buffer to dst and
 ; reset src.  No-op when dst == src.
 vecMove:
-    begin
     ;; args: dst, src
     %assign N 2
     %assign dst (16 + (N-1) * 8)
     %assign src (16 + (N-2) * 8)
+    begin
 
     mov rax, [rbp + dst]
     cmp rax, [rbp + src]
@@ -1022,11 +1027,11 @@ vecMove:
 ; vecEq(a, b) -> 1 if both vecs have the same length and every pair of
 ; elements compares equal via a's meta->eq, else 0.
 vecEq:
-    begin
     ;; args: a, b
     %assign N 2
     %assign a (16 + (N-1) * 8)
     %assign b (16 + (N-2) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; i 8 bytes
@@ -1087,11 +1092,11 @@ vecEq:
 ; vecCmp(a, b) -> lexicographic order: -1/0/1.  Elements are compared
 ; with a's meta->cmp; shorter vec is less when all shared elements tie.
 vecCmp:
-    begin
     ;; args: a, b
     %assign N 2
     %assign a (16 + (N-1) * 8)
     %assign b (16 + (N-2) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; minLen 8 bytes
@@ -1169,10 +1174,10 @@ vecCmp:
 ; each element's meta->hash is folded through fnv64, exactly like
 ; cbase's vec_hash.
 vecHash:
-    begin
     ;; args: self
     %assign N 1
     %assign self (16 + (N-1) * 8)
+    begin
     ;; local variables
     %assign offset 0
     ;; hash 8 bytes
