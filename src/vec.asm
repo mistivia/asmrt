@@ -23,7 +23,7 @@
 section .data
     global vecMeta
 vecMeta:
-    dq Vec_size                     ; .size
+    dq sizeof_Vec                   ; .size
     dq 8                            ; .align
     dq vecDrop                      ; .drop
     dq vecCmp                       ; .cmp
@@ -841,8 +841,8 @@ vecSwap:
     begin
     ;; local variables
     resetOffset
-    ;; tmpVec 32 bytes
-    decOffset 32)
+    ;; tmpVec: Vec
+    decOffset sizeof_Vec
     %assign tmpVec offset
     ;; endlocal
     sub rsp, (-offset)
@@ -850,18 +850,18 @@ vecSwap:
     lea rax, [rbp + tmpVec]
     push rax
     push [rbp + a]
-    push 32
+    push sizeof_Vec
     call memCopy
 
     push [rbp + a]
     push [rbp + b]
-    push 32
+    push sizeof_Vec
     call memCopy
 
     push [rbp + b]
     lea rax, [rbp + tmpVec]
     push rax
-    push 32
+    push sizeof_Vec
     call memCopy
 
     end
@@ -1175,7 +1175,7 @@ vecHash:
     ;; endlocal
     sub rsp, (-offset)
 
-    mov rax, 0xcbf29ce484222325
+    mov rax, FNV_OFFSET_BASIS
     mov [rbp + hash], rax
 
     mov qword [rbp + i], 0

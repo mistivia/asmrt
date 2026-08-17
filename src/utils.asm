@@ -9,7 +9,7 @@
 ; partition() (sort internals) is not `global` and not
 ; declared in asmrt.inc -- it's private to this file.
 ;
-; fnv64's FNV_OFFSET_BASIS = 0xcbf29ce484222325, FNV_PRIME = 0x100000001b3.
+; fnv64's FNV_OFFSET_BASIS = FNV_OFFSET_BASIS, FNV_PRIME = 0x100000001b3.
 
 %include "asmrt.inc"
 
@@ -219,6 +219,9 @@ partition:
 ; fnv64(data, dataSize, input) -> FNV-1a hash of dataSize bytes at data,
 ; seeded with input.  Mirrors cbase/cbase.h's fnv64.
 ; caller pushes in order: push data; push dataSize; push input
+
+%define FNV_PRIME 0x100000001b3
+
 fnv64:
     ;; args: data, dataSize, input
     argnum 3
@@ -246,9 +249,9 @@ fnv64:
     cmp rax, [rbp + dataSize]
     jae .done
 
-    ; hash *= 0x100000001b3  (too big for an imm32, so via rbx)
+    ; hash *= FNV_PRIME  (too big for an imm32, so via rbx)
     mov rax, [rbp + hash]
-    mov rbx, 0x100000001b3
+    mov rbx, FNV_PRIME
     imul rax, rbx
     mov [rbp + hash], rax
 

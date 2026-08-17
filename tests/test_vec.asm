@@ -51,8 +51,8 @@ section .data
     errFnv        db "fnv64 wrong", 0
 
 section .bss
-    vecA     resb 32
-    vecB     resb 32
+    vecA     resb sizeof_Vec
+    vecB     resb sizeof_Vec
     popped   resq 1
     removed  resq 1
 
@@ -171,13 +171,13 @@ entry:
     ; ---- fnv64 sanity ----
     push fnvData
     push 8
-    mov rax, 0xcbf29ce484222325
+    mov rax, FNV_OFFSET_BASIS
     push rax
     call fnv64
     mov [rbp + tmp], rax
     push fnvData
     push 8
-    mov rax, 0xcbf29ce484222325
+    mov rax, FNV_OFFSET_BASIS
     push rax
     call fnv64
     mov rbx, [rbp + tmp]

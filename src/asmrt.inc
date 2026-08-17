@@ -21,6 +21,8 @@
 %ifndef ASMRT_INC
 %define ASMRT_INC
 
+default rel
+
 ; ---- custom ABI support macros ----
 
 %macro begin 0
@@ -148,7 +150,7 @@ incOffset 8
 %assign Vec_meta offset
 incOffset 8
 
-%assign Vec_size offset
+%assign sizeof_Vec offset
 ;; end struct Vec
 
 ; ---- runtime exported symbols ----
@@ -221,6 +223,8 @@ extern strEq
 ; sort(pBase, nmemb, size, pCmpFn) -- quicksort over opaque elements;
 ;   pCmpFn(a, b) -> <0 / 0 / >0, custom-ABI comparator
 extern sort
+
+%define FNV_OFFSET_BASIS 0xcbf29ce484222325
 ; fnv64(pData, dataSize, input) -> hash ; FNV-1a 64-bit
 extern fnv64
 
