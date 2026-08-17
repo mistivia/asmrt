@@ -97,7 +97,7 @@ ioWriteNum:
     begin
 
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; char buf[32] -- scratch digit buffer: enough for a 64-bit value + sign
     %assign offset (offset - 32)
     %assign buf offset
@@ -149,7 +149,7 @@ ioWriteChar:
     begin
 
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; char buf -- one-byte scratch buffer for ioWrite's source
     %assign offset (offset - 8)
     %assign buf offset

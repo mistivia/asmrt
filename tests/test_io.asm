@@ -27,7 +27,7 @@ section .text
 entry:
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; fd needs to survive multiple calls, so it must live on the stack, not just in a register
     %assign offset (offset - 8)
     %assign fd offset

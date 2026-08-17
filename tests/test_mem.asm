@@ -49,7 +49,7 @@ checkRange:
     %assign n (16 + (N-3) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; k 8 bytes
     %assign offset (offset - 8)
     %assign k offset
@@ -86,7 +86,7 @@ checkRange:
 entry:
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; ptr crosses multiple calls, must live on the stack
     %assign offset (offset - 8)
     %assign ptr offset

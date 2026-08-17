@@ -85,6 +85,16 @@
     add  rsp, 128
 %endmacro
 
+%macro resetOffset 0
+    %assign offset 0
+%endmacro
+
+%macro fwdOffset 1
+    %assign offset (offset + %1)
+%endmacro
+
+%define arg(i) (16 + (i) * 8)
+
 ; ---- shared struct definitions ----
 
 ; ValueMeta: mirrors cbase/cbase.h's `struct value_meta`, the type-info
@@ -92,7 +102,7 @@
 ; int/int for size/align, but under this runtime every field is kept as
 ; a full qword so the struct is uniformly 8-aligned and 64 bytes total.
 ;
-;   int                size;    ; +0
+;   int                objsize; ; +0
 ;   int                align;   ; +8
 ;   drop_fn            drop;    ; +16
 ;   cmp_fn             cmp;     ; +24
@@ -102,31 +112,31 @@
 ;   move_fn            move;    ; +56
 ;                                        total 64, all fields 8-aligned
 ;; struct ValueMeta
-%assign offset 0
+resetOffset
 ;; qword size
-%assign ValueMeta_size offset
-%assign offset (offset + 8)
+%assign ValueMeta_objsize offset
+fwdOffset 8
 ;; qword align
 %assign ValueMeta_align offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; qword drop
 %assign ValueMeta_drop offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; qword cmp
 %assign ValueMeta_cmp offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; qword eq
 %assign ValueMeta_eq offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; qword hash
 %assign ValueMeta_hash offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; qword copy
 %assign ValueMeta_copy offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; qword move
 %assign ValueMeta_move offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; endstruct
 %assign ValueMeta_size offset
 
@@ -139,19 +149,19 @@
 ;   size_t capacity ; +16
 ;   struct value_meta *meta ; +24
 ;; struct Vec
-%assign offset 0
+resetOffset
 ;; qword data
 %assign Vec_data offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; qword len
 %assign Vec_len offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; qword capacity
 %assign Vec_capacity offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; qword meta
 %assign Vec_meta offset
-%assign offset (offset + 8)
+fwdOffset 8
 ;; endstruct
 %assign Vec_size offset
 

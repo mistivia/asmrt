@@ -161,7 +161,7 @@ checkInt64:
 entry:
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; tmp 8 bytes
     %assign offset (offset - 8)
     %assign tmp offset

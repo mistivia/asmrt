@@ -62,7 +62,7 @@ sort:
     %assign cmpFn (16 + (N-4) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; partition point, returned by partition(); must
     %assign offset (offset - 8)
     %assign p offset
@@ -126,7 +126,7 @@ partition:
     %assign cmpFn (16 + (N-4) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; boundary: [0, i] are known < pivot so far
     %assign offset (offset - 8)
     %assign i offset
@@ -226,7 +226,7 @@ fnv64:
     %assign input (16 + (N-3) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; hash 8 bytes
     %assign offset (offset - 8)
     %assign hash offset

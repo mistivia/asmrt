@@ -67,7 +67,7 @@ struct Sample {
 
 ```asm
 ;; struct Sample
-%assign offset 0
+resetOffset
 ;; i32 x
 %assign Sample_x offset
 %assign offset (offset + 4)
@@ -87,7 +87,7 @@ struct Sample {
 
 ```asm
 ;; struct Tiny
-%assign offset 0
+resetOffset
 ;; i32 x
 %assign Tiny_x offset
 %assign offset (offset + 4)
@@ -106,7 +106,7 @@ struct Sample {
 
 ```asm
 ;; local variables
-%assign offset 0
+resetOffset
 ;; int64_t x
 %assign offset (offset - 8)
 %assign x offset
@@ -163,7 +163,7 @@ fibo:
     %assign x (16 + (N-1) * 8)
     begin
     ;; local acc
-    %assign offset 0
+    resetOffset
     ;; int64_t acc
     %assign offset (offset - 8)
     %assign acc offset

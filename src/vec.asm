@@ -81,7 +81,7 @@ elemAddr:
     mov rax, [rax + Vec_data]
     mov rbx, [rbp + self]
     mov rbx, [rbx + Vec_meta]
-    mov rbx, [rbx + ValueMeta_size]
+    mov rbx, [rbx + ValueMeta_objsize]
     mov rcx, [rbp + index]
     imul rbx, rcx
     add rax, rbx
@@ -138,7 +138,7 @@ vecWithCapacity:
 
     ; self->data = memAlloc(capacity * meta->size)
     mov rax, [rbp + meta]
-    mov rbx, [rax + ValueMeta_size]
+    mov rbx, [rax + ValueMeta_objsize]
     mov rcx, [rbp + capacity]
     imul rbx, rcx
     push rbx
@@ -162,7 +162,7 @@ vecReserve:
     %assign additional (16 + (N-2) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; needed 8 bytes
     %assign offset (offset - 8)
     %assign needed offset
@@ -202,7 +202,7 @@ vecReserve:
     push rax
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
-    mov rax, [rax + ValueMeta_size]
+    mov rax, [rax + ValueMeta_objsize]
     mov rbx, [rbp + newCap]
     imul rax, rbx
     push rax
@@ -225,7 +225,7 @@ vecDrop:
     begin
 
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; i 8 bytes
     %assign offset (offset - 8)
     %assign i offset
@@ -270,7 +270,7 @@ vecClear:
     %assign self (16 + (N-1) * 8)
 
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; i 8 bytes
     %assign offset (offset - 8)
     %assign i offset
@@ -309,7 +309,7 @@ vecTruncate:
     %assign len (16 + (N-2) * 8)
 
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; i 8 bytes
     %assign offset (offset - 8)
     %assign i offset
@@ -466,7 +466,7 @@ vecSet:
     %assign isMove (16 + (N-4) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; dst 8 bytes
     %assign offset (offset - 8)
     %assign dst offset
@@ -517,7 +517,7 @@ vecPush:
     %assign isMove (16 + (N-3) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; dst 8 bytes
     %assign offset (offset - 8)
     %assign dst offset
@@ -564,7 +564,7 @@ vecPop:
     %assign out (16 + (N-2) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; src 8 bytes
     %assign offset (offset - 8)
     %assign src offset
@@ -592,7 +592,7 @@ vecPop:
     push [rbp + src]
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
-    mov rbx, [rax + ValueMeta_size]
+    mov rbx, [rax + ValueMeta_objsize]
     push rbx
     call memCopy
 .noOut:
@@ -619,7 +619,7 @@ vecInsert:
     %assign isMove (16 + (N-4) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; dst 8 bytes
     %assign offset (offset - 8)
     %assign dst offset
@@ -658,7 +658,7 @@ vecInsert:
 
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
-    mov rdx, [rax + ValueMeta_size]
+    mov rdx, [rax + ValueMeta_objsize]
     mov rax, [rbp + self]
     mov rax, [rax + Vec_len]
     sub rax, [rbp + index]
@@ -706,7 +706,7 @@ vecRemove:
     %assign out (16 + (N-3) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; removed 8 bytes
     %assign offset (offset - 8)
     %assign removed offset
@@ -726,7 +726,7 @@ vecRemove:
     mov [rbp + removed], rax
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
-    mov rbx, [rax + ValueMeta_size]
+    mov rbx, [rax + ValueMeta_objsize]
     push [rbp + out]
     push [rbp + removed]
     push rbx
@@ -754,7 +754,7 @@ vecRemove:
     ; n = size * (len - index - 1)
     mov rdx, [rbp + self]
     mov rdx, [rdx + Vec_meta]
-    mov rdx, [rdx + ValueMeta_size]
+    mov rdx, [rdx + ValueMeta_objsize]
     mov rcx, [rbp + self]
     mov rcx, [rcx + Vec_len]
     sub rcx, [rbp + index]
@@ -786,7 +786,7 @@ vecSwapElement:
     %assign b (16 + (N-3) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; pa 8 bytes
     %assign offset (offset - 8)
     %assign pa offset
@@ -811,7 +811,7 @@ vecSwapElement:
 
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
-    mov rax, [rax + ValueMeta_size]
+    mov rax, [rax + ValueMeta_objsize]
     mov [rbp + size], rax
 
     push [rbp + self]
@@ -841,7 +841,7 @@ vecSwap:
     %assign b (16 + (N-2) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; tmpVec 32 bytes
     %assign offset (offset - 32)
     %assign tmpVec offset
@@ -889,7 +889,7 @@ vecSort:
     push rax
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
-    mov rax, [rax + ValueMeta_size]
+    mov rax, [rax + ValueMeta_objsize]
     push rax
     mov rax, [rbp + self]
     mov rax, [rax + Vec_meta]
@@ -912,7 +912,7 @@ vecCopy:
     %assign src (16 + (N-2) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; i 8 bytes
     %assign offset (offset - 8)
     %assign i offset
@@ -1017,7 +1017,7 @@ vecEq:
     %assign b (16 + (N-2) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; i 8 bytes
     %assign offset (offset - 8)
     %assign i offset
@@ -1082,7 +1082,7 @@ vecCmp:
     %assign b (16 + (N-2) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; minLen 8 bytes
     %assign offset (offset - 8)
     %assign minLen offset
@@ -1163,7 +1163,7 @@ vecHash:
     %assign self (16 + (N-1) * 8)
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; hash 8 bytes
     %assign offset (offset - 8)
     %assign hash offset

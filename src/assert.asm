@@ -14,8 +14,8 @@ section .text
 assert:
     ;; args: msg, flag
     %assign N 2
-    %assign msg (16 + (N-1) * 8)
-    %assign flag (16 + (N-2) * 8)
+    %assign msg arg(1)
+    %assign flag arg(2)
     begin
 
     cmp qword [rbp + flag], 0

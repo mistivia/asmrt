@@ -14,7 +14,7 @@ section .text
 entry:
     begin
     ;; local variables
-    %assign offset 0
+    resetOffset
     ;; default size 8, at rbp-8
     %assign offset (offset - 8)
     %assign a offset
