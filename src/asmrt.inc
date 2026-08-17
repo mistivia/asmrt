@@ -208,6 +208,8 @@ extern memCopy
 extern memMove
 ; memFill(pDest, val, n) -> pDest ; fills n bytes with val's low byte
 extern memFill
+; memSwap(pA, pB, size) ; swap `size` bytes between pA and pB
+extern memSwap
 
 ; assert.asm
 ; assert(pMsg, flag) -- if flag == 0, write pMsg to stderr and exit(-1)

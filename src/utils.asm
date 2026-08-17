@@ -6,8 +6,8 @@
 ;   fnv64(data, dataSize, input) -- FNV-1a 64-bit hash, mirrors
 ;     ckit/cbase/cbase.h's fnv64.
 ;
-; partition()/swapElems() (sort internals) are not `global` and not
-; declared in asmrt.inc -- they're private to this file.
+; partition() (sort internals) is not `global` and not
+; declared in asmrt.inc -- it's private to this file.
 ;
 ; fnv64's FNV_OFFSET_BASIS = 0xcbf29ce484222325, FNV_PRIME = 0x100000001b3.
 
@@ -41,12 +41,11 @@ section .text
 ; moved forward by (p+1)*size elements and nmemb shrunk to match, not
 ; tracking a pair of indices into the original array.
 ;
-; partition()/swapElems() are internal (not `global`) -- nothing outside
-; this file calls them directly, so they're not declared in asmrt.inc
-; either. Every one of them still follows the same custom ABI as any
-; exported function, recursive calls included: the pivot index p, which
-; must survive the call to partition(), lives in a stack local, never a
-; register.
+; partition() is internal (not `global`) -- nothing outside this file
+; calls it directly, so it's not declared in asmrt.inc either. It still
+; follows the same custom ABI as any exported function. The pivot index
+; p, which must survive the call to partition(), lives in a stack local,
+; never a register.
 ;
 ; Naive last-element-as-pivot quicksort degrades to O(n) recursion depth
 ; (and O(n^2) time) on already-sorted or reverse-sorted input -- a known
@@ -180,7 +179,7 @@ partition:
     push rax                       ; addrB = elem[j]
 
     push [rbp + size]
-    call swapElems
+    call memSwap
 
 .noSwap:
     mov rax, [rbp + j]
@@ -206,55 +205,13 @@ partition:
     push rax                       ; addrB = elem[nmemb-1]
 
     push [rbp + size]
-    call swapElems
+    call memSwap
 
     mov rax, [rbp + i]                  ; return the pivot's final index
 
     end
     ret 32
 
-; swapElems(addrA, addrB, size) -- swap `size` bytes between addrA/addrB.
-; Moves 8 bytes at a time while at least 8 remain, then falls back to a
-; byte-at-a-time tail for whatever's left (size isn't guaranteed to be a
-; multiple of 8 -- e.g. a 4-byte int32 element). No call happens inside
-; either loop, so rax/rbx/rcx/rdx/r8/r9b are pure scratch for that
-; stretch, same as strEq's loop in str.asm.
-; caller pushes in order: push addrA; push addrB; push size
-swapElems:
-    ;; args: addrA, addrB, size
-    %assign N 3
-    %assign addrA (16 + (N-1) * 8)
-    %assign addrB (16 + (N-2) * 8)
-    %assign size (16 + (N-3) * 8)
-    begin
-
-    mov rbx, [rbp + addrA]
-    mov rcx, [rbp + addrB]
-    xor r8, r8
-.qwordLoop:
-    mov rax, [rbp + size]
-    sub rax, r8
-    cmp rax, 8
-    jl .byteLoop           ; fewer than 8 bytes left -- finish those one at a time
-    mov rax, [rbx + r8]
-    mov rdx, [rcx + r8]
-    mov [rbx + r8], rdx
-    mov [rcx + r8], rax
-    add r8, 8
-    jmp .qwordLoop
-.byteLoop:
-    cmp r8, [rbp + size]
-    jge .done
-    mov al,  [rbx + r8]
-    mov r9b, [rcx + r8]
-    mov [rbx + r8], r9b
-    mov [rcx + r8], al
-    inc r8
-    jmp .byteLoop
-.done:
-
-    end
-    ret 24
 
 ; ============================ fnv64 ===========================
 

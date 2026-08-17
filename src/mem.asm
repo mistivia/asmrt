@@ -7,13 +7,13 @@
 ; per the real ABI (rdi/rsi/...), same as any other real-ABI call made
 ; from inside this runtime.
 ;
-; memCopy/memMove/memFill don't call into libc at all -- copying/filling
-; bytes doesn't need an allocator, so they're written directly in the
-; custom ABI, the same way str.asm implements strLen/strEq itself
-; instead of wrapping libc's. copyForward (the shared
-; 8-bytes-at-a-time-then-a-tail loop used by both memCopy and memMove's
-; non-overlapping case) is internal, not `global` -- same pattern as
-; utils.asm's swapElems helper.
+; memCopy/memMove/memFill/memSwap don't call into libc at all --
+; copying/filling/swapping bytes doesn't need an allocator, so they're
+; written directly in the custom ABI, the same way str.asm implements
+; strLen/strEq itself instead of wrapping libc's. copyForward (the
+; shared 8-bytes-at-a-time-then-a-tail loop used by both memCopy and
+; memMove's non-overlapping case) is internal, not `global`, while
+; memSwap is the public byte-swap helper shared with utils.asm's sort.
 
 %include "asmrt.inc"
 
@@ -24,6 +24,7 @@ section .text
     global memCopy
     global memMove
     global memFill
+    global memSwap
     extern malloc
     extern free
     extern realloc
@@ -154,7 +155,7 @@ memMove:
 ; a qword once up front (the classic shift-or trick), then stores 8
 ; bytes at a time while at least 8 remain, falling back to a
 ; byte-at-a-time tail for the rest (n isn't guaranteed to be a multiple
-; of 8) -- same chunking as copyForward/swapElems. No call happens in
+; of 8) -- same chunking as copyForward/memSwap. No call happens in
 ; either loop, so rax/rbx/r8/r10 are pure scratch throughout.
 ; caller pushes in order: push dest; push val; push n
 memFill:
@@ -195,6 +196,49 @@ memFill:
     jmp .byteLoop
 .done:
     mov rax, [rbp + dest]
+
+    end
+    ret 24
+
+; memSwap(addrA, addrB, size) -- swap `size` bytes between addrA/addrB.
+; Moves 8 bytes at a time while at least 8 remain, then falls back to a
+; byte-at-a-time tail for whatever's left (size isn't guaranteed to be a
+; multiple of 8 -- e.g. a 4-byte int32 element). No call happens inside
+; either loop, so rax/rbx/rcx/rdx/r8/r9b are pure scratch for that
+; stretch, same as strEq's loop in str.asm.
+; caller pushes in order: push addrA; push addrB; push size
+memSwap:
+    ;; args: addrA, addrB, size
+    %assign N 3
+    %assign addrA (16 + (N-1) * 8)
+    %assign addrB (16 + (N-2) * 8)
+    %assign size (16 + (N-3) * 8)
+    begin
+
+    mov rbx, [rbp + addrA]
+    mov rcx, [rbp + addrB]
+    xor r8, r8
+.qwordLoop:
+    mov rax, [rbp + size]
+    sub rax, r8
+    cmp rax, 8
+    jl .byteLoop           ; fewer than 8 bytes left -- finish those one at a time
+    mov rax, [rbx + r8]
+    mov rdx, [rcx + r8]
+    mov [rbx + r8], rdx
+    mov [rcx + r8], rax
+    add r8, 8
+    jmp .qwordLoop
+.byteLoop:
+    cmp r8, [rbp + size]
+    jge .done
+    mov al,  [rbx + r8]
+    mov r9b, [rcx + r8]
+    mov [rbx + r8], r9b
+    mov [rcx + r8], al
+    inc r8
+    jmp .byteLoop
+.done:
 
     end
     ret 24
