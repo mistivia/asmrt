@@ -26,8 +26,8 @@ sum3:
     %assign p1 arg(1)
     %assign p2 arg(2)
     %assign p3 arg(3)
-    begin
 
+    begin
     mov rax, [rbp + p1]
     cmp rax, 1
     sete al

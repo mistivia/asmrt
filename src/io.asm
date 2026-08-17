@@ -23,9 +23,9 @@ section .text
 ioOpen:
     ; args: path, flags, mode
     argnum 3
-    %assign path arg(1)
+    %assign path  arg(1)
     %assign flags arg(2)
-    %assign mode arg(3)
+    %assign mode  arg(3)
 
     begin
     mov rdi, [rbp + path]
