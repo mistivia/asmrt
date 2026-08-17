@@ -7,7 +7,7 @@
 ; cleans up its three arguments internally with ret 24). The custom ABI
 ; pushes arguments in declaration order, so inside entry [rbp+16]=envp
 ; (pushed last), [rbp+24]=argv, [rbp+32]=argc (pushed first).
-; entry's return value (rax) becomes the process exit code, following the
+; entry's return value becomes the process exit code, following the
 ; __libc_start_main convention that main's return value is the exit
 ; status.
 ;

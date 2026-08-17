@@ -36,7 +36,7 @@ ioOpen:
     end
     ret 24
 
-; ioClose(fd) -> result (rax)
+; ioClose(fd) -> result
 ioClose:
     ;; args: fd
     argnum 1
@@ -86,7 +86,7 @@ ioWrite:
     end
     ret 24
 
-; ioWriteNum(fd, num) -> bytes written (rax), same as ioWrite's return value
+; ioWriteNum(fd, num) -> bytes written, same as ioWrite's return value
 ; Writes the base-10 ASCII representation of the signed integer num to fd,
 ; with a leading '-' for negative values; no trailing newline.
 ioWriteNum:
@@ -139,7 +139,7 @@ ioWriteNum:
     end
     ret 16
 
-; ioWriteChar(fd, ch) -> bytes written (rax), same as ioWrite's return value
+; ioWriteChar(fd, ch) -> bytes written, same as ioWrite's return value
 ; Writes the single byte ch (low 8 bits of the pushed value) to fd.
 ioWriteChar:
     ;; args: fd, ch
@@ -168,7 +168,7 @@ ioWriteChar:
     end
     ret 16
 
-; ioSeek(fd, offset, whence) -> new file offset (rax)
+; ioSeek(fd, offset, whence) -> new file offset
 ; whence: 0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END
 ioSeek:
     ;; args: fd, offset, whence

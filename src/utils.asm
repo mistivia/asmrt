@@ -109,7 +109,8 @@ sort:
     end
     ret 32
 
-; partition(base, nmemb, size, cmpFn) -> pivot index (rax), 0-based within [0, nmemb)
+; partition(base, nmemb, size, cmpFn) -> pivot index
+; 0-based within [0, nmemb)
 ; Lomuto partition: elem[nmemb-1] is the pivot; on return, everything in
 ; [0, p) compares < pivot and everything in (p, nmemb) compares >= pivot,
 ; with the pivot itself now sitting at index p. Same (base, nmemb, size,

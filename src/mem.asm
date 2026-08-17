@@ -29,7 +29,7 @@ section .text
     extern free
     extern realloc
 
-; memAlloc(size) -> ptr (rax), NULL on failure
+; memAlloc(size) -> ptr, NULL on failure
 memAlloc:
     ;; args: size
     argnum 1
@@ -43,13 +43,12 @@ memAlloc:
     end
     ret 8
 
-; memFree(ptr) -> rax is always 0; free() itself returns nothing
+; memFree(ptr) -> void
 memFree:
-    ;; args: ptr
     argnum 1
     %assign ptr arg(1)
-    begin
 
+    begin
     hexalign
     mov rdi, [rbp + ptr]
     call free
@@ -58,7 +57,7 @@ memFree:
     end
     ret 8
 
-; memReloc(ptr, size) -> new ptr (rax), NULL on failure (ptr is left untouched by libc on failure)
+; memReloc(ptr, size) -> new ptr, NULL on failure (ptr is left untouched by libc on failure)
 memReloc:
     ;; args: ptr, size
     argnum 2
@@ -74,7 +73,7 @@ memReloc:
     end
     ret 16
 
-; memCopy(dest, src, n) -> dest (rax)
+; memCopy(dest, src, n) -> dest
 ; Copies n bytes from src to dest. Assumes the two regions don't
 ; overlap -- for possibly-overlapping regions use memMove instead.
 ; caller pushes in order: push dest; push src; push n
@@ -94,7 +93,7 @@ memCopy:
     end
     ret 24
 
-; memMove(dest, src, n) -> dest (rax)
+; memMove(dest, src, n) -> dest
 ; Like memCopy, but safe when the two regions overlap: copies forward
 ; (low to high address) when dest <= src, backward (high to low) when
 ; dest > src, so a byte is never overwritten before it's read.
@@ -149,7 +148,7 @@ memMove:
     end
     ret 24
 
-; memFill(dest, val, n) -> dest (rax)
+; memFill(dest, val, n) -> dest
 ; Fills n bytes at dest with the low byte of val -- same low-byte-only
 ; contract as libc's memset. Broadcasts that byte across all 8 bytes of
 ; a qword once up front (the classic shift-or trick), then stores 8
@@ -241,7 +240,7 @@ memSwap:
     end
     ret 24
 
-; copyForward(dest, src, n) -> dest (rax) -- internal helper shared by
+; copyForward(dest, src, n) -> dest -- internal helper shared by
 ; memCopy and memMove's non-overlapping case. Moves 8 bytes at a time
 ; while at least 8 remain, then a byte-at-a-time tail for whatever's
 ; left (n isn't guaranteed to be a multiple of 8). No call happens

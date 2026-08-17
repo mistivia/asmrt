@@ -16,7 +16,7 @@ section .text
     global fsRmdir
     global fsUnlink
 
-; fsStat(path, statBuf) -> result (rax)
+; fsStat(path, statBuf) -> result
 fsStat:
     ;; args: path, buf
     argnum 2

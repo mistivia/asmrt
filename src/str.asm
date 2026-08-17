@@ -8,7 +8,7 @@ section .text
     global strLen
     global strEq
 
-; strLen(s) -> length, excluding the trailing NUL (rax)
+; strLen(s) -> length, excluding the trailing NUL
 strLen:
     ;; args: s
     argnum 1
