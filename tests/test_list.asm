@@ -22,28 +22,93 @@ section .data
     val25 dq 25
     val30 dq 30
 
-    errInit     db "listInit failed", 0
-    errLen      db "listLen wrong", 0
-    errIsEmpty  db "listIsEmpty wrong", 0
-    errBegin    db "listBegin wrong", 0
-    errLast     db "listLast wrong", 0
-    errEnd      db "listEnd wrong", 0
-    errGet      db "listGet wrong", 0
-    errNext     db "listNext wrong", 0
-    errPrev     db "listPrev wrong", 0
-    errInsert   db "listInsert wrong", 0
-    errSet      db "listSet wrong", 0
-    errRemove   db "listRemove wrong", 0
-    errPop      db "listPop wrong", 0
-    errClear    db "listClear wrong", 0
-    errCopy     db "listCopy wrong", 0
-    errMove     db "listMove wrong", 0
-    errSwap     db "listSwap wrong", 0
-    errEq       db "listEq wrong", 0
-    errCmp      db "listCmp wrong", 0
-    errHash     db "listHash wrong", 0
-    errDrop     db "listDrop wrong", 0
-    errMeta     db "listMeta wrong", 0
+errInit dq (errInit_end - errInit_start)
+    errInit_start: db "listInit failed"
+    errInit_end: db 0
+
+errLen dq (errLen_end - errLen_start)
+    errLen_start: db "listLen wrong"
+    errLen_end: db 0
+
+errIsEmpty dq (errIsEmpty_end - errIsEmpty_start)
+    errIsEmpty_start: db "listIsEmpty wrong"
+    errIsEmpty_end: db 0
+
+errBegin dq (errBegin_end - errBegin_start)
+    errBegin_start: db "listBegin wrong"
+    errBegin_end: db 0
+
+errLast dq (errLast_end - errLast_start)
+    errLast_start: db "listLast wrong"
+    errLast_end: db 0
+
+errEnd dq (errEnd_end - errEnd_start)
+    errEnd_start: db "listEnd wrong"
+    errEnd_end: db 0
+
+errGet dq (errGet_end - errGet_start)
+    errGet_start: db "listGet wrong"
+    errGet_end: db 0
+
+errNext dq (errNext_end - errNext_start)
+    errNext_start: db "listNext wrong"
+    errNext_end: db 0
+
+errPrev dq (errPrev_end - errPrev_start)
+    errPrev_start: db "listPrev wrong"
+    errPrev_end: db 0
+
+errInsert dq (errInsert_end - errInsert_start)
+    errInsert_start: db "listInsert wrong"
+    errInsert_end: db 0
+
+errSet dq (errSet_end - errSet_start)
+    errSet_start: db "listSet wrong"
+    errSet_end: db 0
+
+errRemove dq (errRemove_end - errRemove_start)
+    errRemove_start: db "listRemove wrong"
+    errRemove_end: db 0
+
+errPop dq (errPop_end - errPop_start)
+    errPop_start: db "listPop wrong"
+    errPop_end: db 0
+
+errClear dq (errClear_end - errClear_start)
+    errClear_start: db "listClear wrong"
+    errClear_end: db 0
+
+errCopy dq (errCopy_end - errCopy_start)
+    errCopy_start: db "listCopy wrong"
+    errCopy_end: db 0
+
+errMove dq (errMove_end - errMove_start)
+    errMove_start: db "listMove wrong"
+    errMove_end: db 0
+
+errSwap dq (errSwap_end - errSwap_start)
+    errSwap_start: db "listSwap wrong"
+    errSwap_end: db 0
+
+errEq dq (errEq_end - errEq_start)
+    errEq_start: db "listEq wrong"
+    errEq_end: db 0
+
+errCmp dq (errCmp_end - errCmp_start)
+    errCmp_start: db "listCmp wrong"
+    errCmp_end: db 0
+
+errHash dq (errHash_end - errHash_start)
+    errHash_start: db "listHash wrong"
+    errHash_end: db 0
+
+errDrop dq (errDrop_end - errDrop_start)
+    errDrop_start: db "listDrop wrong"
+    errDrop_end: db 0
+
+errMeta dq (errMeta_end - errMeta_start)
+    errMeta_start: db "listMeta wrong"
+    errMeta_end: db 0
 
 section .bss
     listA    resb sizeof_List

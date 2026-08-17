@@ -11,8 +11,13 @@ section .data
     arr32      dd 3, -1, 2, -5, 0, 42, -42
     arr32Len   equ 7
 
-    errNotSorted64 db "sort() left the int64 array out of order", 0
-    errNotSorted32 db "sort() left the int32 array out of order", 0
+errNotSorted64 dq (errNotSorted64_end - errNotSorted64_start)
+    errNotSorted64_start: db "sort() left the int64 array out of order"
+    errNotSorted64_end: db 0
+
+errNotSorted32 dq (errNotSorted32_end - errNotSorted32_start)
+    errNotSorted32_start: db "sort() left the int32 array out of order"
+    errNotSorted32_end: db 0
 
 section .text
     global entry

@@ -6,17 +6,35 @@
 section .data
     msg         db "hello asmrt io test", 10
     msgLen      equ $ - msg
-    path        db "/tmp/asmrt_test_io.txt", 0
-    errOpen     db "ioOpen failed", 0
-    errWrite    db "ioWrite short write", 0
-    errRead     db "ioRead short read", 0
-    errContent  db "ioRead content mismatch", 0
-    errSeek     db "ioSeek(SEEK_SET, 0) did not return 0", 0
+    path db "/tmp/asmrt_test_io.txt", 0
 
-    numPath     db "/tmp/asmrt_test_io_num.txt", 0
+errOpen dq (errOpen_end - errOpen_start)
+    errOpen_start: db "ioOpen failed"
+    errOpen_end: db 0
+
+errWrite dq (errWrite_end - errWrite_start)
+    errWrite_start: db "ioWrite short write"
+    errWrite_end: db 0
+
+errRead dq (errRead_end - errRead_start)
+    errRead_start: db "ioRead short read"
+    errRead_end: db 0
+
+errContent dq (errContent_end - errContent_start)
+    errContent_start: db "ioRead content mismatch"
+    errContent_end: db 0
+
+errSeek dq (errSeek_end - errSeek_start)
+    errSeek_start: db "ioSeek(SEEK_SET, 0) did not return 0"
+    errSeek_end: db 0
+
+    numPath db "/tmp/asmrt_test_io_num.txt", 0
+
     numExpect   db "42,-7,0,A", 10
     numExpectLen equ $ - numExpect
-    errNumContent db "ioWriteNum/ioWriteChar content mismatch", 0
+errNumContent dq (errNumContent_end - errNumContent_start)
+    errNumContent_start: db "ioWriteNum/ioWriteChar content mismatch"
+    errNumContent_end: db 0
 
 section .bss
     readBuf resb 64

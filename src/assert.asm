@@ -1,8 +1,9 @@
 ; assert.asm -- assertion, custom ABI
 ;
-; assert(msg, flag)
-;   flag false (0): write the NUL-terminated msg to stderr, then
-;     terminate the process with exit code -1;
+; assert(pStr, flag)
+;   flag false (0): write the length-prefixed string pStr (str.asm
+;     layout: [8-byte len][data][NUL]) to stderr, then terminate the
+;     process with exit code -1;
 ;   flag true: do nothing, return normally.
 
 %include "asmrt.inc"
@@ -21,13 +22,9 @@ assert:
     cmp qword [rbp + flag], 0
     jne .ok
 
-    push [rbp + msg]
-    call strLen          ; rax = strlen(msg); msg is a stack argument, still readable after the call
-
     push 2               ; fd = stderr
-    push [rbp + msg]     ; buf = msg
-    push rax             ; count = strlen(msg)
-    call ioWrite
+    push [rbp + msg]     ; pStr = msg (length-prefixed)
+    call ioWriteString
 
     push -1
     call rtExit          ; never returns

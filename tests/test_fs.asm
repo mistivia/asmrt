@@ -10,11 +10,23 @@
 %include "asmrt.inc"
 
 section .data
-    dir        db "tests/asmrt_test_dir", 0
-    errMkdir   db "fsMkdir failed", 0
-    errStat    db "fsStat on created dir failed", 0
-    errRmdir   db "fsRmdir failed", 0
-    errStat2   db "fsStat should fail after rmdir", 0
+    dir db "tests/asmrt_test_dir", 0
+
+errMkdir dq (errMkdir_end - errMkdir_start)
+    errMkdir_start: db "fsMkdir failed"
+    errMkdir_end: db 0
+
+errStat dq (errStat_end - errStat_start)
+    errStat_start: db "fsStat on created dir failed"
+    errStat_end: db 0
+
+errRmdir dq (errRmdir_end - errRmdir_start)
+    errRmdir_start: db "fsRmdir failed"
+    errRmdir_end: db 0
+
+errStat2 dq (errStat2_end - errStat2_start)
+    errStat2_start: db "fsStat should fail after rmdir"
+    errStat2_end: db 0
 
 section .bss
     statBuf resb 144

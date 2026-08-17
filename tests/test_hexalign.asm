@@ -9,8 +9,13 @@
 %include "asmrt.inc"
 
 section .data
-    errAlignedCase1 db "case1: rsp should be 16-byte aligned after hexalign", 0
-    errAlignedCase2 db "case2: rsp should be 16-byte aligned after hexalign", 0
+errAlignedCase1 dq (errAlignedCase1_end - errAlignedCase1_start)
+    errAlignedCase1_start: db "case1: rsp should be 16-byte aligned after hexalign"
+    errAlignedCase1_end: db 0
+
+errAlignedCase2 dq (errAlignedCase2_end - errAlignedCase2_start)
+    errAlignedCase2_start: db "case2: rsp should be 16-byte aligned after hexalign"
+    errAlignedCase2_end: db 0
 
 section .text
     global entry

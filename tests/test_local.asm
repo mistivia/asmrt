@@ -3,10 +3,21 @@
 %include "asmrt.inc"
 
 section .data
-    errA    db "local a mismatch", 0
-    errB    db "local b mismatch", 0
-    errC    db "local c mismatch", 0
-    errD    db "local d (struct-sized) mismatch", 0
+errA dq (errA_end - errA_start)
+    errA_start: db "local a mismatch"
+    errA_end: db 0
+
+errB dq (errB_end - errB_start)
+    errB_start: db "local b mismatch"
+    errB_end: db 0
+
+errC dq (errC_end - errC_start)
+    errC_start: db "local c mismatch"
+    errC_end: db 0
+
+errD dq (errD_end - errD_start)
+    errD_start: db "local d (struct-sized) mismatch"
+    errD_end: db 0
 
 section .text
     global entry

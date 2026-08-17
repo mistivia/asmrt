@@ -3,9 +3,17 @@
 %include "asmrt.inc"
 
 section .data
-    err1    db "args p1 mismatch", 0
-    err2    db "args p2 mismatch", 0
-    err3    db "args p3 mismatch", 0
+err1 dq (err1_end - err1_start)
+    err1_start: db "args p1 mismatch"
+    err1_end: db 0
+
+err2 dq (err2_end - err2_start)
+    err2_start: db "args p2 mismatch"
+    err2_end: db 0
+
+err3 dq (err3_end - err3_start)
+    err3_start: db "args p3 mismatch"
+    err3_end: db 0
 
 section .text
     global entry

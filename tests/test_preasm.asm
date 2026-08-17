@@ -8,7 +8,9 @@
 %include "asmrt.inc"
 
 section .data
-    probe   db "x", 0
+probe dq (probe_end - probe_start)
+    probe_start: db "x"
+    probe_end: db 0
 
     expRax dq 0x1111111111111111
     expRbx dq 0x2222222222222222
@@ -25,20 +27,61 @@ section .data
     expR14 dq 0xDDDDDDDDDDDDDDDD
     expR15 dq 0xEEEEEEEEEEEEEEEE
 
-    errRax db "preasm/postasm failed to protect rax", 0
-    errRbx db "preasm/postasm failed to protect rbx", 0
-    errRcx db "preasm/postasm failed to protect rcx", 0
-    errRdx db "preasm/postasm failed to protect rdx", 0
-    errRsi db "preasm/postasm failed to protect rsi", 0
-    errRdi db "preasm/postasm failed to protect rdi", 0
-    errR8  db "preasm/postasm failed to protect r8", 0
-    errR9  db "preasm/postasm failed to protect r9", 0
-    errR10 db "preasm/postasm failed to protect r10", 0
-    errR11 db "preasm/postasm failed to protect r11", 0
-    errR12 db "preasm/postasm failed to protect r12", 0
-    errR13 db "preasm/postasm failed to protect r13", 0
-    errR14 db "preasm/postasm failed to protect r14", 0
-    errR15 db "preasm/postasm failed to protect r15", 0
+errRax dq (errRax_end - errRax_start)
+    errRax_start: db "preasm/postasm failed to protect rax"
+    errRax_end: db 0
+
+errRbx dq (errRbx_end - errRbx_start)
+    errRbx_start: db "preasm/postasm failed to protect rbx"
+    errRbx_end: db 0
+
+errRcx dq (errRcx_end - errRcx_start)
+    errRcx_start: db "preasm/postasm failed to protect rcx"
+    errRcx_end: db 0
+
+errRdx dq (errRdx_end - errRdx_start)
+    errRdx_start: db "preasm/postasm failed to protect rdx"
+    errRdx_end: db 0
+
+errRsi dq (errRsi_end - errRsi_start)
+    errRsi_start: db "preasm/postasm failed to protect rsi"
+    errRsi_end: db 0
+
+errRdi dq (errRdi_end - errRdi_start)
+    errRdi_start: db "preasm/postasm failed to protect rdi"
+    errRdi_end: db 0
+
+errR8 dq (errR8_end - errR8_start)
+    errR8_start: db "preasm/postasm failed to protect r8"
+    errR8_end: db 0
+
+errR9 dq (errR9_end - errR9_start)
+    errR9_start: db "preasm/postasm failed to protect r9"
+    errR9_end: db 0
+
+errR10 dq (errR10_end - errR10_start)
+    errR10_start: db "preasm/postasm failed to protect r10"
+    errR10_end: db 0
+
+errR11 dq (errR11_end - errR11_start)
+    errR11_start: db "preasm/postasm failed to protect r11"
+    errR11_end: db 0
+
+errR12 dq (errR12_end - errR12_start)
+    errR12_start: db "preasm/postasm failed to protect r12"
+    errR12_end: db 0
+
+errR13 dq (errR13_end - errR13_start)
+    errR13_start: db "preasm/postasm failed to protect r13"
+    errR13_end: db 0
+
+errR14 dq (errR14_end - errR14_start)
+    errR14_start: db "preasm/postasm failed to protect r14"
+    errR14_end: db 0
+
+errR15 dq (errR15_end - errR15_start)
+    errR15_start: db "preasm/postasm failed to protect r15"
+    errR15_end: db 0
 
 section .bss
     actRax resq 1
@@ -79,7 +122,7 @@ entry:
 
     preasm
     push probe
-    call strLen          ; custom-ABI call, rewrites every register to something else
+    call stringLen       ; custom-ABI call, rewrites every register to something else
     postasm
 
     ; move every register to memory right after postasm, before the

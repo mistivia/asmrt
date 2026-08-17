@@ -23,15 +23,41 @@ section .data
     fillExpected db 0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA
     fillLen      equ 11   ; deliberately not a multiple of 8, to exercise the tail loop too
 
-    errAllocNull     db "memAlloc returned null", 0
-    errReadback      db "value read back from allocated memory does not match what was written", 0
-    errRelocNull     db "memReloc returned null", 0
-    errRelocPreserve db "memReloc did not preserve the original content", 0
-    errRelocReadback db "value read back from the grown region does not match what was written", 0
-    errCopy          db "memCopy did not reproduce the source bytes", 0
-    errMoveLeft       db "memMove (dest < src, forward) produced the wrong bytes", 0
-    errMoveRight      db "memMove (dest > src, backward) produced the wrong bytes", 0
-    errFill           db "memFill did not fill every byte with the given value", 0
+errAllocNull dq (errAllocNull_end - errAllocNull_start)
+    errAllocNull_start: db "memAlloc returned null"
+    errAllocNull_end: db 0
+
+errReadback dq (errReadback_end - errReadback_start)
+    errReadback_start: db "value read back from allocated memory does not match what was written"
+    errReadback_end: db 0
+
+errRelocNull dq (errRelocNull_end - errRelocNull_start)
+    errRelocNull_start: db "memReloc returned null"
+    errRelocNull_end: db 0
+
+errRelocPreserve dq (errRelocPreserve_end - errRelocPreserve_start)
+    errRelocPreserve_start: db "memReloc did not preserve the original content"
+    errRelocPreserve_end: db 0
+
+errRelocReadback dq (errRelocReadback_end - errRelocReadback_start)
+    errRelocReadback_start: db "value read back from the grown region does not match what was written"
+    errRelocReadback_end: db 0
+
+errCopy dq (errCopy_end - errCopy_start)
+    errCopy_start: db "memCopy did not reproduce the source bytes"
+    errCopy_end: db 0
+
+errMoveLeft dq (errMoveLeft_end - errMoveLeft_start)
+    errMoveLeft_start: db "memMove (dest < src, forward) produced the wrong bytes"
+    errMoveLeft_end: db 0
+
+errMoveRight dq (errMoveRight_end - errMoveRight_start)
+    errMoveRight_start: db "memMove (dest > src, backward) produced the wrong bytes"
+    errMoveRight_end: db 0
+
+errFill dq (errFill_end - errFill_start)
+    errFill_start: db "memFill did not fill every byte with the given value"
+    errFill_end: db 0
 
 section .bss
     copyDst resb 16

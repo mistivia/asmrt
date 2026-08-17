@@ -3,7 +3,9 @@
 %include "asmrt.inc"
 
 section .data
-    msg db "this should never be printed", 10, 0
+msg dq (msg_end - msg_start)
+    msg_start: db "this should never be printed", 10
+    msg_end: db 0
 
 section .text
     global entry

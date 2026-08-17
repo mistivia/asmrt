@@ -6,7 +6,9 @@
 %include "asmrt.inc"
 
 section .data
-    msg db "expected failure: intentional assert trip for test harness", 10, 0
+msg dq (msg_end - msg_start)
+    msg_start: db "expected failure: intentional assert trip for test harness", 10
+    msg_end: db 0
 
 section .text
     global entry

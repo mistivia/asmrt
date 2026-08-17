@@ -17,6 +17,7 @@ section .text
     global ioSeek
     global ioWriteNum
     global ioWriteChar
+    global ioWriteString
 
 ; ioOpen(path, flags, mode) -> fd
 ioOpen:
@@ -135,6 +136,26 @@ ioWriteNum:
     push rbx
     push rax
     call ioWrite
+
+    end
+    ret 16
+
+; ioWriteString(fd, pStr) -> bytes written
+; Writes the whole length-prefixed string pStr (see str.asm layout:
+; [8-byte len][data][NUL]) to fd in one syscall.
+ioWriteString:
+    ; args: fd, pStr
+    argnum 2
+    %assign fd arg(1)
+    %assign pStr arg(2)
+    begin
+
+    mov rdi, [rbp + fd]
+    mov rax, [rbp + pStr]
+    mov rdx, [rax]          ; len
+    lea rsi, [rax + 8]      ; data
+    mov rax, 1              ; sys_write
+    syscall
 
     end
     ret 16

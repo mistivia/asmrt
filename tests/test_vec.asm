@@ -25,30 +25,101 @@ section .data
     val3  dq 3
     val9  dq 9
 
-    errInit       db "vecWithCapacity failed", 0
-    errPushLen    db "vecPush len wrong", 0
-    errPushVal    db "vecPush value wrong", 0
-    errGet        db "vecGet wrong", 0
-    errGetOob     db "vecGet OOB should be NULL", 0
-    errFirst      db "vecFirst wrong", 0
-    errLast       db "vecLast wrong", 0
-    errIsEmpty    db "vecIsEmpty wrong", 0
-    errSet        db "vecSet wrong", 0
-    errPop        db "vecPop wrong", 0
-    errInsert     db "vecInsert wrong", 0
-    errRemove     db "vecRemove wrong", 0
-    errSort       db "vecSort wrong", 0
-    errTruncate   db "vecTruncate wrong", 0
-    errClear      db "vecClear wrong", 0
-    errSwapElem   db "vecSwapElement wrong", 0
-    errSwap       db "vecSwap wrong", 0
-    errCopy       db "vecCopy wrong", 0
-    errEq         db "vecEq wrong", 0
-    errCmp        db "vecCmp wrong", 0
-    errHash       db "vecHash wrong", 0
-    errMove       db "vecMove wrong", 0
-    errDrop       db "vecDrop wrong", 0
-    errFnv        db "fnv64 wrong", 0
+errInit dq (errInit_end - errInit_start)
+    errInit_start: db "vecWithCapacity failed"
+    errInit_end: db 0
+
+errPushLen dq (errPushLen_end - errPushLen_start)
+    errPushLen_start: db "vecPush len wrong"
+    errPushLen_end: db 0
+
+errPushVal dq (errPushVal_end - errPushVal_start)
+    errPushVal_start: db "vecPush value wrong"
+    errPushVal_end: db 0
+
+errGet dq (errGet_end - errGet_start)
+    errGet_start: db "vecGet wrong"
+    errGet_end: db 0
+
+errGetOob dq (errGetOob_end - errGetOob_start)
+    errGetOob_start: db "vecGet OOB should be NULL"
+    errGetOob_end: db 0
+
+errFirst dq (errFirst_end - errFirst_start)
+    errFirst_start: db "vecFirst wrong"
+    errFirst_end: db 0
+
+errLast dq (errLast_end - errLast_start)
+    errLast_start: db "vecLast wrong"
+    errLast_end: db 0
+
+errIsEmpty dq (errIsEmpty_end - errIsEmpty_start)
+    errIsEmpty_start: db "vecIsEmpty wrong"
+    errIsEmpty_end: db 0
+
+errSet dq (errSet_end - errSet_start)
+    errSet_start: db "vecSet wrong"
+    errSet_end: db 0
+
+errPop dq (errPop_end - errPop_start)
+    errPop_start: db "vecPop wrong"
+    errPop_end: db 0
+
+errInsert dq (errInsert_end - errInsert_start)
+    errInsert_start: db "vecInsert wrong"
+    errInsert_end: db 0
+
+errRemove dq (errRemove_end - errRemove_start)
+    errRemove_start: db "vecRemove wrong"
+    errRemove_end: db 0
+
+errSort dq (errSort_end - errSort_start)
+    errSort_start: db "vecSort wrong"
+    errSort_end: db 0
+
+errTruncate dq (errTruncate_end - errTruncate_start)
+    errTruncate_start: db "vecTruncate wrong"
+    errTruncate_end: db 0
+
+errClear dq (errClear_end - errClear_start)
+    errClear_start: db "vecClear wrong"
+    errClear_end: db 0
+
+errSwapElem dq (errSwapElem_end - errSwapElem_start)
+    errSwapElem_start: db "vecSwapElement wrong"
+    errSwapElem_end: db 0
+
+errSwap dq (errSwap_end - errSwap_start)
+    errSwap_start: db "vecSwap wrong"
+    errSwap_end: db 0
+
+errCopy dq (errCopy_end - errCopy_start)
+    errCopy_start: db "vecCopy wrong"
+    errCopy_end: db 0
+
+errEq dq (errEq_end - errEq_start)
+    errEq_start: db "vecEq wrong"
+    errEq_end: db 0
+
+errCmp dq (errCmp_end - errCmp_start)
+    errCmp_start: db "vecCmp wrong"
+    errCmp_end: db 0
+
+errHash dq (errHash_end - errHash_start)
+    errHash_start: db "vecHash wrong"
+    errHash_end: db 0
+
+errMove dq (errMove_end - errMove_start)
+    errMove_start: db "vecMove wrong"
+    errMove_end: db 0
+
+errDrop dq (errDrop_end - errDrop_start)
+    errDrop_start: db "vecDrop wrong"
+    errDrop_end: db 0
+
+errFnv dq (errFnv_end - errFnv_start)
+    errFnv_start: db "fnv64 wrong"
+    errFnv_end: db 0
 
 section .bss
     vecA     resb sizeof_Vec
