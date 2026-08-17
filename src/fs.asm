@@ -19,9 +19,9 @@ section .text
 ; fsStat(path, statBuf) -> result (rax)
 fsStat:
     ;; args: path, buf
-    %assign N 2
-    %assign path (16 + (N-1) * 8)
-    %assign buf (16 + (N-2) * 8)
+    argnum 2
+    %assign path arg(1)
+    %assign buf arg(2)
     begin
 
     mov rdi, [rbp + path]
@@ -35,9 +35,9 @@ fsStat:
 ; fsFstat(fd, statBuf) -> result
 fsFstat:
     ;; args: fd, buf
-    %assign N 2
-    %assign fd (16 + (N-1) * 8)
-    %assign buf (16 + (N-2) * 8)
+    argnum 2
+    %assign fd arg(1)
+    %assign buf arg(2)
     begin
 
     mov rdi, [rbp + fd]
@@ -51,9 +51,9 @@ fsFstat:
 ; fsMkdir(path, mode) -> result
 fsMkdir:
     ;; args: path, mode
-    %assign N 2
-    %assign path (16 + (N-1) * 8)
-    %assign mode (16 + (N-2) * 8)
+    argnum 2
+    %assign path arg(1)
+    %assign mode arg(2)
     begin
 
     mov rdi, [rbp + path]
@@ -66,11 +66,10 @@ fsMkdir:
 
 ; fsRmdir(path) -> result
 fsRmdir:
-    ;; args: path
-    %assign N 1
-    %assign path (16 + (N-1) * 8)
-    begin
+    argnum 1
+    %assign path arg(1)
 
+    begin
     mov rdi, [rbp + path]
     mov rax, 84         ; sys_rmdir
     syscall
@@ -80,11 +79,10 @@ fsRmdir:
 
 ; fsUnlink(path) -> result
 fsUnlink:
-    ;; args: path
-    %assign N 1
-    %assign path (16 + (N-1) * 8)
-    begin
+    argnum 1
+    %assign path arg(1)
 
+    begin
     mov rdi, [rbp + path]
     mov rax, 87         ; sys_unlink
     syscall

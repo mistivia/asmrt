@@ -14,10 +14,10 @@ section .text
 ; landed at the right offset (not just that the sum is right)
 sum3:
     ;; args: p1, p2, p3
-    %assign N 3
-    %assign p1 (16 + (N-1) * 8)
-    %assign p2 (16 + (N-2) * 8)
-    %assign p3 (16 + (N-3) * 8)
+    argnum 3
+    %assign p1 arg(1)
+    %assign p2 arg(2)
+    %assign p3 arg(3)
     begin
 
     mov rax, [rbp + p1]

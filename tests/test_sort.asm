@@ -20,9 +20,9 @@ section .text
 ; cmpInt64(a, b) -> *a - *b, a/b are pointers to int64 elements
 cmpInt64:
     ;; args: a, b
-    %assign N 2
-    %assign a (16 + (N-1) * 8)
-    %assign b (16 + (N-2) * 8)
+    argnum 2
+    %assign a arg(1)
+    %assign b arg(2)
     begin
 
     mov rax, [rbp + a]
@@ -37,9 +37,9 @@ cmpInt64:
 ; cmpInt32(a, b) -> *a - *b (sign-extended to 64 bits), a/b point to int32 elements
 cmpInt32:
     ;; args: a, b
-    %assign N 2
-    %assign a (16 + (N-1) * 8)
-    %assign b (16 + (N-2) * 8)
+    argnum 2
+    %assign a arg(1)
+    %assign b arg(2)
     begin
 
     mov rax, [rbp + a]

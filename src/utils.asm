@@ -54,12 +54,12 @@ section .text
 
 ; caller pushes in order: push base; push nmemb; push size; push cmpFn
 sort:
-    ;; args: base, nmemb, size, cmpFn
-    %assign N 4
-    %assign base (16 + (N-1) * 8)
-    %assign nmemb (16 + (N-2) * 8)
-    %assign size (16 + (N-3) * 8)
-    %assign cmpFn (16 + (N-4) * 8)
+    argnum 4
+    %assign base arg(1)
+    %assign nmemb arg(2)
+    %assign size arg(3)
+    %assign cmpFn arg(4)
+
     begin
     ;; local variables
     resetOffset
@@ -118,12 +118,12 @@ sort:
 ; handing it a narrower (base, nmemb) slice instead of extra indices.
 ; caller pushes in order: push base; push nmemb; push size; push cmpFn
 partition:
-    ;; args: base, nmemb, size, cmpFn
-    %assign N 4
-    %assign base (16 + (N-1) * 8)
-    %assign nmemb (16 + (N-2) * 8)
-    %assign size (16 + (N-3) * 8)
-    %assign cmpFn (16 + (N-4) * 8)
+    argnum 4
+    %assign base arg(1)
+    %assign nmemb arg(2)
+    %assign size arg(3)
+    %assign cmpFn arg(4)
+
     begin
     ;; local variables
     resetOffset
@@ -220,10 +220,11 @@ partition:
 ; caller pushes in order: push data; push dataSize; push input
 fnv64:
     ;; args: data, dataSize, input
-    %assign N 3
-    %assign data (16 + (N-1) * 8)
-    %assign dataSize (16 + (N-2) * 8)
-    %assign input (16 + (N-3) * 8)
+    argnum 3
+    %assign data arg(1)
+    %assign dataSize arg(2)
+    %assign input arg(3)
+
     begin
     ;; local variables
     resetOffset

@@ -63,8 +63,8 @@ section .text
 
 int64Drop:
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
     begin
     xor rax, rax
     end
@@ -72,9 +72,9 @@ int64Drop:
 
 int64Cmp:
     ;; args: a, b
-    %assign N 2
-    %assign a (16 + (N-1) * 8)
-    %assign b (16 + (N-2) * 8)
+    argnum 2
+    %assign a arg(1)
+    %assign b arg(2)
     begin
     mov rax, [rbp + a]
     mov rax, [rax]
@@ -86,9 +86,9 @@ int64Cmp:
 
 int64Eq:
     ;; args: a, b
-    %assign N 2
-    %assign a (16 + (N-1) * 8)
-    %assign b (16 + (N-2) * 8)
+    argnum 2
+    %assign a arg(1)
+    %assign b arg(2)
     begin
     mov rax, [rbp + a]
     mov rax, [rax]
@@ -102,8 +102,8 @@ int64Eq:
 
 int64Hash:
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
     begin
     mov rax, [rbp + self]
     mov rax, [rax]
@@ -112,9 +112,9 @@ int64Hash:
 
 int64Copy:
     ;; args: dst, src
-    %assign N 2
-    %assign dst (16 + (N-1) * 8)
-    %assign src (16 + (N-2) * 8)
+    argnum 2
+    %assign dst arg(1)
+    %assign src arg(2)
     begin
     push [rbp + dst]
     push [rbp + src]
@@ -125,9 +125,9 @@ int64Copy:
 
 int64Move:
     ;; args: dst, src
-    %assign N 2
-    %assign dst (16 + (N-1) * 8)
-    %assign src (16 + (N-2) * 8)
+    argnum 2
+    %assign dst arg(1)
+    %assign src arg(2)
     begin
     push [rbp + dst]
     push [rbp + src]
@@ -139,11 +139,11 @@ int64Move:
 ; ---- helper: assert vecGet(vecPtr, idx) == expect ----
 checkInt64:
     ;; args: vecPtr, idx, expect, errMsg
-    %assign N 4
-    %assign vecPtr (16 + (N-1) * 8)
-    %assign idx (16 + (N-2) * 8)
-    %assign expect (16 + (N-3) * 8)
-    %assign errMsg (16 + (N-4) * 8)
+    argnum 4
+    %assign vecPtr arg(1)
+    %assign idx arg(2)
+    %assign expect arg(3)
+    %assign errMsg arg(4)
     begin
     push [rbp + vecPtr]
     push [rbp + idx]

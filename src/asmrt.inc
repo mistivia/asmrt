@@ -9,10 +9,10 @@
 ; Params and locals are declared with plain %assign offsets, e.g.:
 ;
 ;   ;; args: x, y, z
-;   %assign N 3
-;   %assign x (16 + (N-1) * 8)
-;   %assign y (16 + (N-2) * 8)
-;   %assign z (16 + (N-3) * 8)
+;   argnum 3
+;   %assign x arg(1)
+;   %assign y arg(2)
+;   %assign z arg(3)
 ;
 ; and accessed as [rbp + x].  Required order in every function:
 ;   name: -> begin -> arg declarations -> local declarations ->
@@ -93,7 +93,11 @@
     %assign offset (offset + %1)
 %endmacro
 
-%define arg(i) (16 + (i) * 8)
+%macro argnum 1
+    %assign __argnum %1
+%endmacro
+
+%define arg(i) (16 + (__argnum - i) * 8)
 
 ; ---- shared struct definitions ----
 

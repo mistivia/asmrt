@@ -46,10 +46,10 @@
 
 ```asm
 ;; args: x, y, z
-%assign N 3
-%assign x (16 + (N-1) * 8)
-%assign y (16 + (N-2) * 8)
-%assign z (16 + (N-3) * 8)
+argnum 3
+%assign x arg(1)
+%assign y arg(2)
+%assign z arg(3)
 ```
 
 ## 结构
@@ -159,8 +159,8 @@ entry:
 
 fibo:
     ;; args: x
-    %assign N 1
-    %assign x (16 + (N-1) * 8)
+    argnum 1
+    %assign x arg(1)
     begin
     ;; local acc
     resetOffset
@@ -193,8 +193,8 @@ fibo:
 
 printNum:
     ;; args x
-    %assign N 1
-    %assign x (16 + (N-1) * 8)
+    argnum 1
+    %assign x arg(1)
     begin
     ; 没有局部变量，不需要 endlocal——对齐交给下面的 hexalign 动态处理
     hexalign ;; align to 16 byte before calling C function

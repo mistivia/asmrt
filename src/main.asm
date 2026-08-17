@@ -38,8 +38,8 @@ main:
 ; Caller pushes code
 rtExit:
     ;; args: code
-    %assign N 1
-    %assign code (16 + (N-1) * 8)
+    argnum 1
+    %assign code arg(1)
     begin
 
     mov rdi, [rbp + code]

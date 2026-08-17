@@ -21,12 +21,12 @@ section .text
 ; ioOpen(path, flags, mode) -> fd
 ioOpen:
     ;; args: path, flags, mode
-    %assign N 3
-    %assign path (16 + (N-1) * 8)
-    %assign flags (16 + (N-2) * 8)
-    %assign mode (16 + (N-3) * 8)
-    begin
+    argnum 3
+    %assign path arg(1)
+    %assign flags arg(2)
+    %assign mode arg(3)
 
+    begin
     mov rdi, [rbp + path]
     mov rsi, [rbp + flags]
     mov rdx, [rbp + mode]
@@ -39,8 +39,8 @@ ioOpen:
 ; ioClose(fd) -> result (rax)
 ioClose:
     ;; args: fd
-    %assign N 1
-    %assign fd (16 + (N-1) * 8)
+    argnum 1
+    %assign fd arg(1)
     begin
 
     mov rdi, [rbp + fd]
@@ -53,10 +53,10 @@ ioClose:
 ; ioRead(fd, buf, count) -> bytes read
 ioRead:
     ;; args: fd, buf, count
-    %assign N 3
-    %assign fd (16 + (N-1) * 8)
-    %assign buf (16 + (N-2) * 8)
-    %assign count (16 + (N-3) * 8)
+    argnum 3
+    %assign fd arg(1)
+    %assign buf arg(2)
+    %assign count arg(3)
     begin
 
     mov rdi, [rbp + fd]
@@ -71,10 +71,10 @@ ioRead:
 ; ioWrite(fd, buf, count) -> bytes written
 ioWrite:
     ;; args: fd, buf, count
-    %assign N 3
-    %assign fd (16 + (N-1) * 8)
-    %assign buf (16 + (N-2) * 8)
-    %assign count (16 + (N-3) * 8)
+    argnum 3
+    %assign fd arg(1)
+    %assign buf arg(2)
+    %assign count arg(3)
     begin
 
     mov rdi, [rbp + fd]
@@ -91,7 +91,7 @@ ioWrite:
 ; with a leading '-' for negative values; no trailing newline.
 ioWriteNum:
     ;; args: fd, num
-    %assign N 2
+    argnum 2
     %assign fd arg(1)
     %assign num arg(2)
     begin
@@ -143,7 +143,7 @@ ioWriteNum:
 ; Writes the single byte ch (low 8 bits of the pushed value) to fd.
 ioWriteChar:
     ;; args: fd, ch
-    %assign N 2
+    argnum 2
     %assign fd arg(1)
     %assign ch arg(2)
     begin
@@ -172,10 +172,10 @@ ioWriteChar:
 ; whence: 0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END
 ioSeek:
     ;; args: fd, offset, whence
-    %assign N 3
-    %assign fd (16 + (N-1) * 8)
-    %assign offset (16 + (N-2) * 8)
-    %assign whence (16 + (N-3) * 8)
+    argnum 3
+    %assign fd arg(1)
+    %assign offset arg(2)
+    %assign whence arg(3)
     begin
 
     mov rdi, [rbp + fd]

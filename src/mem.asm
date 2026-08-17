@@ -32,8 +32,8 @@ section .text
 ; memAlloc(size) -> ptr (rax), NULL on failure
 memAlloc:
     ;; args: size
-    %assign N 1
-    %assign size (16 + (N-1) * 8)
+    argnum 1
+    %assign size arg(1)
     begin
 
     hexalign
@@ -46,8 +46,8 @@ memAlloc:
 ; memFree(ptr) -> rax is always 0; free() itself returns nothing
 memFree:
     ;; args: ptr
-    %assign N 1
-    %assign ptr (16 + (N-1) * 8)
+    argnum 1
+    %assign ptr arg(1)
     begin
 
     hexalign
@@ -61,9 +61,9 @@ memFree:
 ; memReloc(ptr, size) -> new ptr (rax), NULL on failure (ptr is left untouched by libc on failure)
 memReloc:
     ;; args: ptr, size
-    %assign N 2
-    %assign ptr  (16 + (N-1) * 8)
-    %assign size (16 + (N-2) * 8)
+    argnum 2
+    %assign ptr  arg(1)
+    %assign size arg(2)
     begin
 
     hexalign
@@ -80,10 +80,10 @@ memReloc:
 ; caller pushes in order: push dest; push src; push n
 memCopy:
     ;; args: dest, src, n
-    %assign N 3
-    %assign dest (16 + (N-1) * 8)
-    %assign src  (16 + (N-2) * 8)
-    %assign n    (16 + (N-3) * 8)
+    argnum 3
+    %assign dest arg(1)
+    %assign src  arg(2)
+    %assign n    arg(3)
     begin
 
     push [rbp + dest]
@@ -101,12 +101,12 @@ memCopy:
 ; caller pushes in order: push dest; push src; push n
 memMove:
     ;; args: dest, src, n
-    %assign N 3
-    %assign dest (16 + (N-1) * 8)
-    %assign src  (16 + (N-2) * 8)
-    %assign n    (16 + (N-3) * 8)
-    begin
+    argnum 3
+    %assign dest arg(1)
+    %assign src  arg(2)
+    %assign n    arg(3)
 
+    begin
     mov rax, [rbp + dest]
     mov rbx, [rbp + src]
     cmp rax, rbx
@@ -159,13 +159,12 @@ memMove:
 ; either loop, so rax/rbx/r8/r10 are pure scratch throughout.
 ; caller pushes in order: push dest; push val; push n
 memFill:
-    ;; args: dest, val, n
-    %assign N 3
-    %assign dest (16 + (N-1) * 8)
-    %assign val  (16 + (N-2) * 8)
-    %assign n    (16 + (N-3) * 8)
-    begin
+    argnum 3
+    %assign dest arg(1)
+    %assign val  arg(2)
+    %assign n    arg(3)
 
+    begin
     mov rax, [rbp + val]
     and rax, 0xFF
     mov r10, rax
@@ -208,13 +207,12 @@ memFill:
 ; stretch, same as strEq's loop in str.asm.
 ; caller pushes in order: push addrA; push addrB; push size
 memSwap:
-    ;; args: addrA, addrB, size
-    %assign N 3
-    %assign addrA (16 + (N-1) * 8)
-    %assign addrB (16 + (N-2) * 8)
-    %assign size (16 + (N-3) * 8)
-    begin
+    argnum 3
+    %assign addrA arg(1)
+    %assign addrB arg(2)
+    %assign size  arg(3)
 
+    begin
     mov rbx, [rbp + addrA]
     mov rcx, [rbp + addrB]
     xor r8, r8
@@ -222,7 +220,7 @@ memSwap:
     mov rax, [rbp + size]
     sub rax, r8
     cmp rax, 8
-    jl .byteLoop           ; fewer than 8 bytes left -- finish those one at a time
+    jl .byteLoop
     mov rax, [rbx + r8]
     mov rdx, [rcx + r8]
     mov [rbx + r8], rdx
@@ -251,12 +249,12 @@ memSwap:
 ; caller pushes in order: push dest; push src; push n
 copyForward:
     ;; args: dest, src, n
-    %assign N 3
-    %assign dest (16 + (N-1) * 8)
-    %assign src  (16 + (N-2) * 8)
-    %assign n    (16 + (N-3) * 8)
-    begin
+    argnum 3
+    %assign dest arg(1)
+    %assign src  arg(2)
+    %assign n    arg(3)
 
+    begin
     mov rbx, [rbp + dest]
     mov rcx, [rbp + src]
     xor r8, r8

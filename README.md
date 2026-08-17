@@ -145,10 +145,10 @@ section .text
 
 entry:
     ;; args: argc, argv, envp
-    %assign N 3
-    %assign argc (16 + (N-1) * 8)
-    %assign argv (16 + (N-2) * 8)
-    %assign envp (16 + (N-3) * 8)
+    argnum 3
+    %assign argc arg(1)
+    %assign argv arg(2)
+    %assign envp arg(3)
     begin
 
     push 1

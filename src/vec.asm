@@ -72,9 +72,9 @@ section .text
 ; caller pushes in order: push self; push index
 elemAddr:
     ;; args: self, index
-    %assign N 2
-    %assign self (16 + (N-1) * 8)
-    %assign index (16 + (N-2) * 8)
+    argnum 2
+    %assign self arg(1)
+    %assign index arg(2)
     begin
 
     mov rax, [rbp + self]
@@ -94,9 +94,9 @@ elemAddr:
 ; vecInit(self, meta) -> 0.  Zero the vec and attach the ValueMeta.
 vecInit:
     ;; args: self, meta
-    %assign N 2
-    %assign self (16 + (N-1) * 8)
-    %assign meta (16 + (N-2) * 8)
+    argnum 2
+    %assign self arg(1)
+    %assign meta arg(2)
     begin
 
     mov rax, [rbp + self]
@@ -116,10 +116,10 @@ vecInit:
 ; capacity is 0, matching cbase).
 vecWithCapacity:
     ;; args: self, meta, capacity
-    %assign N 3
-    %assign self (16 + (N-1) * 8)
-    %assign meta (16 + (N-2) * 8)
-    %assign capacity (16 + (N-3) * 8)
+    argnum 3
+    %assign self arg(1)
+    %assign meta arg(2)
+    %assign capacity arg(3)
     begin
 
     mov rax, [rbp + self]
@@ -157,9 +157,9 @@ vecWithCapacity:
 ; elements, doubling from 4 as cbase does.
 vecReserve:
     ;; args: self, additional
-    %assign N 2
-    %assign self (16 + (N-1) * 8)
-    %assign additional (16 + (N-2) * 8)
+    argnum 2
+    %assign self arg(1)
+    %assign additional arg(2)
     begin
     ;; local variables
     resetOffset
@@ -220,8 +220,8 @@ vecReserve:
 ; and reset the vec in place.
 vecDrop:
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
     begin
 
     ;; local variables
@@ -266,8 +266,8 @@ vecClear:
     begin
 
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
 
     ;; local variables
     resetOffset
@@ -304,9 +304,9 @@ vecTruncate:
     begin
 
     ;; args: self, len
-    %assign N 2
-    %assign self (16 + (N-1) * 8)
-    %assign len (16 + (N-2) * 8)
+    argnum 2
+    %assign self arg(1)
+    %assign len arg(2)
 
     ;; local variables
     resetOffset
@@ -350,9 +350,9 @@ vecTruncate:
 ; vecGet(self, index) -> ptr to element, or NULL if out of bounds
 vecGet:
     ;; args: self, index
-    %assign N 2
-    %assign self (16 + (N-1) * 8)
-    %assign index (16 + (N-2) * 8)
+    argnum 2
+    %assign self arg(1)
+    %assign index arg(2)
     begin
 
     mov rax, [rbp + self]
@@ -374,8 +374,8 @@ vecGet:
 ; vecFirst(self) -> ptr to first element, or NULL if empty
 vecFirst:
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
     begin
 
     mov rax, [rbp + self]
@@ -393,8 +393,8 @@ vecFirst:
 ; vecLast(self) -> ptr to last element, or NULL if empty
 vecLast:
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
     begin
 
     mov rax, [rbp + self]
@@ -416,8 +416,8 @@ vecLast:
 ; vecLen(self) -> len
 vecLen:
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
     begin
 
     mov rax, [rbp + self]
@@ -429,8 +429,8 @@ vecLen:
 ; vecIsEmpty(self) -> 1 if len == 0, else 0
 vecIsEmpty:
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
     begin
 
     mov rax, [rbp + self]
@@ -444,8 +444,8 @@ vecIsEmpty:
 ; vecAsPtr(self) -> raw data pointer (may be NULL)
 vecAsPtr:
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
     begin
 
     mov rax, [rbp + self]
@@ -459,11 +459,11 @@ vecAsPtr:
 ; when index is out of bounds.
 vecSet:
     ;; args: self, index, elem, isMove
-    %assign N 4
-    %assign self (16 + (N-1) * 8)
-    %assign index (16 + (N-2) * 8)
-    %assign elem (16 + (N-3) * 8)
-    %assign isMove (16 + (N-4) * 8)
+    argnum 4
+    %assign self arg(1)
+    %assign index arg(2)
+    %assign elem arg(3)
+    %assign isMove arg(4)
     begin
     ;; local variables
     resetOffset
@@ -511,10 +511,10 @@ vecSet:
 ; when isMove != 0.
 vecPush:
     ;; args: self, elem, isMove
-    %assign N 3
-    %assign self (16 + (N-1) * 8)
-    %assign elem (16 + (N-2) * 8)
-    %assign isMove (16 + (N-3) * 8)
+    argnum 3
+    %assign self arg(1)
+    %assign elem arg(2)
+    %assign isMove arg(3)
     begin
     ;; local variables
     resetOffset
@@ -559,9 +559,9 @@ vecPush:
 ; *not* dropped (ownership moves to the caller), matching cbase.
 vecPop:
     ;; args: self, out
-    %assign N 2
-    %assign self (16 + (N-1) * 8)
-    %assign out (16 + (N-2) * 8)
+    argnum 2
+    %assign self arg(1)
+    %assign out arg(2)
     begin
     ;; local variables
     resetOffset
@@ -612,11 +612,11 @@ vecPop:
 ; otherwise a copy is made (ValueMeta_copy).  No-op when index > len.
 vecInsert:
     ;; args: self, index, elem, isMove
-    %assign N 4
-    %assign self (16 + (N-1) * 8)
-    %assign index (16 + (N-2) * 8)
-    %assign elem (16 + (N-3) * 8)
-    %assign isMove (16 + (N-4) * 8)
+    argnum 4
+    %assign self arg(1)
+    %assign index arg(2)
+    %assign elem arg(3)
+    %assign isMove arg(4)
     begin
     ;; local variables
     resetOffset
@@ -700,10 +700,10 @@ vecInsert:
 ; matching cbase.  No-op when index >= len.
 vecRemove:
     ;; args: self, index, out
-    %assign N 3
-    %assign self (16 + (N-1) * 8)
-    %assign index (16 + (N-2) * 8)
-    %assign out (16 + (N-3) * 8)
+    argnum 3
+    %assign self arg(1)
+    %assign index arg(2)
+    %assign out arg(3)
     begin
     ;; local variables
     resetOffset
@@ -780,10 +780,10 @@ vecRemove:
 ; out-of-bounds or a == b.
 vecSwapElement:
     ;; args: self, a, b
-    %assign N 3
-    %assign self (16 + (N-1) * 8)
-    %assign a (16 + (N-2) * 8)
-    %assign b (16 + (N-3) * 8)
+    argnum 3
+    %assign self arg(1)
+    %assign a arg(2)
+    %assign b arg(3)
     begin
     ;; local variables
     resetOffset
@@ -836,9 +836,9 @@ vecSwapElement:
 ; vecSwap(a, b) -- swap two whole vec headers (32 bytes each).
 vecSwap:
     ;; args: a, b
-    %assign N 2
-    %assign a (16 + (N-1) * 8)
-    %assign b (16 + (N-2) * 8)
+    argnum 2
+    %assign a arg(1)
+    %assign b arg(2)
     begin
     ;; local variables
     resetOffset
@@ -873,8 +873,8 @@ vecSwap:
 ; contract sort() expects).
 vecSort:
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
     begin
 
     mov rax, [rbp + self]
@@ -907,9 +907,9 @@ vecSort:
 ; dst is re-initialized with src's meta and capacity == src->len.
 vecCopy:
     ;; args: dst, src
-    %assign N 2
-    %assign dst (16 + (N-1) * 8)
-    %assign src (16 + (N-2) * 8)
+    argnum 2
+    %assign dst arg(1)
+    %assign src arg(2)
     begin
     ;; local variables
     resetOffset
@@ -977,9 +977,9 @@ vecCopy:
 ; reset src.  No-op when dst == src.
 vecMove:
     ;; args: dst, src
-    %assign N 2
-    %assign dst (16 + (N-1) * 8)
-    %assign src (16 + (N-2) * 8)
+    argnum 2
+    %assign dst arg(1)
+    %assign src arg(2)
     begin
 
     mov rax, [rbp + dst]
@@ -1012,9 +1012,9 @@ vecMove:
 ; elements compares equal via a's meta->eq, else 0.
 vecEq:
     ;; args: a, b
-    %assign N 2
-    %assign a (16 + (N-1) * 8)
-    %assign b (16 + (N-2) * 8)
+    argnum 2
+    %assign a arg(1)
+    %assign b arg(2)
     begin
     ;; local variables
     resetOffset
@@ -1077,9 +1077,9 @@ vecEq:
 ; with a's meta->cmp; shorter vec is less when all shared elements tie.
 vecCmp:
     ;; args: a, b
-    %assign N 2
-    %assign a (16 + (N-1) * 8)
-    %assign b (16 + (N-2) * 8)
+    argnum 2
+    %assign a arg(1)
+    %assign b arg(2)
     begin
     ;; local variables
     resetOffset
@@ -1159,8 +1159,8 @@ vecCmp:
 ; cbase's vec_hash.
 vecHash:
     ;; args: self
-    %assign N 1
-    %assign self (16 + (N-1) * 8)
+    argnum 1
+    %assign self arg(1)
     begin
     ;; local variables
     resetOffset

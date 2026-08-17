@@ -42,11 +42,11 @@ section .text
 
 ; checkRange(a, b, n) -> 1 if a[0..n) == b[0..n) byte for byte, else 0
 checkRange:
-    ;; args: a, b, n
-    %assign N 3
-    %assign a (16 + (N-1) * 8)
-    %assign b (16 + (N-2) * 8)
-    %assign n (16 + (N-3) * 8)
+    argnum 3
+    %assign a arg(1)
+    %assign b arg(2)
+    %assign n arg(3)
+
     begin
     ;; local variables
     resetOffset
