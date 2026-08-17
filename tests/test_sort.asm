@@ -18,12 +18,16 @@ section .text
     global entry
 
 ; cmpInt64(a, b) -> *a - *b, a/b are pointers to int64 elements
-proc cmpInt64
-    args a, b
+cmpInt64:
+    begin
+    ;; args: a, b
+    %assign N 2
+    %assign a (16 + (N-1) * 8)
+    %assign b (16 + (N-2) * 8)
 
-    mov rax, [%$a]
+    mov rax, [rbp + a]
     mov rax, [rax]
-    mov rbx, [%$b]
+    mov rbx, [rbp + b]
     mov rbx, [rbx]
     sub rax, rbx
 
@@ -31,21 +35,31 @@ proc cmpInt64
     ret 16
 
 ; cmpInt32(a, b) -> *a - *b (sign-extended to 64 bits), a/b point to int32 elements
-proc cmpInt32
-    args a, b
+cmpInt32:
+    begin
+    ;; args: a, b
+    %assign N 2
+    %assign a (16 + (N-1) * 8)
+    %assign b (16 + (N-2) * 8)
 
-    mov rax, [%$a]
+    mov rax, [rbp + a]
     movsx rax, dword [rax]
-    mov rbx, [%$b]
+    mov rbx, [rbp + b]
     movsx rbx, dword [rbx]
     sub rax, rbx
 
     end
     ret 16
 
-proc entry
-    local idx
-    endlocal
+entry:
+    begin
+    ;; local variables
+    %assign offset 0
+    ;; idx 8 bytes
+    %assign offset (offset - 8)
+    %assign idx offset
+    ;; endlocal
+    sub rsp, (-offset)
 
     push arr64
     push arr64Len
@@ -53,13 +67,13 @@ proc entry
     push cmpInt64
     call sort
 
-    mov qword [%$idx], 0
+    mov qword [rbp + idx], 0
 .check64Loop:
-    mov rax, [%$idx]
+    mov rax, [rbp + idx]
     cmp rax, arr64Len
     jge .check64Done
 
-    mov rbx, [%$idx]
+    mov rbx, [rbp + idx]
     mov rcx, [arr64 + rbx*8]
     cmp rcx, rbx                ; ascending 0..9 -> arr64[i] should equal i
     sete al
@@ -68,9 +82,9 @@ proc entry
     push rax
     call assert
 
-    mov rax, [%$idx]
+    mov rax, [rbp + idx]
     inc rax
-    mov [%$idx], rax
+    mov [rbp + idx], rax
     jmp .check64Loop
 .check64Done:
 
@@ -80,15 +94,15 @@ proc entry
     push cmpInt32
     call sort
 
-    mov qword [%$idx], 0
+    mov qword [rbp + idx], 0
 .check32Loop:
-    mov rax, [%$idx]
+    mov rax, [rbp + idx]
     cmp rax, arr32Len
     jge .check32Done
     cmp rax, 0
     je .check32Next             ; nothing to compare the first element against
 
-    mov rbx, [%$idx]
+    mov rbx, [rbp + idx]
     movsx rcx, dword [arr32 + rbx*4]
     dec rbx
     movsx rdx, dword [arr32 + rbx*4]
@@ -100,9 +114,9 @@ proc entry
     call assert
 
 .check32Next:
-    mov rax, [%$idx]
+    mov rax, [rbp + idx]
     inc rax
-    mov [%$idx], rax
+    mov [rbp + idx], rax
     jmp .check32Loop
 .check32Done:
 

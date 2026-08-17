@@ -41,28 +41,38 @@ section .text
     global entry
 
 ; checkRange(a, b, n) -> 1 if a[0..n) == b[0..n) byte for byte, else 0
-proc checkRange
-    args a, b, n
-    local k
-    endlocal
+checkRange:
+    begin
+    ;; args: a, b, n
+    %assign N 3
+    %assign a (16 + (N-1) * 8)
+    %assign b (16 + (N-2) * 8)
+    %assign n (16 + (N-3) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; k 8 bytes
+    %assign offset (offset - 8)
+    %assign k offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov qword [%$k], 0
+    mov qword [rbp + k], 0
 .loop:
-    mov rax, [%$k]
-    cmp rax, [%$n]
+    mov rax, [rbp + k]
+    cmp rax, [rbp + n]
     jge .eq
 
-    mov rbx, [%$a]
-    mov rcx, [%$k]
+    mov rbx, [rbp + a]
+    mov rcx, [rbp + k]
     mov dl, [rbx + rcx]
-    mov rbx, [%$b]
-    mov rcx, [%$k]
+    mov rbx, [rbp + b]
+    mov rcx, [rbp + k]
     cmp dl, [rbx + rcx]
     jne .neq
 
-    mov rax, [%$k]
+    mov rax, [rbp + k]
     inc rax
-    mov [%$k], rax
+    mov [rbp + k], rax
     jmp .loop
 .eq:
     mov rax, 1
@@ -73,26 +83,32 @@ proc checkRange
     end
     ret 24
 
-proc entry
-    local ptr        ; ptr crosses multiple calls, must live on the stack
-    endlocal
+entry:
+    begin
+    ;; local variables
+    %assign offset 0
+    ;; ptr crosses multiple calls, must live on the stack
+    %assign offset (offset - 8)
+    %assign ptr offset
+    ;; endlocal
+    sub rsp, (-offset)
 
     push 16
     call memAlloc
-    mov [%$ptr], rax
+    mov [rbp + ptr], rax
 
-    cmp qword [%$ptr], 0
+    cmp qword [rbp + ptr], 0
     setne al
     movzx rax, al
     push errAllocNull
     push rax
     call assert
 
-    mov rax, [%$ptr]
+    mov rax, [rbp + ptr]
     mov rbx, [pattern1]
     mov [rax], rbx
 
-    mov rax, [%$ptr]
+    mov rax, [rbp + ptr]
     mov rbx, [rax]
     cmp rbx, [pattern1]
     sete al
@@ -101,19 +117,19 @@ proc entry
     push rax
     call assert
 
-    push [%$ptr]
+    push [rbp + ptr]
     push 32
     call memReloc
-    mov [%$ptr], rax
+    mov [rbp + ptr], rax
 
-    cmp qword [%$ptr], 0
+    cmp qword [rbp + ptr], 0
     setne al
     movzx rax, al
     push errRelocNull
     push rax
     call assert
 
-    mov rax, [%$ptr]
+    mov rax, [rbp + ptr]
     mov rbx, [rax]
     cmp rbx, [pattern1]
     sete al
@@ -122,11 +138,11 @@ proc entry
     push rax
     call assert
 
-    mov rax, [%$ptr]
+    mov rax, [rbp + ptr]
     mov rbx, [pattern2]
     mov [rax+8], rbx
 
-    mov rax, [%$ptr]
+    mov rax, [rbp + ptr]
     mov rbx, [rax+8]
     cmp rbx, [pattern2]
     sete al
@@ -135,7 +151,7 @@ proc entry
     push rax
     call assert
 
-    push [%$ptr]
+    push [rbp + ptr]
     call memFree
 
     ; memCopy(dest, src, n) -- params pushed in declaration order: dest, src, n

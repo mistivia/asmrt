@@ -1,4 +1,4 @@
-; test_local.asm -- local/endlocal shortcut macro smoke test
+; test_local.asm -- local variable declaration smoke test
 
 %include "asmrt.inc"
 
@@ -11,20 +11,32 @@ section .data
 section .text
     global entry
 
-proc entry
-    local a          ; default size 8, at rbp-8
-    local b          ; default size 8, at rbp-16
-    local c          ; default size 8, at rbp-24
-    local d, 16      ; struct-sized, at rbp-40
-    endlocal
+entry:
+    begin
+    ;; local variables
+    %assign offset 0
+    ;; default size 8, at rbp-8
+    %assign offset (offset - 8)
+    %assign a offset
+    ;; default size 8, at rbp-16
+    %assign offset (offset - 8)
+    %assign b offset
+    ;; default size 8, at rbp-24
+    %assign offset (offset - 8)
+    %assign c offset
+    ;; struct-sized, at rbp-40
+    %assign offset (offset - 16)
+    %assign d offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov qword [%$a], 111
-    mov qword [%$b], 222
-    mov qword [%$c], 333
-    mov qword [%$d], 444
-    mov qword [%$d + 8], 555
+    mov qword [rbp + a], 111
+    mov qword [rbp + b], 222
+    mov qword [rbp + c], 333
+    mov qword [rbp + d], 444
+    mov qword [rbp + d + 8], 555
 
-    mov rax, [%$a]
+    mov rax, [rbp + a]
     cmp rax, 111
     sete al
     movzx rax, al
@@ -32,7 +44,7 @@ proc entry
     push rax
     call assert
 
-    mov rax, [%$b]
+    mov rax, [rbp + b]
     cmp rax, 222
     sete al
     movzx rax, al
@@ -40,7 +52,7 @@ proc entry
     push rax
     call assert
 
-    mov rax, [%$c]
+    mov rax, [rbp + c]
     cmp rax, 333
     sete al
     movzx rax, al
@@ -48,10 +60,10 @@ proc entry
     push rax
     call assert
 
-    mov rax, [%$d]
+    mov rax, [rbp + d]
     cmp rax, 444
     jne .fail
-    mov rax, [%$d + 8]
+    mov rax, [rbp + d + 8]
     cmp rax, 555
     jne .fail
     mov rax, 1

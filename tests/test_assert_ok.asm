@@ -8,7 +8,8 @@ section .data
 section .text
     global entry
 
-proc entry
+entry:
+    begin
 
     push msg
     push 1              ; flag = true

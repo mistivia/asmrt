@@ -20,95 +20,102 @@
 
 ```asm
 %macro begin 0
-    %push
     push rbp
     mov  rbp, rsp
-    %assign __localSize 0
 %endmacro
 
 %macro end 0
     mov  rsp, rbp
     pop  rbp
-    %pop
 %endmacro
 ```
 
-`begin` 除了建立标准栈帧，还 `%push` 一个 NASM 预处理器 context，`end` 收尾时 `%pop` 掉它。这是因为**参数、局部变量都通过 context-local 的 `%$name` 别名访问**（而不是普通全局 `%define`）：同一个变量名（`path`、`fd`、`size`……）在不同函数里反复出现是常态，如果用普通 `%define` 定义，NASM 预处理器会在扫描到*下一次*同名声明所在的那一行时，把这行里的裸标识符先展开成上一个函数遗留下来的旧定义（这一步发生在 NASM 识别这是一次宏调用之前），导致声明直接损坏、编译失败。`%$name` 是 context-local 的，`%pop` 时自动失效，不会有这个问题。
+`begin` 建立栈帧。
 
-**硬性规定：一个函数里 `proc`（内含 `begin`）/`end` 必须各出现且只出现一次**——`%push`/`%pop` 是预处理期指令，按源码文本顺序执行，不看运行时走的是哪条分支。函数内如果有多个提前返回的出口，必须让它们都跳转到同一个 `end` 之前，不能各自各写一个 `end`。
+**硬性规定：一个函数里 `begin`/`end` 必须各出现且只出现一次**。函数内如果有多个提前返回的出口，必须让它们都跳转到同一个 `end` 之前，不能各自各写一个 `end`。
 
-**每个函数体内的顺序固定为：`proc name` → `args`（声明参数）→ `local`...（声明局部变量）→ `endlocal` → 函数体 → `end`。** `args`/`local` 必须写在 `proc`/`begin` 之后，因为 `begin` 是 push context 的地方。
+**每个函数体内的顺序固定为：`name:` -> `begin` → 声明参数→ 声明局部变量→ `endlocal` → 函数体 → `end`。
 
-## proc：函数标签 + begin 合并
+## 声明参数
+
+参数必须是8 byte，如果需要用结构体，那用指针。
+
+假设有N个参数，第i个参数的偏移是 16 + (N-i) * 8
+
+例如，对于f(x, y, z):
 
 ```asm
-%macro proc 1
-%1:
-    begin
-%endmacro
+;; args: x, y, z
+%assign N 3
+%assign x (16 + (N-1) * 8)
+%assign y (16 + (N-2) * 8)
+%assign z (16 + (N-3) * 8)
 ```
 
-`proc funcName` 等价于 `funcName:` 紧跟一行 `begin`，写函数时用这一个宏代替两行。不发 `global`——`global funcName` 仍然按原来的习惯集中写在文件开头的 `section .text` 声明块里。
+## 结构
 
-## args：声明参数
+例如，对于下面的struct：
 
-```asm
-%macro args 1-*
-    %assign %%n %0
-    %assign %%i 1
-    %rep %0
-        %xdefine %[%$ %+ %1] (rbp + 16 + 8*(%%n - %%i))
-        %assign %%i %%i+1
-    %rotate 1
-    %endrep
-%endmacro
+```c
+struct Sample {
+    int32_t x, y;
+    int64_t z;
+}
 ```
 
-`args a1, a2, ..., an` 按 push 顺序声明参数（`a1` 最先 push，`an` 最后 push、落在 `[rbp+16]`），用到的地方写 `[%$a1]`。**硬性规定：每个参数必须恰好 8 字节**——标量直接传值，结构体只能传指针，不按值展开成多个栈槽。
-
-## local / endlocal：声明局部变量
+这样实现：
 
 ```asm
-%macro local 1-2 8
-    %assign __localSize __localSize + %2
-    %assign %[%$ %+ %1 %+ _offset] (-__localSize)
-    %xdefine %[%$ %+ %1] (rbp + %[%$ %+ %1 %+ _offset])
-%endmacro
-
-%macro endlocal 0
-    sub rsp, __localSize
-%endmacro
+;; struct Sample
+%assign offset 0
+;; i32 x
+%assign Sample_x offset
+%assign offset (offset + 4)
+;; i32 y
+%assign Sample_y offset
+%assign offset (offset + 4)
+;; i64 z
+%assign Sample_y offset
+%assign offset (offset + 8)
+;; endstruct
+%assign Sample_size offset
 ```
 
-`local name[, size]`（`size` 缺省 8）按声明顺序累加偏移，用到的地方写 `[%$name]`；最后一个 `local` 之后调用一次 `endlocal`，补上 `sub rsp, N`。**硬性规定：`size` 必须是 8 的整数倍**（结构体大小同样必须是 8 的倍数，见下面 struc 一节），这样 `endlocal` 算出来的 `N` 自动就是 8 的整数倍，不需要额外取整。
+`Sample_x`/`Sample_y`/`Sample_z` 是字段偏移，`Sample_size` 是整个结构体的字节数。
 
-## 结构体：直接用 NASM 的 struc/endstruc
-
-不再手写 `%assign Type_field (...)` 链，直接用 NASM 自带的结构体宏：
+**硬性规定不变：`Type_size` 必须是 8 的整数倍。** 字段本身凑不满时手动补一个padding:
 
 ```asm
-struc Sample                ; int32 x; int32 y; int64 z;
-    .x: resd 1
-    .y: resd 1
-    .z: resq 1
-endstruc                    ; Sample_size = 4+4+8 = 16，已经是 8 的整数倍，不用 padding
-```
-
-`Sample.x`/`Sample.y`/`Sample.z` 是字段偏移，`Sample_size` 是整个结构体的字节数。访问字段：`[%$c + Sample.y]`（`%$c` 是 `local`/`args` 声明的、指向该结构体实例的地址）或 `[somePtr + Sample.y]`（`somePtr` 是指向堆/全局实例的指针）。
-
-**硬性规定不变：`Type_size` 必须是 8 的整数倍。** 字段本身凑不满时手动补一个 `resX` padding 字段：
-
-```asm
-struc Tiny                  ; int32 x;
-    .x: resd 1
-    resd 1                  ; 4 字节实际数据凑不满 8，补 4 字节 padding
-endstruc                    ; Tiny_size = 4+4 = 8
+;; struct Tiny
+%assign offset 0
+;; i32 x
+%assign Tiny_x offset
+%assign offset (offset + 4)
+;; endstruct
+%assign offset (offset + 4) ;; padding
+%assign Tiny_size offset
 ```
 
 跨模块共享的结构体（如 `ValueMeta`、`Vec`）统一声明在 `asmrt.inc` 的
 "shared struct definitions" 段，而不放在某个 `.asm` 模块里——这样任何
-`%include "asmrt.inc"` 的模块都能直接用结构体名和字段偏移。`struc` 的
-字段布局必须保持 8 的整数倍（见上），`Type_size` 同样必须是 8 的倍数。
+`%include "asmrt.inc"` 的模块都能直接用结构体名和字段偏移。
+
+## 声明局部变量
+
+例如栈上有变量 i64 x，和Sample s
+
+```asm
+;; local variables
+%assign offset 0
+;; int64_t x
+%assign offset (offset - 8)
+%assign x offset
+;; Sample s
+%assign offset (offset - Sample_size)
+%assign s offset
+;; endlocal
+sub rsp, (-offset)
+```
 
 ## hexalign：真实 ABI 调用点的动态栈对齐
 
@@ -122,96 +129,65 @@ endstruc                    ; Tiny_size = 4+4 = 8
 
 调用真实 ABI 函数（libc、系统调用等）之前放一句 `hexalign`，运行时按需垫 8 字节，不需要手算参数/局部变量个数的奇偶性，也不需要配对的"撤销"宏——垫的空间随 `end` 的 `mov rsp, rbp` 一并归还。按*调用点*放，不是按函数放：一个函数有几处真实 ABI 调用，每处前面都要放。
 
-## preasmcall / postasmcall：C 回调场景下的全寄存器保护宏
+## preasm / postasm：C 回调场景下的全寄存器保护宏
 
-```asm
-%macro preasmcall 0
-    push rax
-    push rbx
-    push rcx
-    push rdx
-    push rbp
-    push rsi
-    push rdi
-    push r8
-    push r9
-    push r10
-    push r11
-    push r12
-    push r13
-    push r14
-    push r15
-    sub  rsp, 8   ; 15 个寄存器是奇数个，补一个占位槽凑够 16 字节对齐
-%endmacro
-
-%macro postasmcall 0
-    add  rsp, 8
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rdi
-    pop rsi
-    pop rbp
-    pop rdx
-    pop rcx
-    pop rbx
-    pop rax
-%endmacro
-```
 
 C 代码把一个函数指针注册为回调（如 `qsort` 的比较函数），回调内部要转调自定义 ABI 函数时，用这一对宏包住 `call`：
 
 ```asm
 myCallback:
-    preasmcall
+    preasm
     ; ... 按自定义 ABI 规则 push 参数 ...
     call someAsmrtFunc
-    postasmcall
+    postasm
     ; 需要用到 someAsmrtFunc 的返回值的话，必须在 postasmcall 之前
     ; 把 rax 存到内存里——postasmcall 会把 rax 也恢复成调用前的值
     ret
 ```
 
-保护范围包含 `rax`（连同调用结果一起被恢复，需要的话提前存走）和 `rbp`——因此 `preasmcall`/`postasmcall` 之间不能通过 `[%$name]` 访问当前函数自己的参数/局部变量，这段区间 `rbp` 的语义不受保证。
-
 ## 完整示例（递归 fibo + 调用真实 ABI 的 printf）
 
 ```asm
-proc main
-
+entry:
+    begin
     push 10
     call fibo
     push rax
     call printNum
-    ...
+    end
+    ret 24
 
-proc fibo
-    args x
-    local acc        ; 存第一次递归调用的结果，8 字节
-    endlocal
+fibo:
+    begin
+    ;; args: x
+    %assign N 1
+    %assign x (16 + (N-1) * 8)
 
-    mov rax, [%$x]
+    ;; local acc
+    %assign offset 0
+    ;; int64_t acc
+    %assign offset (offset - 8)
+    %assign acc offset
+    ;; endlocal
+    sub rsp, (-offset)
+
+    mov rax, [rbp + x]
     cmp rax, 2
     jg .calc
     mov rax, 1
     jmp .end
 .calc:
-    mov rax, [%$x]
+    mov rax, [rbp + x]
     sub rax, 1
     push rax
-    call fibo        ; 调用之后除 rax 外所有寄存器视为已破坏
-    mov [%$acc], rax    ; 立刻把结果存回栈上的局部变量，不留在寄存器里
+    call fibo               ; 调用之后除 rax 外所有寄存器视为已破坏
+    mov [rbp + acc], rax    ; 立刻把结果存回栈上的局部变量，不留在寄存器里
 
-    mov rax, [%$x]
+    mov rax, [rbp + x]
     sub rax, 2
     push rax
     call fibo
-    add rax, [%$acc]    ; acc 是栈上变量，不受两次调用之间寄存器被破坏的影响
+    add rax, [rbp + acc]    ; acc 是栈上变量，不受两次调用之间寄存器被破坏的影响
 .end:
     end
     ret 8
@@ -220,9 +196,9 @@ proc printNum
     args x
     ; 没有局部变量，不需要 endlocal——对齐交给下面的 hexalign 动态处理
 
-    hexalign
+    hexalign ;; align to 16 byte before calling C function
     mov rdi, printMsg
-    mov rsi, [%$x]
+    mov rsi, [rbp + x]
     xor rax, rax         ; printf 是变参函数，rax 需清零表示 0 个向量寄存器参数
     call printf
 

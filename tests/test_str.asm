@@ -20,7 +20,8 @@ section .data
 section .text
     global entry
 
-proc entry
+entry:
+    begin
 
     push s1
     call strLen

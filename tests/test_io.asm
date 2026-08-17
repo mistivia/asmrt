@@ -24,24 +24,30 @@ section .bss
 section .text
     global entry
 
-proc entry
-    local fd         ; fd needs to survive multiple calls, so it must live on the stack, not just in a register
-    endlocal
+entry:
+    begin
+    ;; local variables
+    %assign offset 0
+    ;; fd needs to survive multiple calls, so it must live on the stack, not just in a register
+    %assign offset (offset - 8)
+    %assign fd offset
+    ;; endlocal
+    sub rsp, (-offset)
 
     push path
     push 0x242          ; flags O_RDWR|O_CREAT|O_TRUNC (need to seek back on the same fd and read later)
     push 0x1A4          ; mode 0644
     call ioOpen
-    mov [%$fd], rax
+    mov [rbp + fd], rax
 
-    cmp qword [%$fd], 0
+    cmp qword [rbp + fd], 0
     setge al
     movzx rax, al
     push errOpen
     push rax
     call assert
 
-    push [%$fd]
+    push [rbp + fd]
     push msg
     push msgLen
     call ioWrite
@@ -54,7 +60,7 @@ proc entry
     call assert
 
     ; leave fd open, use ioSeek to rewind to the start and read again, to verify seek works
-    push [%$fd]
+    push [rbp + fd]
     push 0              ; offset
     push 0              ; whence SEEK_SET
     call ioSeek
@@ -66,7 +72,7 @@ proc entry
     push rax
     call assert
 
-    push [%$fd]
+    push [rbp + fd]
     push readBuf
     push msgLen
     call ioRead
@@ -78,16 +84,16 @@ proc entry
     push rax
     call assert
 
-    push [%$fd]
+    push [rbp + fd]
     call ioClose
 
     push path
     push 0              ; flags O_RDONLY
     push 0              ; mode (ignored for O_RDONLY)
     call ioOpen
-    mov [%$fd], rax
+    mov [rbp + fd], rax
 
-    push [%$fd]
+    push [rbp + fd]
     push readBuf
     push msgLen
     call ioRead
@@ -99,7 +105,7 @@ proc entry
     push rax
     call assert
 
-    push [%$fd]
+    push [rbp + fd]
     call ioClose
 
     xor rcx, rcx
@@ -125,53 +131,53 @@ proc entry
     push 0x242          ; flags O_RDWR|O_CREAT|O_TRUNC
     push 0x1A4          ; mode 0644
     call ioOpen
-    mov [%$fd], rax
+    mov [rbp + fd], rax
 
-    cmp qword [%$fd], 0
+    cmp qword [rbp + fd], 0
     setge al
     movzx rax, al
     push errOpen
     push rax
     call assert
 
-    push [%$fd]
+    push [rbp + fd]
     push 42
     call ioWriteNum
 
-    push [%$fd]
+    push [rbp + fd]
     push ','
     call ioWriteChar
 
-    push [%$fd]
+    push [rbp + fd]
     push -7
     call ioWriteNum
 
-    push [%$fd]
+    push [rbp + fd]
     push ','
     call ioWriteChar
 
-    push [%$fd]
+    push [rbp + fd]
     push 0
     call ioWriteNum
 
-    push [%$fd]
+    push [rbp + fd]
     push ','
     call ioWriteChar
 
-    push [%$fd]
+    push [rbp + fd]
     push 'A'
     call ioWriteChar
 
-    push [%$fd]
+    push [rbp + fd]
     push 10
     call ioWriteChar
 
-    push [%$fd]
+    push [rbp + fd]
     push 0              ; offset
     push 0              ; whence SEEK_SET
     call ioSeek
 
-    push [%$fd]
+    push [rbp + fd]
     push readBuf
     push numExpectLen
     call ioRead
@@ -183,7 +189,7 @@ proc entry
     push rax
     call assert
 
-    push [%$fd]
+    push [rbp + fd]
     call ioClose
 
     xor rcx, rcx

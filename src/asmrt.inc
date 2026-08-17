@@ -6,16 +6,17 @@
 ; real-ABI, or bare syscall) -- so no variable ever lives in a register
 ; across a call, only on the stack.
 ;
-; Params and locals are declared with args/local and accessed as
-; context-local %$name aliases (NASM %push/%pop), e.g. [%$fd], [%$flag].
-; Using %$ instead of a plain global %define means the same name can be
-; reused in different functions in the same file without colliding --
-; a plain %define would otherwise leak for the rest of the file and get
-; pre-expanded (and corrupted) the next time that name is declared.
+; Params and locals are declared with plain %assign offsets, e.g.:
 ;
-; Required order in every function: proc name -> args -> local... ->
-; endlocal -> body -> end. (args/local must come after proc/begin
-; because begin is what pushes the context %$ names live in.)
+;   ;; args: x, y, z
+;   %assign N 3
+;   %assign x (16 + (N-1) * 8)
+;   %assign y (16 + (N-2) * 8)
+;   %assign z (16 + (N-3) * 8)
+;
+; and accessed as [rbp + x].  Required order in every function:
+;   name: -> begin -> arg declarations -> local declarations ->
+;   endlocal -> body -> end.
 
 %ifndef ASMRT_INC
 %define ASMRT_INC
@@ -23,49 +24,13 @@
 ; ---- custom ABI support macros ----
 
 %macro begin 0
-    %push
     push rbp
     mov  rbp, rsp
-    %assign __localSize 0
 %endmacro
 
 %macro end 0
     mov  rsp, rbp
     pop  rbp
-    %pop
-%endmacro
-
-; proc name: function label + begin, merged. Write `proc funcName`
-; instead of `funcName:` followed by `begin`. Does not emit `global` --
-; that's still declared separately at the top of the file, as before.
-%macro proc 1
-%1:
-    begin
-%endmacro
-
-; args a1, ..., an: declare params in push order (a1 pushed first, an
-; pushed last, landing at [rbp+16]). Must follow begin.
-%macro args 1-*
-    %assign %%n %0
-    %assign %%i 1
-    %rep %0
-        %xdefine %[%$ %+ %1] (rbp + 16 + 8*(%%n - %%i))
-        %assign %%i %%i+1
-    %rotate 1
-    %endrep
-%endmacro
-
-; local name[, size=8]: declare a local, accumulating __localSize (reset
-; by begin). size must be a multiple of 8 (see AGENTS.md). Call
-; endlocal once, after the last local, to emit the sub rsp.
-%macro local 1-2 8
-    %assign __localSize __localSize + %2
-    %assign %[%$ %+ %1 %+ _offset] (-__localSize)
-    %xdefine %[%$ %+ %1] (rbp + %[%$ %+ %1 %+ _offset])
-%endmacro
-
-%macro endlocal 0
-    sub rsp, __localSize
 %endmacro
 
 ; hexalign: pad rsp to 16-byte alignment before a real-ABI call. Under
@@ -136,16 +101,34 @@
 ;   copy_fn            copy;    ; +48
 ;   move_fn            move;    ; +56
 ;                                        total 64, all fields 8-aligned
-struc ValueMeta
-    .size:  resq 1
-    .align: resq 1
-    .drop:  resq 1
-    .cmp:   resq 1
-    .eq:    resq 1
-    .hash:  resq 1
-    .copy:  resq 1
-    .move:  resq 1
-endstruc
+;; struct ValueMeta
+%assign offset 0
+;; qword size
+%assign ValueMeta_size offset
+%assign offset (offset + 8)
+;; qword align
+%assign ValueMeta_align offset
+%assign offset (offset + 8)
+;; qword drop
+%assign ValueMeta_drop offset
+%assign offset (offset + 8)
+;; qword cmp
+%assign ValueMeta_cmp offset
+%assign offset (offset + 8)
+;; qword eq
+%assign ValueMeta_eq offset
+%assign offset (offset + 8)
+;; qword hash
+%assign ValueMeta_hash offset
+%assign offset (offset + 8)
+;; qword copy
+%assign ValueMeta_copy offset
+%assign offset (offset + 8)
+;; qword move
+%assign ValueMeta_move offset
+%assign offset (offset + 8)
+;; endstruct
+%assign ValueMeta_size offset
 
 ; Vec: mirrors cbase/cbase.h's `struct vec`, a generic growable
 ; array.  All four fields are qwords, so the struct is 32 bytes and
@@ -155,12 +138,22 @@ endstruc
 ;   size_t len;     ; +8
 ;   size_t capacity ; +16
 ;   struct value_meta *meta ; +24
-struc Vec
-    .data:     resq 1
-    .len:      resq 1
-    .capacity: resq 1
-    .meta:     resq 1
-endstruc
+;; struct Vec
+%assign offset 0
+;; qword data
+%assign Vec_data offset
+%assign offset (offset + 8)
+;; qword len
+%assign Vec_len offset
+%assign offset (offset + 8)
+;; qword capacity
+%assign Vec_capacity offset
+%assign offset (offset + 8)
+;; qword meta
+%assign Vec_meta offset
+%assign offset (offset + 8)
+;; endstruct
+%assign Vec_size offset
 
 ; ---- runtime exported symbols ----
 ;

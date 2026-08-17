@@ -61,27 +61,38 @@ section .text
 
 ; ---- int64 trait callbacks (custom ABI, same as sort's comparators) ----
 
-proc int64Drop
-    args self
+int64Drop:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
     xor rax, rax
     end
     ret 8
 
-proc int64Cmp
-    args a, b
-    mov rax, [%$a]
+int64Cmp:
+    begin
+    ;; args: a, b
+    %assign N 2
+    %assign a (16 + (N-1) * 8)
+    %assign b (16 + (N-2) * 8)
+    mov rax, [rbp + a]
     mov rax, [rax]
-    mov rbx, [%$b]
+    mov rbx, [rbp + b]
     mov rbx, [rbx]
     sub rax, rbx
     end
     ret 16
 
-proc int64Eq
-    args a, b
-    mov rax, [%$a]
+int64Eq:
+    begin
+    ;; args: a, b
+    %assign N 2
+    %assign a (16 + (N-1) * 8)
+    %assign b (16 + (N-2) * 8)
+    mov rax, [rbp + a]
     mov rax, [rax]
-    mov rbx, [%$b]
+    mov rbx, [rbp + b]
     mov rbx, [rbx]
     cmp rax, rbx
     sete al
@@ -89,50 +100,73 @@ proc int64Eq
     end
     ret 16
 
-proc int64Hash
-    args self
-    mov rax, [%$self]
+int64Hash:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
+    mov rax, [rbp + self]
     mov rax, [rax]
     end
     ret 8
 
-proc int64Copy
-    args dst, src
-    push [%$dst]
-    push [%$src]
+int64Copy:
+    begin
+    ;; args: dst, src
+    %assign N 2
+    %assign dst (16 + (N-1) * 8)
+    %assign src (16 + (N-2) * 8)
+    push [rbp + dst]
+    push [rbp + src]
     push 8
     call memCopy
     end
     ret 16
 
-proc int64Move
-    args dst, src
-    push [%$dst]
-    push [%$src]
+int64Move:
+    begin
+    ;; args: dst, src
+    %assign N 2
+    %assign dst (16 + (N-1) * 8)
+    %assign src (16 + (N-2) * 8)
+    push [rbp + dst]
+    push [rbp + src]
     push 8
     call memCopy
     end
     ret 16
 
 ; ---- helper: assert vecGet(vecPtr, idx) == expect ----
-proc checkInt64
-    args vecPtr, idx, expect, errMsg
-    push [%$vecPtr]
-    push [%$idx]
+checkInt64:
+    begin
+    ;; args: vecPtr, idx, expect, errMsg
+    %assign N 4
+    %assign vecPtr (16 + (N-1) * 8)
+    %assign idx (16 + (N-2) * 8)
+    %assign expect (16 + (N-3) * 8)
+    %assign errMsg (16 + (N-4) * 8)
+    push [rbp + vecPtr]
+    push [rbp + idx]
     call vecGet
     mov rbx, [rax]
-    cmp rbx, [%$expect]
+    cmp rbx, [rbp + expect]
     sete al
     movzx rax, al
-    push [%$errMsg]
+    push [rbp + errMsg]
     push rax
     call assert
     end
     ret 32
 
-proc entry
-    local tmp
-    endlocal
+entry:
+    begin
+    ;; local variables
+    %assign offset 0
+    ;; tmp 8 bytes
+    %assign offset (offset - 8)
+    %assign tmp offset
+    ;; endlocal
+    sub rsp, (-offset)
 
     ; ---- fnv64 sanity ----
     push fnvData
@@ -140,13 +174,13 @@ proc entry
     mov rax, 0xcbf29ce484222325
     push rax
     call fnv64
-    mov [%$tmp], rax
+    mov [rbp + tmp], rax
     push fnvData
     push 8
     mov rax, 0xcbf29ce484222325
     push rax
     call fnv64
-    mov rbx, [%$tmp]
+    mov rbx, [rbp + tmp]
     cmp rax, rbx
     sete al
     movzx rax, al
@@ -166,14 +200,14 @@ proc entry
     push rax
     call assert
 
-    cmp qword [vecA + Vec.capacity], 2
+    cmp qword [vecA + Vec_capacity], 2
     sete al
     movzx rax, al
     push errInit
     push rax
     call assert
 
-    cmp qword [vecA + Vec.data], 0
+    cmp qword [vecA + Vec_data], 0
     setne al
     movzx rax, al
     push errInit
@@ -448,8 +482,8 @@ proc entry
     push vecA
     call vecCopy
 
-    mov rax, [vecB + Vec.data]
-    cmp rax, [vecA + Vec.data]
+    mov rax, [vecB + Vec_data]
+    cmp rax, [vecA + Vec_data]
     setne al
     movzx rax, al
     push errCopy
@@ -495,13 +529,13 @@ proc entry
     ; ---- vecHash equal for two equal vecs ----
     push vecA
     call vecHash
-    mov [%$tmp], rax
+    mov [rbp + tmp], rax
     push vecB
     push vecA
     call vecCopy
     push vecA
     call vecHash
-    mov rbx, [%$tmp]
+    mov rbx, [rbp + tmp]
     cmp rax, rbx
     sete al
     movzx rax, al
@@ -514,19 +548,19 @@ proc entry
     push vecA
     call vecMove
 
-    cmp qword [vecA + Vec.data], 0
+    cmp qword [vecA + Vec_data], 0
     sete al
     movzx rax, al
     push errMove
     push rax
     call assert
-    cmp qword [vecA + Vec.len], 0
+    cmp qword [vecA + Vec_len], 0
     sete al
     movzx rax, al
     push errMove
     push rax
     call assert
-    cmp qword [vecB + Vec.len], 2
+    cmp qword [vecB + Vec_len], 2
     sete al
     movzx rax, al
     push errMove
@@ -538,13 +572,13 @@ proc entry
     push vecB
     call vecSwap
 
-    cmp qword [vecA + Vec.len], 2
+    cmp qword [vecA + Vec_len], 2
     sete al
     movzx rax, al
     push errSwap
     push rax
     call assert
-    cmp qword [vecB + Vec.len], 0
+    cmp qword [vecB + Vec_len], 0
     sete al
     movzx rax, al
     push errSwap
@@ -557,13 +591,13 @@ proc entry
     push vecB
     call vecDrop
 
-    cmp qword [vecA + Vec.data], 0
+    cmp qword [vecA + Vec_data], 0
     sete al
     movzx rax, al
     push errDrop
     push rax
     call assert
-    cmp qword [vecA + Vec.capacity], 0
+    cmp qword [vecA + Vec_capacity], 0
     sete al
     movzx rax, al
     push errDrop

@@ -11,18 +11,21 @@ section .text
     global assert
 
 ; caller pushes in order: push msg; push flag (first argument pushed first)
-proc assert
-    args msg, flag
-    ; no locals needed here
+assert:
+    begin
+    ;; args: msg, flag
+    %assign N 2
+    %assign msg (16 + (N-1) * 8)
+    %assign flag (16 + (N-2) * 8)
 
-    cmp qword [%$flag], 0
+    cmp qword [rbp + flag], 0
     jne .ok
 
-    push [%$msg]
+    push [rbp + msg]
     call strLen          ; rax = strlen(msg); msg is a stack argument, still readable after the call
 
     push 2               ; fd = stderr
-    push [%$msg]         ; buf = msg
+    push [rbp + msg]     ; buf = msg
     push rax             ; count = strlen(msg)
     call ioWrite
 

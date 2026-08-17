@@ -128,10 +128,10 @@ declared in `asmrt.inc`, and not meant to be called from elsewhere.
 ## Writing a program against asmrt
 
 A program provides its own entry point, `entry`, called by `main.asm`
-with the process's `argc`/`argv`/`envp` (in that push order, so `args
-argc, argv, envp` after `proc entry` gives you `[%$argc]`/`[%$argv]`/
-`[%$envp]`). `entry`'s return value in `rax` becomes the process exit
-code.
+with the process's `argc`/`argv`/`envp` (in that push order, so the
+`%assign` parameter declarations after `entry:` give you
+`[rbp + argc]`/`[rbp + argv]`/`[rbp + envp]`). `entry`'s return value
+in `rax` becomes the process exit code.
 
 ```asm
 %include "asmrt.inc"
@@ -143,7 +143,13 @@ section .data
 section .text
     global entry
 
-proc entry
+entry:
+    begin
+    ;; args: argc, argv, envp
+    %assign N 3
+    %assign argc (16 + (N-1) * 8)
+    %assign argv (16 + (N-2) * 8)
+    %assign envp (16 + (N-3) * 8)
 
     push 1
     push msg
@@ -172,24 +178,25 @@ gcc -no-pie hello.o build/libasmrt.a -o hello
 - Registers: aside from `rax`, every register is clobbered by any call
   (custom-ABI call, real-ABI call, or bare `syscall`), so no variable is
   ever kept live in a register across a call — everything lives on the
-  stack, declared with `args`/`local` and accessed as `[%$name]` — see
-  [AGENTS.md](AGENTS.md) for the full convention.
+  stack, declared with plain `%assign` offsets and accessed as
+  `[rbp + name]` — see [AGENTS.md](AGENTS.md) for the full convention.
 
-Macros provided by `asmrt.inc` (write order in every function: `proc
-name` → `args` → `local`... → `endlocal` → body → `end`):
+Macros and declaration style used in every function (write order:
+`name:` → `begin` → parameter `%assign`s → local `%assign`s → `endlocal`
+→ body → `end`):
 
 | Macro | Purpose |
 |---|---|
-| `proc name` | function label + `begin`, merged (`global name` is still declared separately, as before) |
-| `begin` / `end` | set up / tear down the standard stack frame (also push/pop the context `%$name` locals live in) |
-| `args a1, ..., an` | declare parameters in push order; use as `[%$a1]` etc. |
-| `local name[, size]` / `endlocal` | declare a local (default size 8 bytes); use as `[%$name]`; `endlocal` emits the `sub rsp` |
+| `begin` / `end` | set up / tear down the standard stack frame |
+| `%assign param (16 + (N-i) * 8)` | declare the `i`-th of `N` parameters; use as `[rbp + param]` |
+| `%assign offset (offset - size)` / `%assign local offset` | declare a local of `size` bytes; use as `[rbp + local]`; end these with `sub rsp, (-offset)` |
 | `hexalign` | pad the stack to 16-byte alignment right before a real-ABI call (e.g. libc), no paired "undo" needed |
-| `preasmcall` / `postasmcall` | save/restore every register around a custom-ABI call made from inside a real-ABI callback (e.g. a function pointer handed to a C library) |
+| `preasm` / `postasm` | save/restore every register around a custom-ABI call made from inside a real-ABI callback (e.g. a function pointer handed to a C library) |
 
 ## Naming convention
 
 - Variables (parameters, locals, globals): `camelCase`
 - Functions: `camelCase`
-- Struct-like types: `CamelCase`, declared with NASM's `struc`/`endstruc`
-  (field offsets come out as `Type.field`, size as `Type_size`)
+- Struct-like types: `CamelCase`, with offsets declared as
+  `Type_field` and total size as `Type_size` (see the "shared struct
+  definitions" section of `asmrt.inc` for the pattern)

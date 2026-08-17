@@ -3,3 +3,4 @@ TASK.md
 build/
 tmp/
 .basher/
+tmp_*

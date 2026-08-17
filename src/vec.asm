@@ -70,15 +70,19 @@ section .text
 ; elemAddr(self, index) -> ptr to element at self->data + index*meta->size
 ; No call inside, so rax/rbx/rcx are pure scratch for this stretch.
 ; caller pushes in order: push self; push index
-proc elemAddr
-    args self, index
+elemAddr:
+    begin
+    ;; args: self, index
+    %assign N 2
+    %assign self (16 + (N-1) * 8)
+    %assign index (16 + (N-2) * 8)
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.data]
-    mov rbx, [%$self]
-    mov rbx, [rbx + Vec.meta]
-    mov rbx, [rbx + ValueMeta.size]
-    mov rcx, [%$index]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_data]
+    mov rbx, [rbp + self]
+    mov rbx, [rbx + Vec_meta]
+    mov rbx, [rbx + ValueMeta_size]
+    mov rcx, [rbp + index]
     imul rbx, rcx
     add rax, rbx
 
@@ -88,15 +92,19 @@ proc elemAddr
 ; ---- construction / destruction ----
 
 ; vecInit(self, meta) -> 0.  Zero the vec and attach the ValueMeta.
-proc vecInit
-    args self, meta
+vecInit:
+    begin
+    ;; args: self, meta
+    %assign N 2
+    %assign self (16 + (N-1) * 8)
+    %assign meta (16 + (N-2) * 8)
 
-    mov rax, [%$self]
-    mov qword [rax + Vec.data], 0
-    mov qword [rax + Vec.len], 0
-    mov qword [rax + Vec.capacity], 0
-    mov rbx, [%$meta]
-    mov [rax + Vec.meta], rbx
+    mov rax, [rbp + self]
+    mov qword [rax + Vec_data], 0
+    mov qword [rax + Vec_len], 0
+    mov qword [rax + Vec_capacity], 0
+    mov rbx, [rbp + meta]
+    mov [rax + Vec_meta], rbx
 
     xor rax, rax
 
@@ -106,32 +114,37 @@ proc vecInit
 ; vecWithCapacity(self, meta, capacity) -> 0.  Like vecInit, but
 ; pre-allocates room for `capacity` elements (data stays NULL when
 ; capacity is 0, matching cbase).
-proc vecWithCapacity
-    args self, meta, capacity
+vecWithCapacity:
+    begin
+    ;; args: self, meta, capacity
+    %assign N 3
+    %assign self (16 + (N-1) * 8)
+    %assign meta (16 + (N-2) * 8)
+    %assign capacity (16 + (N-3) * 8)
 
-    mov rax, [%$self]
-    mov qword [rax + Vec.data], 0
-    mov qword [rax + Vec.len], 0
-    mov qword [rax + Vec.capacity], 0
-    mov rbx, [%$meta]
-    mov [rax + Vec.meta], rbx
+    mov rax, [rbp + self]
+    mov qword [rax + Vec_data], 0
+    mov qword [rax + Vec_len], 0
+    mov qword [rax + Vec_capacity], 0
+    mov rbx, [rbp + meta]
+    mov [rax + Vec_meta], rbx
 
-    mov rax, [%$self]
-    mov rbx, [%$capacity]
-    mov [rax + Vec.capacity], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rbp + capacity]
+    mov [rax + Vec_capacity], rbx
 
     cmp rbx, 0
     je .noAlloc
 
     ; self->data = memAlloc(capacity * meta->size)
-    mov rax, [%$meta]
-    mov rbx, [rax + ValueMeta.size]
-    mov rcx, [%$capacity]
+    mov rax, [rbp + meta]
+    mov rbx, [rax + ValueMeta_size]
+    mov rcx, [rbp + capacity]
     imul rbx, rcx
     push rbx
     call memAlloc
-    mov rbx, [%$self]
-    mov [rbx + Vec.data], rax
+    mov rbx, [rbp + self]
+    mov [rbx + Vec_data], rax
     jmp .done
 .noAlloc:
 .done:
@@ -142,51 +155,62 @@ proc vecWithCapacity
 
 ; vecReserve(self, additional) -- ensure capacity for len+additional
 ; elements, doubling from 4 as cbase does.
-proc vecReserve
-    args self, additional
-    local needed
-    local newCap
-    endlocal
+vecReserve:
+    begin
+    ;; args: self, additional
+    %assign N 2
+    %assign self (16 + (N-1) * 8)
+    %assign additional (16 + (N-2) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; needed 8 bytes
+    %assign offset (offset - 8)
+    %assign needed offset
+    ;; newCap 8 bytes
+    %assign offset (offset - 8)
+    %assign newCap offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.len]
-    add rax, [%$additional]
-    mov [%$needed], rax
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_len]
+    add rax, [rbp + additional]
+    mov [rbp + needed], rax
 
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.capacity]
-    cmp [%$needed], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_capacity]
+    cmp [rbp + needed], rbx
     jbe .done
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.capacity]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_capacity]
     test rax, rax
     jnz .haveCap
     mov rax, 4
 .haveCap:
-    mov [%$newCap], rax
+    mov [rbp + newCap], rax
 .growLoop:
-    mov rax, [%$newCap]
-    cmp rax, [%$needed]
+    mov rax, [rbp + newCap]
+    cmp rax, [rbp + needed]
     jae .grown
-    shl qword [%$newCap], 1
+    shl qword [rbp + newCap], 1
     jmp .growLoop
 .grown:
     ; self->data = memReloc(self->data, newCap * meta->size)
-    mov rax, [%$self]
-    mov rax, [rax + Vec.data]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_data]
     push rax
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    mov rax, [rax + ValueMeta.size]
-    mov rbx, [%$newCap]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    mov rax, [rax + ValueMeta_size]
+    mov rbx, [rbp + newCap]
     imul rax, rbx
     push rax
     call memReloc
-    mov rbx, [%$self]
-    mov [rbx + Vec.data], rax
-    mov rax, [%$newCap]
-    mov [rbx + Vec.capacity], rax
+    mov rbx, [rbp + self]
+    mov [rbx + Vec_data], rax
+    mov rax, [rbp + newCap]
+    mov [rbx + Vec_capacity], rax
 .done:
 
     end
@@ -194,99 +218,124 @@ proc vecReserve
 
 ; vecDrop(self) -- drop every element (via meta->drop), free the buffer,
 ; and reset the vec in place.
-proc vecDrop
-    args self
-    local i
-    endlocal
+vecDrop:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; i 8 bytes
+    %assign offset (offset - 8)
+    %assign i offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov qword [%$i], 0
+    mov qword [rbp + i], 0
 .loop:
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$i], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + i], rbx
     jae .freeData
-    push [%$self]
-    push [%$i]
+    push [rbp + self]
+    push [rbp + i]
     call elemAddr
-    mov rbx, [%$self]
-    mov rbx, [rbx + Vec.meta]
+    mov rbx, [rbp + self]
+    mov rbx, [rbx + Vec_meta]
     push rax
-    call [rbx + ValueMeta.drop]
-    inc qword [%$i]
+    call [rbx + ValueMeta_drop]
+    inc qword [rbp + i]
     jmp .loop
 .freeData:
-    mov rax, [%$self]
-    mov rax, [rax + Vec.data]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_data]
     push rax
     call memFree
 
-    mov rax, [%$self]
-    mov qword [rax + Vec.data], 0
-    mov qword [rax + Vec.len], 0
-    mov qword [rax + Vec.capacity], 0
+    mov rax, [rbp + self]
+    mov qword [rax + Vec_data], 0
+    mov qword [rax + Vec_len], 0
+    mov qword [rax + Vec_capacity], 0
 
     end
     ret 8
 
 ; vecClear(self) -- drop every element and set len to 0, keep buffer.
-proc vecClear
-    args self
-    local i
-    endlocal
+vecClear:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; i 8 bytes
+    %assign offset (offset - 8)
+    %assign i offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov qword [%$i], 0
+    mov qword [rbp + i], 0
 .loop:
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$i], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + i], rbx
     jae .done
-    push [%$self]
-    push [%$i]
+    push [rbp + self]
+    push [rbp + i]
     call elemAddr
-    mov rbx, [%$self]
-    mov rbx, [rbx + Vec.meta]
+    mov rbx, [rbp + self]
+    mov rbx, [rbx + Vec_meta]
     push rax
-    call [rbx + ValueMeta.drop]
-    inc qword [%$i]
+    call [rbx + ValueMeta_drop]
+    inc qword [rbp + i]
     jmp .loop
 .done:
-    mov rax, [%$self]
-    mov qword [rax + Vec.len], 0
+    mov rax, [rbp + self]
+    mov qword [rax + Vec_len], 0
 
     end
     ret 8
 
 ; vecTruncate(self, len) -- drop elements from len onward, shrink len.
-proc vecTruncate
-    args self, len
-    local i
-    endlocal
+vecTruncate:
+    begin
+    ;; args: self, len
+    %assign N 2
+    %assign self (16 + (N-1) * 8)
+    %assign len (16 + (N-2) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; i 8 bytes
+    %assign offset (offset - 8)
+    %assign i offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$len], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + len], rbx
     jae .setLen
 
-    mov rax, [%$len]
-    mov [%$i], rax
+    mov rax, [rbp + len]
+    mov [rbp + i], rax
 .loop:
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$i], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + i], rbx
     jae .setLen
-    push [%$self]
-    push [%$i]
+    push [rbp + self]
+    push [rbp + i]
     call elemAddr
-    mov rbx, [%$self]
-    mov rbx, [rbx + Vec.meta]
+    mov rbx, [rbp + self]
+    mov rbx, [rbx + Vec_meta]
     push rax
-    call [rbx + ValueMeta.drop]
-    inc qword [%$i]
+    call [rbx + ValueMeta_drop]
+    inc qword [rbp + i]
     jmp .loop
 .setLen:
-    mov rax, [%$self]
-    mov rbx, [%$len]
-    mov [rax + Vec.len], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rbp + len]
+    mov [rax + Vec_len], rbx
 
     end
     ret 16
@@ -294,16 +343,20 @@ proc vecTruncate
 ; ---- element access ----
 
 ; vecGet(self, index) -> ptr to element, or NULL if out of bounds
-proc vecGet
-    args self, index
+vecGet:
+    begin
+    ;; args: self, index
+    %assign N 2
+    %assign self (16 + (N-1) * 8)
+    %assign index (16 + (N-2) * 8)
 
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$index], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + index], rbx
     jae .oob
 
-    push [%$self]
-    push [%$index]
+    push [rbp + self]
+    push [rbp + index]
     call elemAddr
     jmp .done
 .oob:
@@ -314,13 +367,16 @@ proc vecGet
     ret 16
 
 ; vecFirst(self) -> ptr to first element, or NULL if empty
-proc vecFirst
-    args self
+vecFirst:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
 
-    mov rax, [%$self]
-    cmp qword [rax + Vec.len], 0
+    mov rax, [rbp + self]
+    cmp qword [rax + Vec_len], 0
     je .empty
-    mov rax, [rax + Vec.data]
+    mov rax, [rax + Vec_data]
     jmp .done
 .empty:
     xor rax, rax
@@ -330,13 +386,16 @@ proc vecFirst
     ret 8
 
 ; vecLast(self) -> ptr to last element, or NULL if empty
-proc vecLast
-    args self
+vecLast:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
 
-    mov rax, [%$self]
-    cmp qword [rax + Vec.len], 0
+    mov rax, [rbp + self]
+    cmp qword [rax + Vec_len], 0
     je .empty
-    mov rbx, [rax + Vec.len]
+    mov rbx, [rax + Vec_len]
     dec rbx
     push rax
     push rbx
@@ -350,21 +409,27 @@ proc vecLast
     ret 8
 
 ; vecLen(self) -> len
-proc vecLen
-    args self
+vecLen:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.len]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_len]
 
     end
     ret 8
 
 ; vecIsEmpty(self) -> 1 if len == 0, else 0
-proc vecIsEmpty
-    args self
+vecIsEmpty:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
 
-    mov rax, [%$self]
-    cmp qword [rax + Vec.len], 0
+    mov rax, [rbp + self]
+    cmp qword [rax + Vec_len], 0
     sete al
     movzx rax, al
 
@@ -372,11 +437,14 @@ proc vecIsEmpty
     ret 8
 
 ; vecAsPtr(self) -> raw data pointer (may be NULL)
-proc vecAsPtr
-    args self
+vecAsPtr:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.data]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_data]
 
     end
     ret 8
@@ -384,38 +452,49 @@ proc vecAsPtr
 ; vecSet(self, index, elem, isMove) -- replace element at index: drop
 ; the old one, copy the new one in (or move when isMove != 0).  No-op
 ; when index is out of bounds.
-proc vecSet
-    args self, index, elem, isMove
-    local dst
-    endlocal
+vecSet:
+    begin
+    ;; args: self, index, elem, isMove
+    %assign N 4
+    %assign self (16 + (N-1) * 8)
+    %assign index (16 + (N-2) * 8)
+    %assign elem (16 + (N-3) * 8)
+    %assign isMove (16 + (N-4) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; dst 8 bytes
+    %assign offset (offset - 8)
+    %assign dst offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$index], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + index], rbx
     jae .done
 
-    push [%$self]
-    push [%$index]
+    push [rbp + self]
+    push [rbp + index]
     call elemAddr
-    mov [%$dst], rax
+    mov [rbp + dst], rax
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    push [%$dst]
-    call [rax + ValueMeta.drop]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    push [rbp + dst]
+    call [rax + ValueMeta_drop]
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    cmp qword [%$isMove], 0
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    cmp qword [rbp + isMove], 0
     jne .moveElem
-    push [%$dst]
-    push [%$elem]
-    call [rax + ValueMeta.copy]
+    push [rbp + dst]
+    push [rbp + elem]
+    call [rax + ValueMeta_copy]
     jmp .done
 .moveElem:
-    push [%$dst]
-    push [%$elem]
-    call [rax + ValueMeta.move]
+    push [rbp + dst]
+    push [rbp + elem]
+    call [rax + ValueMeta_move]
 .done:
 
     end
@@ -425,37 +504,47 @@ proc vecSet
 
 ; vecPush(self, elem, isMove) -- append a copy of elem, or move it in
 ; when isMove != 0.
-proc vecPush
-    args self, elem, isMove
-    local dst
-    endlocal
+vecPush:
+    begin
+    ;; args: self, elem, isMove
+    %assign N 3
+    %assign self (16 + (N-1) * 8)
+    %assign elem (16 + (N-2) * 8)
+    %assign isMove (16 + (N-3) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; dst 8 bytes
+    %assign offset (offset - 8)
+    %assign dst offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    push [%$self]
+    push [rbp + self]
     push 1
     call vecReserve
 
-    push [%$self]
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
+    push [rbp + self]
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
     push rbx
     call elemAddr
-    mov [%$dst], rax
+    mov [rbp + dst], rax
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    cmp qword [%$isMove], 0
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    cmp qword [rbp + isMove], 0
     jne .moveElem
-    push [%$dst]
-    push [%$elem]
-    call [rax + ValueMeta.copy]
+    push [rbp + dst]
+    push [rbp + elem]
+    call [rax + ValueMeta_copy]
     jmp .finish
 .moveElem:
-    push [%$dst]
-    push [%$elem]
-    call [rax + ValueMeta.move]
+    push [rbp + dst]
+    push [rbp + elem]
+    call [rax + ValueMeta_move]
 .finish:
-    mov rax, [%$self]
-    inc qword [rax + Vec.len]
+    mov rax, [rbp + self]
+    inc qword [rax + Vec_len]
 
     end
     ret 24
@@ -463,33 +552,42 @@ proc vecPush
 ; vecPop(self, out) -> 1 if an element was popped, else 0.  When out is
 ; non-NULL the popped element is copied into *out.  The element slot is
 ; *not* dropped (ownership moves to the caller), matching cbase.
-proc vecPop
-    args self, out
-    local src
-    endlocal
+vecPop:
+    begin
+    ;; args: self, out
+    %assign N 2
+    %assign self (16 + (N-1) * 8)
+    %assign out (16 + (N-2) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; src 8 bytes
+    %assign offset (offset - 8)
+    %assign src offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov rax, [%$self]
-    cmp qword [rax + Vec.len], 0
+    mov rax, [rbp + self]
+    cmp qword [rax + Vec_len], 0
     je .false
 
-    mov rax, [%$self]
-    dec qword [rax + Vec.len]
+    mov rax, [rbp + self]
+    dec qword [rax + Vec_len]
 
-    cmp qword [%$out], 0
+    cmp qword [rbp + out], 0
     je .noOut
 
-    push [%$self]
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
+    push [rbp + self]
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
     push rbx
     call elemAddr
-    mov [%$src], rax
+    mov [rbp + src], rax
 
-    push [%$out]
-    push [%$src]
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    mov rbx, [rax + ValueMeta.size]
+    push [rbp + out]
+    push [rbp + src]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    mov rbx, [rax + ValueMeta_size]
     push rbx
     call memCopy
 .noOut:
@@ -505,74 +603,87 @@ proc vecPop
 ; ---- insert / remove ----
 
 ; vecInsert(self, index, elem, isMove) -- insert elem at index
-; (0..len inclusive).  isMove != 0 moves elem in (ValueMeta.move),
-; otherwise a copy is made (ValueMeta.copy).  No-op when index > len.
-proc vecInsert
-    args self, index, elem, isMove
-    local dst
-    local shiftDst
-    endlocal
+; (0..len inclusive).  isMove != 0 moves elem in (ValueMeta_move),
+; otherwise a copy is made (ValueMeta_copy).  No-op when index > len.
+vecInsert:
+    begin
+    ;; args: self, index, elem, isMove
+    %assign N 4
+    %assign self (16 + (N-1) * 8)
+    %assign index (16 + (N-2) * 8)
+    %assign elem (16 + (N-3) * 8)
+    %assign isMove (16 + (N-4) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; dst 8 bytes
+    %assign offset (offset - 8)
+    %assign dst offset
+    ;; shiftDst 8 bytes
+    %assign offset (offset - 8)
+    %assign shiftDst offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$index], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + index], rbx
     ja .done
 
-    push [%$self]
+    push [rbp + self]
     push 1
     call vecReserve
 
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$index], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + index], rbx
     jae .noShift
 
     ; shift [index, len) up one slot: memMove(data+(index+1)*size, data+index*size, (len-index)*size)
-    mov rbx, [%$index]
+    mov rbx, [rbp + index]
     inc rbx
-    push [%$self]
+    push [rbp + self]
     push rbx
     call elemAddr
-    mov [%$shiftDst], rax
+    mov [rbp + shiftDst], rax
 
-    push [%$self]
-    push [%$index]
+    push [rbp + self]
+    push [rbp + index]
     call elemAddr
     mov rbx, rax                ; src
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    mov rdx, [rax + ValueMeta.size]
-    mov rax, [%$self]
-    mov rax, [rax + Vec.len]
-    sub rax, [%$index]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    mov rdx, [rax + ValueMeta_size]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_len]
+    sub rax, [rbp + index]
     imul rax, rdx               ; n bytes
 
-    push [%$shiftDst]
+    push [rbp + shiftDst]
     push rbx
     push rax
     call memMove
 .noShift:
-    push [%$self]
-    push [%$index]
+    push [rbp + self]
+    push [rbp + index]
     call elemAddr
-    mov [%$dst], rax
+    mov [rbp + dst], rax
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    cmp qword [%$isMove], 0
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    cmp qword [rbp + isMove], 0
     jne .moveElem
-    push [%$dst]
-    push [%$elem]
-    call [rax + ValueMeta.copy]
+    push [rbp + dst]
+    push [rbp + elem]
+    call [rax + ValueMeta_copy]
     jmp .finish
 .moveElem:
-    push [%$dst]
-    push [%$elem]
-    call [rax + ValueMeta.move]
+    push [rbp + dst]
+    push [rbp + elem]
+    call [rax + ValueMeta_move]
 .finish:
-    mov rax, [%$self]
-    inc qword [rax + Vec.len]
+    mov rax, [rbp + self]
+    inc qword [rax + Vec_len]
 .done:
 
     end
@@ -582,66 +693,76 @@ proc vecInsert
 ; the tail down.  When out is non-NULL, copy the removed element into
 ; *out first (ownership moves to the caller; the slot is not dropped),
 ; matching cbase.  No-op when index >= len.
-proc vecRemove
-    args self, index, out
-    local removed
-    endlocal
+vecRemove:
+    begin
+    ;; args: self, index, out
+    %assign N 3
+    %assign self (16 + (N-1) * 8)
+    %assign index (16 + (N-2) * 8)
+    %assign out (16 + (N-3) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; removed 8 bytes
+    %assign offset (offset - 8)
+    %assign removed offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$index], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + index], rbx
     jae .done
 
-    cmp qword [%$out], 0
+    cmp qword [rbp + out], 0
     je .noOut
-    push [%$self]
-    push [%$index]
+    push [rbp + self]
+    push [rbp + index]
     call elemAddr
-    mov [%$removed], rax
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    mov rbx, [rax + ValueMeta.size]
-    push [%$out]
-    push [%$removed]
+    mov [rbp + removed], rax
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    mov rbx, [rax + ValueMeta_size]
+    push [rbp + out]
+    push [rbp + removed]
     push rbx
     call memCopy
 .noOut:
-    mov rax, [%$self]
-    mov rax, [rax + Vec.len]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_len]
     dec rax
-    cmp [%$index], rax
+    cmp [rbp + index], rax
     jae .noShift
 
     ; dest = elemAddr(self, index)
-    push [%$self]
-    push [%$index]
+    push [rbp + self]
+    push [rbp + index]
     call elemAddr
-    mov [%$removed], rax
+    mov [rbp + removed], rax
 
     ; src = elemAddr(self, index+1)
-    mov rbx, [%$index]
+    mov rbx, [rbp + index]
     inc rbx
-    push [%$self]
+    push [rbp + self]
     push rbx
     call elemAddr
 
     ; n = size * (len - index - 1)
-    mov rdx, [%$self]
-    mov rdx, [rdx + Vec.meta]
-    mov rdx, [rdx + ValueMeta.size]
-    mov rcx, [%$self]
-    mov rcx, [rcx + Vec.len]
-    sub rcx, [%$index]
+    mov rdx, [rbp + self]
+    mov rdx, [rdx + Vec_meta]
+    mov rdx, [rdx + ValueMeta_size]
+    mov rcx, [rbp + self]
+    mov rcx, [rcx + Vec_len]
+    sub rcx, [rbp + index]
     dec rcx
     imul rdx, rcx
 
-    push [%$removed]
+    push [rbp + removed]
     push rax
     push rdx
     call memMove
 .noShift:
-    mov rax, [%$self]
-    dec qword [rax + Vec.len]
+    mov rax, [rbp + self]
+    dec qword [rax + Vec_len]
 .done:
 
     end
@@ -651,56 +772,72 @@ proc vecRemove
 
 ; vecSwapElement(self, a, b) -- byte-swap two elements via a temporary
 ; buffer of meta->size bytes.  No-op for out-of-bounds or a == b.
-proc vecSwapElement
-    args self, a, b
-    local tmp
-    local pa
-    local pb
-    local size
-    endlocal
+vecSwapElement:
+    begin
+    ;; args: self, a, b
+    %assign N 3
+    %assign self (16 + (N-1) * 8)
+    %assign a (16 + (N-2) * 8)
+    %assign b (16 + (N-3) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; tmp 8 bytes
+    %assign offset (offset - 8)
+    %assign tmp offset
+    ;; pa 8 bytes
+    %assign offset (offset - 8)
+    %assign pa offset
+    ;; pb 8 bytes
+    %assign offset (offset - 8)
+    %assign pb offset
+    ;; size 8 bytes
+    %assign offset (offset - 8)
+    %assign size offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov rax, [%$a]
-    cmp rax, [%$b]
+    mov rax, [rbp + a]
+    cmp rax, [rbp + b]
     je .done
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$a], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + a], rbx
     jae .done
-    cmp [%$b], rbx
+    cmp [rbp + b], rbx
     jae .done
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    mov rax, [rax + ValueMeta.size]
-    mov [%$size], rax
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    mov rax, [rax + ValueMeta_size]
+    mov [rbp + size], rax
     push rax
     call memAlloc
-    mov [%$tmp], rax
+    mov [rbp + tmp], rax
 
-    push [%$self]
-    push [%$a]
+    push [rbp + self]
+    push [rbp + a]
     call elemAddr
-    mov [%$pa], rax
+    mov [rbp + pa], rax
 
-    push [%$self]
-    push [%$b]
+    push [rbp + self]
+    push [rbp + b]
     call elemAddr
-    mov [%$pb], rax
+    mov [rbp + pb], rax
 
-    push [%$tmp]
-    push [%$pa]
-    push [%$size]
+    push [rbp + tmp]
+    push [rbp + pa]
+    push [rbp + size]
     call memCopy
-    push [%$pa]
-    push [%$pb]
-    push [%$size]
+    push [rbp + pa]
+    push [rbp + pb]
+    push [rbp + size]
     call memCopy
-    push [%$pb]
-    push [%$tmp]
-    push [%$size]
+    push [rbp + pb]
+    push [rbp + tmp]
+    push [rbp + size]
     call memCopy
 
-    push [%$tmp]
+    push [rbp + tmp]
     call memFree
 .done:
 
@@ -708,24 +845,33 @@ proc vecSwapElement
     ret 24
 
 ; vecSwap(a, b) -- swap two whole vec headers (32 bytes each).
-proc vecSwap
-    args a, b
-    local tmpVec, 32
-    endlocal
+vecSwap:
+    begin
+    ;; args: a, b
+    %assign N 2
+    %assign a (16 + (N-1) * 8)
+    %assign b (16 + (N-2) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; tmpVec 32 bytes
+    %assign offset (offset - 32)
+    %assign tmpVec offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    lea rax, [%$tmpVec]
+    lea rax, [rbp + tmpVec]
     push rax
-    push [%$a]
+    push [rbp + a]
     push 32
     call memCopy
 
-    push [%$a]
-    push [%$b]
+    push [rbp + a]
+    push [rbp + b]
     push 32
     call memCopy
 
-    push [%$b]
-    lea rax, [%$tmpVec]
+    push [rbp + b]
+    lea rax, [rbp + tmpVec]
     push rax
     push 32
     call memCopy
@@ -736,26 +882,29 @@ proc vecSwap
 ; vecSort(self) -- sort the elements in place using the runtime's
 ; sort() with meta->cmp as the comparator (same custom-ABI callback
 ; contract sort() expects).
-proc vecSort
-    args self
+vecSort:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
 
-    mov rax, [%$self]
-    cmp qword [rax + Vec.len], 1
+    mov rax, [rbp + self]
+    cmp qword [rax + Vec_len], 1
     jbe .done
 
-    mov rax, [%$self]
-    mov rax, [rax + Vec.data]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_data]
     push rax
-    mov rax, [%$self]
-    mov rax, [rax + Vec.len]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_len]
     push rax
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    mov rax, [rax + ValueMeta.size]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    mov rax, [rax + ValueMeta_size]
     push rax
-    mov rax, [%$self]
-    mov rax, [rax + Vec.meta]
-    mov rax, [rax + ValueMeta.cmp]
+    mov rax, [rbp + self]
+    mov rax, [rax + Vec_meta]
+    mov rax, [rax + ValueMeta_cmp]
     push rax
     call sort
 .done:
@@ -767,56 +916,69 @@ proc vecSort
 
 ; vecCopy(dst, src) -- deep copy src into dst.  No-op when dst == src.
 ; dst is re-initialized with src's meta and capacity == src->len.
-proc vecCopy
-    args dst, src
-    local i
-    local srcElem
-    local dstElem
-    endlocal
+vecCopy:
+    begin
+    ;; args: dst, src
+    %assign N 2
+    %assign dst (16 + (N-1) * 8)
+    %assign src (16 + (N-2) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; i 8 bytes
+    %assign offset (offset - 8)
+    %assign i offset
+    ;; srcElem 8 bytes
+    %assign offset (offset - 8)
+    %assign srcElem offset
+    ;; dstElem 8 bytes
+    %assign offset (offset - 8)
+    %assign dstElem offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov rax, [%$dst]
-    cmp rax, [%$src]
+    mov rax, [rbp + dst]
+    cmp rax, [rbp + src]
     je .done
 
-    mov rax, [%$src]
-    mov rax, [rax + Vec.meta]
-    push [%$dst]
+    mov rax, [rbp + src]
+    mov rax, [rax + Vec_meta]
+    push [rbp + dst]
     push rax
-    mov rax, [%$src]
-    mov rax, [rax + Vec.len]
+    mov rax, [rbp + src]
+    mov rax, [rax + Vec_len]
     push rax
     call vecWithCapacity
 
-    mov qword [%$i], 0
+    mov qword [rbp + i], 0
 .loop:
-    mov rax, [%$src]
-    mov rbx, [rax + Vec.len]
-    cmp [%$i], rbx
+    mov rax, [rbp + src]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + i], rbx
     jae .setLen
 
-    push [%$src]
-    push [%$i]
+    push [rbp + src]
+    push [rbp + i]
     call elemAddr
-    mov [%$srcElem], rax
+    mov [rbp + srcElem], rax
 
-    push [%$dst]
-    push [%$i]
+    push [rbp + dst]
+    push [rbp + i]
     call elemAddr
-    mov [%$dstElem], rax
+    mov [rbp + dstElem], rax
 
-    mov rax, [%$dst]
-    mov rax, [rax + Vec.meta]
-    push [%$dstElem]
-    push [%$srcElem]
-    call [rax + ValueMeta.copy]
+    mov rax, [rbp + dst]
+    mov rax, [rax + Vec_meta]
+    push [rbp + dstElem]
+    push [rbp + srcElem]
+    call [rax + ValueMeta_copy]
 
-    inc qword [%$i]
+    inc qword [rbp + i]
     jmp .loop
 .setLen:
-    mov rax, [%$dst]
-    mov rbx, [%$src]
-    mov rbx, [rbx + Vec.len]
-    mov [rax + Vec.len], rbx
+    mov rax, [rbp + dst]
+    mov rbx, [rbp + src]
+    mov rbx, [rbx + Vec_len]
+    mov [rax + Vec_len], rbx
 .done:
 
     end
@@ -824,28 +986,32 @@ proc vecCopy
 
 ; vecMove(dst, src) -- transfer ownership of src's buffer to dst and
 ; reset src.  No-op when dst == src.
-proc vecMove
-    args dst, src
+vecMove:
+    begin
+    ;; args: dst, src
+    %assign N 2
+    %assign dst (16 + (N-1) * 8)
+    %assign src (16 + (N-2) * 8)
 
-    mov rax, [%$dst]
-    cmp rax, [%$src]
+    mov rax, [rbp + dst]
+    cmp rax, [rbp + src]
     je .done
 
-    mov rbx, [%$src]
-    mov rax, [%$dst]
-    mov rcx, [rbx + Vec.data]
-    mov [rax + Vec.data], rcx
-    mov rcx, [rbx + Vec.len]
-    mov [rax + Vec.len], rcx
-    mov rcx, [rbx + Vec.capacity]
-    mov [rax + Vec.capacity], rcx
-    mov rcx, [rbx + Vec.meta]
-    mov [rax + Vec.meta], rcx
+    mov rbx, [rbp + src]
+    mov rax, [rbp + dst]
+    mov rcx, [rbx + Vec_data]
+    mov [rax + Vec_data], rcx
+    mov rcx, [rbx + Vec_len]
+    mov [rax + Vec_len], rcx
+    mov rcx, [rbx + Vec_capacity]
+    mov [rax + Vec_capacity], rcx
+    mov rcx, [rbx + Vec_meta]
+    mov [rax + Vec_meta], rcx
 
-    mov qword [rbx + Vec.data], 0
-    mov qword [rbx + Vec.len], 0
-    mov qword [rbx + Vec.capacity], 0
-    mov qword [rbx + Vec.meta], 0
+    mov qword [rbx + Vec_data], 0
+    mov qword [rbx + Vec_len], 0
+    mov qword [rbx + Vec_capacity], 0
+    mov qword [rbx + Vec_meta], 0
 .done:
 
     end
@@ -855,45 +1021,58 @@ proc vecMove
 
 ; vecEq(a, b) -> 1 if both vecs have the same length and every pair of
 ; elements compares equal via a's meta->eq, else 0.
-proc vecEq
-    args a, b
-    local i
-    local ea
-    local eb
-    endlocal
+vecEq:
+    begin
+    ;; args: a, b
+    %assign N 2
+    %assign a (16 + (N-1) * 8)
+    %assign b (16 + (N-2) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; i 8 bytes
+    %assign offset (offset - 8)
+    %assign i offset
+    ;; ea 8 bytes
+    %assign offset (offset - 8)
+    %assign ea offset
+    ;; eb 8 bytes
+    %assign offset (offset - 8)
+    %assign eb offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov rax, [%$a]
-    mov rbx, [%$b]
-    mov rcx, [rax + Vec.len]
-    cmp rcx, [rbx + Vec.len]
+    mov rax, [rbp + a]
+    mov rbx, [rbp + b]
+    mov rcx, [rax + Vec_len]
+    cmp rcx, [rbx + Vec_len]
     jne .notEq
 
-    mov qword [%$i], 0
+    mov qword [rbp + i], 0
 .loop:
-    mov rax, [%$a]
-    mov rbx, [rax + Vec.len]
-    cmp [%$i], rbx
+    mov rax, [rbp + a]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + i], rbx
     jae .eq
 
-    push [%$a]
-    push [%$i]
+    push [rbp + a]
+    push [rbp + i]
     call elemAddr
-    mov [%$ea], rax
+    mov [rbp + ea], rax
 
-    push [%$b]
-    push [%$i]
+    push [rbp + b]
+    push [rbp + i]
     call elemAddr
-    mov [%$eb], rax
+    mov [rbp + eb], rax
 
-    mov rax, [%$a]
-    mov rax, [rax + Vec.meta]
-    push [%$ea]
-    push [%$eb]
-    call [rax + ValueMeta.eq]
+    mov rax, [rbp + a]
+    mov rax, [rax + Vec_meta]
+    push [rbp + ea]
+    push [rbp + eb]
+    call [rax + ValueMeta_eq]
     test rax, rax
     jz .notEq
 
-    inc qword [%$i]
+    inc qword [rbp + i]
     jmp .loop
 .eq:
     mov rax, 1
@@ -907,55 +1086,70 @@ proc vecEq
 
 ; vecCmp(a, b) -> lexicographic order: -1/0/1.  Elements are compared
 ; with a's meta->cmp; shorter vec is less when all shared elements tie.
-proc vecCmp
-    args a, b
-    local minLen
-    local i
-    local ea
-    local eb
-    endlocal
+vecCmp:
+    begin
+    ;; args: a, b
+    %assign N 2
+    %assign a (16 + (N-1) * 8)
+    %assign b (16 + (N-2) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; minLen 8 bytes
+    %assign offset (offset - 8)
+    %assign minLen offset
+    ;; i 8 bytes
+    %assign offset (offset - 8)
+    %assign i offset
+    ;; ea 8 bytes
+    %assign offset (offset - 8)
+    %assign ea offset
+    ;; eb 8 bytes
+    %assign offset (offset - 8)
+    %assign eb offset
+    ;; endlocal
+    sub rsp, (-offset)
 
-    mov rax, [%$a]
-    mov rbx, [%$b]
-    mov rax, [rax + Vec.len]
-    mov rbx, [rbx + Vec.len]
+    mov rax, [rbp + a]
+    mov rbx, [rbp + b]
+    mov rax, [rax + Vec_len]
+    mov rbx, [rbx + Vec_len]
     cmp rax, rbx
     jbe .aIsMin
     mov rax, rbx
 .aIsMin:
-    mov [%$minLen], rax
+    mov [rbp + minLen], rax
 
-    mov qword [%$i], 0
+    mov qword [rbp + i], 0
 .loop:
-    mov rax, [%$i]
-    cmp rax, [%$minLen]
+    mov rax, [rbp + i]
+    cmp rax, [rbp + minLen]
     jae .compareLens
 
-    push [%$a]
-    push [%$i]
+    push [rbp + a]
+    push [rbp + i]
     call elemAddr
-    mov [%$ea], rax
+    mov [rbp + ea], rax
 
-    push [%$b]
-    push [%$i]
+    push [rbp + b]
+    push [rbp + i]
     call elemAddr
-    mov [%$eb], rax
+    mov [rbp + eb], rax
 
-    mov rax, [%$a]
-    mov rax, [rax + Vec.meta]
-    push [%$ea]
-    push [%$eb]
-    call [rax + ValueMeta.cmp]
+    mov rax, [rbp + a]
+    mov rax, [rax + Vec_meta]
+    push [rbp + ea]
+    push [rbp + eb]
+    call [rax + ValueMeta_cmp]
     test rax, rax
     jnz .done
 
-    inc qword [%$i]
+    inc qword [rbp + i]
     jmp .loop
 .compareLens:
-    mov rax, [%$a]
-    mov rbx, [%$b]
-    mov rax, [rax + Vec.len]
-    mov rbx, [rbx + Vec.len]
+    mov rax, [rbp + a]
+    mov rbx, [rbp + b]
+    mov rax, [rax + Vec_len]
+    mov rbx, [rbx + Vec_len]
     cmp rax, rbx
     jl .less
     jg .greater
@@ -974,43 +1168,55 @@ proc vecCmp
 ; vecHash(self) -> deterministic FNV-1a hash over the element hashes:
 ; each element's meta->hash is folded through fnv64, exactly like
 ; cbase's vec_hash.
-proc vecHash
-    args self
-    local hash
-    local i
-    local elemHash
-    endlocal
+vecHash:
+    begin
+    ;; args: self
+    %assign N 1
+    %assign self (16 + (N-1) * 8)
+    ;; local variables
+    %assign offset 0
+    ;; hash 8 bytes
+    %assign offset (offset - 8)
+    %assign hash offset
+    ;; i 8 bytes
+    %assign offset (offset - 8)
+    %assign i offset
+    ;; elemHash 8 bytes
+    %assign offset (offset - 8)
+    %assign elemHash offset
+    ;; endlocal
+    sub rsp, (-offset)
 
     mov rax, 0xcbf29ce484222325
-    mov [%$hash], rax
+    mov [rbp + hash], rax
 
-    mov qword [%$i], 0
+    mov qword [rbp + i], 0
 .loop:
-    mov rax, [%$self]
-    mov rbx, [rax + Vec.len]
-    cmp [%$i], rbx
+    mov rax, [rbp + self]
+    mov rbx, [rax + Vec_len]
+    cmp [rbp + i], rbx
     jae .done
 
-    push [%$self]
-    push [%$i]
+    push [rbp + self]
+    push [rbp + i]
     call elemAddr
-    mov rbx, [%$self]
-    mov rbx, [rbx + Vec.meta]
+    mov rbx, [rbp + self]
+    mov rbx, [rbx + Vec_meta]
     push rax
-    call [rbx + ValueMeta.hash]
-    mov [%$elemHash], rax
+    call [rbx + ValueMeta_hash]
+    mov [rbp + elemHash], rax
 
-    lea rax, [%$elemHash]
+    lea rax, [rbp + elemHash]
     push rax
     push 8
-    push [%$hash]
+    push [rbp + hash]
     call fnv64
-    mov [%$hash], rax
+    mov [rbp + hash], rax
 
-    inc qword [%$i]
+    inc qword [rbp + i]
     jmp .loop
 .done:
-    mov rax, [%$hash]
+    mov rax, [rbp + hash]
 
     end
     ret 8

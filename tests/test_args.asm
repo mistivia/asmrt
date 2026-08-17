@@ -1,4 +1,4 @@
-; test_args.asm -- args shortcut macro smoke test
+; test_args.asm -- args parameter declaration smoke test
 
 %include "asmrt.inc"
 
@@ -12,10 +12,15 @@ section .text
 
 ; sum3(p1, p2, p3) -> rax = p1*100 + p2*10 + p3, to check each param
 ; landed at the right offset (not just that the sum is right)
-proc sum3
-    args p1, p2, p3
+sum3:
+    begin
+    ;; args: p1, p2, p3
+    %assign N 3
+    %assign p1 (16 + (N-1) * 8)
+    %assign p2 (16 + (N-2) * 8)
+    %assign p3 (16 + (N-3) * 8)
 
-    mov rax, [%$p1]
+    mov rax, [rbp + p1]
     cmp rax, 1
     sete al
     movzx rax, al
@@ -23,7 +28,7 @@ proc sum3
     push rax
     call assert
 
-    mov rax, [%$p2]
+    mov rax, [rbp + p2]
     cmp rax, 2
     sete al
     movzx rax, al
@@ -31,7 +36,7 @@ proc sum3
     push rax
     call assert
 
-    mov rax, [%$p3]
+    mov rax, [rbp + p3]
     cmp rax, 3
     sete al
     movzx rax, al
@@ -39,17 +44,18 @@ proc sum3
     push rax
     call assert
 
-    mov rax, [%$p1]
+    mov rax, [rbp + p1]
     imul rax, 100
-    mov rcx, [%$p2]
+    mov rcx, [rbp + p2]
     imul rcx, 10
     add rax, rcx
-    add rax, [%$p3]
+    add rax, [rbp + p3]
 
     end
     ret 24
 
-proc entry
+entry:
+    begin
 
     push 1
     push 2
