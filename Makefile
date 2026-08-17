@@ -31,7 +31,7 @@ lib: $(LIB)
 $(LIB): $(OBJS) | $(BUILD_DIR)
 	$(AR) rcs $@ $(OBJS)
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.asm | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.asm $(INC) | $(BUILD_DIR)
 	$(AS) $(ASFLAGS) $< -o $@
 
 $(BUILD_DIR):
@@ -40,7 +40,7 @@ $(BUILD_DIR):
 $(TEST_BUILD_DIR):
 	mkdir -p $(TEST_BUILD_DIR)
 
-$(TEST_BUILD_DIR)/%.o: $(TEST_DIR)/%.asm | $(TEST_BUILD_DIR)
+$(TEST_BUILD_DIR)/%.o: $(TEST_DIR)/%.asm $(INC) | $(TEST_BUILD_DIR)
 	$(AS) $(ASFLAGS) $< -o $@
 
 $(TEST_BUILD_DIR)/%: $(TEST_BUILD_DIR)/%.o $(LIB)

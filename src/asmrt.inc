@@ -139,6 +139,19 @@ incOffset 8
 %assign sizeof_Vec offset
 ; end struct Vec
 
+; struct List
+resetOffset
+%assign List_vhead offset
+incOffset 8
+%assign List_vtail offset
+incOffset 8
+%assign List_len offset
+incOffset 8
+%assign List_pValueMeta offset
+incOffset 8
+%assign sizeof_List offset
+; end struct List
+
 ; ---- runtime exported symbols ----
 ;
 ; Signature comments use the custom ABI: caller pushes args in
@@ -268,5 +281,59 @@ extern vecCmp
 extern vecHash
 ; vecMeta ; ValueMeta instance describing struct Vec itself
 extern vecMeta
+
+; list.asm
+; listInit(pList, pMeta) -> 0 ; alloc sentinel nodes, attach the ValueMeta
+extern listInit
+; listDrop(pList) ; drop every elem, free all nodes incl. sentinels, reset in place
+extern listDrop
+; listClear(pList) ; drop every elem, keep sentinel nodes
+extern listClear
+; listCopy(pDst, pSrc) ; deep copy src into dst (no-op if same list)
+extern listCopy
+; listMove(pDst, pSrc) ; transfer ownership, reset pSrc
+extern listMove
+; listSwap(pA, pB) ; swap two whole list headers
+extern listSwap
+; listInsertBefore(pList, pIter, pElem, isMove) -> pNode ; insert elem before iter; isMove != 0 moves, else copies; NULL if iter invalid
+extern listInsertBefore
+; listInsertAfter(pList, pIter, pElem, isMove) -> pNode ; insert elem after iter; isMove != 0 moves, else copies; NULL if iter invalid
+extern listInsertAfter
+; listRemove(pList, pIter) ; drop elem, unlink and free the node
+extern listRemove
+; listSet(pList, pIter, pElem, isMove) ; replace elem at iter; isMove != 0 moves, else copies
+extern listSet
+; listBegin(pList) -> pNode ; first data node (or vtail sentinel if empty)
+extern listBegin
+; listLast(pList) -> pNode ; last data node, NULL if empty
+extern listLast
+; listEnd(pList) -> pNode ; the vtail sentinel
+extern listEnd
+; listNext(pIter) -> pNode ; iter->next; NULL if pIter is NULL
+extern listNext
+; listPrev(pIter) -> pNode ; iter->prev; NULL if pIter is NULL or would be vhead
+extern listPrev
+; listGet(pIter) -> pElem ; pointer to the node's element; NULL if pIter is NULL
+extern listGet
+; listLen(pList) -> len
+extern listLen
+; listIsEmpty(pList) -> 1/0
+extern listIsEmpty
+; listPushBack(pList, pElem, isMove) -> pNode ; append elem; isMove != 0 moves, else copies
+extern listPushBack
+; listPushFront(pList, pElem, isMove) -> pNode ; prepend elem; isMove != 0 moves, else copies
+extern listPushFront
+; listPopBack(pList) ; drop and remove the last elem
+extern listPopBack
+; listPopFront(pList) ; drop and remove the first elem
+extern listPopFront
+; listEq(pA, pB) -> 1/0 ; same len, element-wise eq via meta
+extern listEq
+; listCmp(pA, pB) -> -1/0/1 ; lexicographic
+extern listCmp
+; listHash(pList) -> hash ; FNV-1a over element hashes
+extern listHash
+; listMeta ; ValueMeta instance describing struct List itself
+extern listMeta
 
 %endif ; ASMRT_INC
