@@ -135,7 +135,6 @@ listInit:
 
     ; success
     xor rax, rax
-
     end
     ret 16
 
@@ -200,7 +199,6 @@ listDrop:
     mov qword [rax + List_vtail], 0
     mov qword [rax + List_len], 0
     mov qword [rax + List_pValueMeta], 0
-
     end
     ret 8
 
@@ -266,7 +264,6 @@ listClear:
     mov [rbx + ListNode_next], rcx
     mov [rcx + ListNode_prev], rbx
     mov qword [rax + List_len], 0
-
     end
     ret 8
 
@@ -324,7 +321,6 @@ listCopy:
     mov [rbp + it], rax
     jmp .loop
 .done:
-
     end
     ret 16
 
@@ -360,7 +356,6 @@ listMove:
     mov qword [rcx + List_len], 0
     mov qword [rcx + List_pValueMeta], 0
 .done:
-
     end
     ret 16
 
@@ -377,7 +372,6 @@ listSwap:
     push [rbp + pB]
     push sizeof_List
     call memSwap
-
     end
     ret 16
 
@@ -456,7 +450,6 @@ listInsertBefore:
     ; invalid iterator: nothing inserted, signal with NULL
     xor rax, rax
 .done:
-
     end
     ret 32
 
@@ -533,7 +526,6 @@ listInsertAfter:
     ; invalid iterator: nothing inserted, signal with NULL
     xor rax, rax
 .done:
-
     end
     ret 32
 
@@ -578,7 +570,6 @@ listRemove:
     mov rax, [rbp + pList]
     dec qword [rax + List_len]
 .done:
-
     end
     ret 16
 
@@ -625,7 +616,6 @@ listSet:
 .moveElem:
     call [rax + ValueMeta_move]
 .done:
-
     end
     ret 32
 
@@ -639,7 +629,6 @@ listBegin:
     mov rax, [rbp + pList]
     mov rax, [rax + List_vhead]
     mov rax, [rax + ListNode_next]
-
     end
     ret 8
 
@@ -662,7 +651,6 @@ listLast:
 .empty:
     xor rax, rax
 .done:
-
     end
     ret 8
 
@@ -676,7 +664,6 @@ listEnd:
     ; vtail is the end marker
     mov rax, [rbp + pList]
     mov rax, [rax + List_vtail]
-
     end
     ret 8
 
@@ -696,7 +683,6 @@ listNext:
 .empty:
     xor rax, rax
 .done:
-
     end
     ret 8
 
@@ -723,7 +709,6 @@ listPrev:
 .empty:
     xor rax, rax
 .done:
-
     end
     ret 8
 
@@ -743,7 +728,6 @@ listGet:
 .empty:
     xor rax, rax
 .done:
-
     end
     ret 8
 
@@ -757,7 +741,6 @@ listLen:
     ; report how many elements are stored
     mov rax, [rbp + pList]
     mov rax, [rax + List_len]
-
     end
     ret 8
 
@@ -773,7 +756,6 @@ listIsEmpty:
     cmp qword [rax + List_len], 0
     sete al
     movzx rax, al
-
     end
     ret 8
 
@@ -796,7 +778,6 @@ listPushBack:
     push [rbp + pElem]
     push [rbp + isMove]
     call listInsertBefore
-
     end
     ret 24
 
@@ -819,7 +800,6 @@ listPushFront:
     push [rbp + pElem]
     push [rbp + isMove]
     call listInsertAfter
-
     end
     ret 24
 
@@ -837,7 +817,6 @@ listPopBack:
     push [rbp + pList]
     push rax
     call listRemove
-
     end
     ret 8
 
@@ -855,7 +834,6 @@ listPopFront:
     push [rbp + pList]
     push rax
     call listRemove
-
     end
     ret 8
 
@@ -931,7 +909,6 @@ listEq:
 .notEq:
     xor rax, rax
 .done:
-
     end
     ret 16
 
@@ -1014,7 +991,6 @@ listCmp:
     ; b ran dry first: a is the longer one
     mov rax, 1
 .done:
-
     end
     ret 16
 
@@ -1079,6 +1055,5 @@ listHash:
     jmp .loop
 .done:
     mov rax, [rbp + hash]
-
     end
     ret 8

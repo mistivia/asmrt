@@ -58,7 +58,6 @@ sum3:
     imul rcx, 10
     add rax, rcx
     add rax, [rbp + p3]
-
     end
     ret 24
 
@@ -77,6 +76,5 @@ entry:
 .fail:
     mov rax, 1
 .done:
-
     end
     ret 24

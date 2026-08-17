@@ -209,7 +209,6 @@ partition:
     call memSwap
 
     mov rax, [rbp + i]                  ; return the pivot's final index
-
     end
     ret 32
 
@@ -267,6 +266,5 @@ fnv64:
     jmp .loop
 .done:
     mov rax, [rbp + hash]
-
     end
     ret 24

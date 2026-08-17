@@ -85,7 +85,6 @@ elemAddr:
     mov rcx, [rbp + index]
     imul rbx, rcx
     add rax, rbx
-
     end
     ret 16
 
@@ -107,7 +106,6 @@ vecInit:
     mov [rax + Vec_meta], rbx
 
     xor rax, rax
-
     end
     ret 16
 
@@ -149,7 +147,6 @@ vecWithCapacity:
 .noAlloc:
 .done:
     xor rax, rax
-
     end
     ret 24
 
@@ -212,7 +209,6 @@ vecReserve:
     mov rax, [rbp + newCap]
     mov [rbx + Vec_capacity], rax
 .done:
-
     end
     ret 16
 
@@ -256,7 +252,6 @@ vecDrop:
     mov qword [rax + Vec_data], 0
     mov qword [rax + Vec_len], 0
     mov qword [rax + Vec_capacity], 0
-
     end
     ret 8
 
@@ -294,7 +289,6 @@ vecClear:
 .done:
     mov rax, [rbp + self]
     mov qword [rax + Vec_len], 0
-
     end
     ret 8
 
@@ -340,7 +334,6 @@ vecTruncate:
     mov rax, [rbp + self]
     mov rbx, [rbp + len]
     mov [rax + Vec_len], rbx
-
     end
     ret 16
 
@@ -366,7 +359,6 @@ vecGet:
 .oob:
     xor rax, rax
 .done:
-
     end
     ret 16
 
@@ -385,7 +377,6 @@ vecFirst:
 .empty:
     xor rax, rax
 .done:
-
     end
     ret 8
 
@@ -408,7 +399,6 @@ vecLast:
 .empty:
     xor rax, rax
 .done:
-
     end
     ret 8
 
@@ -421,7 +411,6 @@ vecLen:
 
     mov rax, [rbp + self]
     mov rax, [rax + Vec_len]
-
     end
     ret 8
 
@@ -436,7 +425,6 @@ vecIsEmpty:
     cmp qword [rax + Vec_len], 0
     sete al
     movzx rax, al
-
     end
     ret 8
 
@@ -449,7 +437,6 @@ vecAsPtr:
 
     mov rax, [rbp + self]
     mov rax, [rax + Vec_data]
-
     end
     ret 8
 
@@ -500,7 +487,6 @@ vecSet:
     push [rbp + elem]
     call [rax + ValueMeta_move]
 .done:
-
     end
     ret 32
 
@@ -549,7 +535,6 @@ vecPush:
 .finish:
     mov rax, [rbp + self]
     inc qword [rax + Vec_len]
-
     end
     ret 24
 
@@ -600,7 +585,6 @@ vecPop:
 .false:
     xor rax, rax
 .done:
-
     end
     ret 16
 
@@ -689,7 +673,6 @@ vecInsert:
     mov rax, [rbp + self]
     inc qword [rax + Vec_len]
 .done:
-
     end
     ret 32
 
@@ -768,7 +751,6 @@ vecRemove:
     mov rax, [rbp + self]
     dec qword [rax + Vec_len]
 .done:
-
     end
     ret 24
 
@@ -828,7 +810,6 @@ vecSwapElement:
     push [rbp + size]
     call memSwap
 .done:
-
     end
     ret 24
 
@@ -863,7 +844,6 @@ vecSwap:
     push rax
     push sizeof_Vec
     call memCopy
-
     end
     ret 16
 
@@ -896,7 +876,6 @@ vecSort:
     push rax
     call sort
 .done:
-
     end
     ret 8
 
@@ -968,7 +947,6 @@ vecCopy:
     mov rbx, [rbx + Vec_len]
     mov [rax + Vec_len], rbx
 .done:
-
     end
     ret 16
 
@@ -1001,7 +979,6 @@ vecMove:
     mov qword [rbx + Vec_capacity], 0
     mov qword [rbx + Vec_meta], 0
 .done:
-
     end
     ret 16
 
@@ -1068,7 +1045,6 @@ vecEq:
 .notEq:
     xor rax, rax
 .done:
-
     end
     ret 16
 
@@ -1149,7 +1125,6 @@ vecCmp:
 .greater:
     mov rax, 1
 .done:
-
     end
     ret 16
 
@@ -1205,6 +1180,5 @@ vecHash:
     jmp .loop
 .done:
     mov rax, [rbp + hash]
-
     end
     ret 8

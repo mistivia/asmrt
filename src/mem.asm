@@ -39,7 +39,6 @@ memAlloc:
     hexalign
     mov rdi, [rbp + size]
     call malloc
-
     end
     ret 8
 
@@ -69,7 +68,6 @@ memReloc:
     mov rdi, [rbp + ptr]
     mov rsi, [rbp + size]
     call realloc
-
     end
     ret 16
 
@@ -89,7 +87,6 @@ memCopy:
     push [rbp + src]
     push [rbp + n]
     call copyForward
-
     end
     ret 24
 
@@ -194,7 +191,6 @@ memFill:
     jmp .byteLoop
 .done:
     mov rax, [rbp + dest]
-
     end
     ret 24
 
@@ -236,7 +232,6 @@ memSwap:
     inc r8
     jmp .byteLoop
 .done:
-
     end
     ret 24
 
@@ -275,6 +270,5 @@ copyForward:
     jmp .byteLoop
 .done:
     mov rax, [rbp + dest]
-
     end
     ret 24

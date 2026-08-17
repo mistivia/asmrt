@@ -33,7 +33,6 @@ ioOpen:
     mov rdx, [rbp + mode]
     mov rax, 2          ; sys_open
     syscall
-
     end
     ret 24
 
@@ -47,7 +46,6 @@ ioClose:
     mov rdi, [rbp + fd]
     mov rax, 3          ; sys_close
     syscall
-
     end
     ret 8
 
@@ -65,7 +63,6 @@ ioRead:
     mov rdx, [rbp + count]
     mov rax, 0          ; sys_read
     syscall
-
     end
     ret 24
 
@@ -83,7 +80,6 @@ ioWrite:
     mov rdx, [rbp + count]
     mov rax, 1          ; sys_write
     syscall
-
     end
     ret 24
 
@@ -136,7 +132,6 @@ ioWriteNum:
     push rbx
     push rax
     call ioWrite
-
     end
     ret 16
 
@@ -158,7 +153,6 @@ ioWriteString:
     lea rsi, [rax + 8]      ; data
     mov rax, 1              ; sys_write
     syscall
-
     end
     ret 16
 
@@ -187,7 +181,6 @@ ioWriteChar:
     push rax
     push 1
     call ioWrite
-
     end
     ret 16
 
@@ -206,6 +199,5 @@ ioSeek:
     mov rdx, [rbp + whence]
     mov rax, 8          ; sys_lseek
     syscall
-
     end
     ret 24

@@ -202,7 +202,6 @@ printNum:
     mov rsi, [rbp + x]
     xor rax, rax         ; printf 是变参函数，rax 需清零表示 0 个向量寄存器参数
     call printf
-
     end
     ret 8
 ```

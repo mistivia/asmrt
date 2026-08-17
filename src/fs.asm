@@ -28,7 +28,6 @@ fsStat:
     mov rsi, [rbp + buf]
     mov rax, 4          ; sys_stat
     syscall
-
     end
     ret 16
 
@@ -44,7 +43,6 @@ fsFstat:
     mov rsi, [rbp + buf]
     mov rax, 5          ; sys_fstat
     syscall
-
     end
     ret 16
 
@@ -60,7 +58,6 @@ fsMkdir:
     mov rsi, [rbp + mode]
     mov rax, 83         ; sys_mkdir
     syscall
-
     end
     ret 16
 
@@ -73,7 +70,6 @@ fsRmdir:
     mov rdi, [rbp + path]
     mov rax, 84         ; sys_rmdir
     syscall
-
     end
     ret 8
 
@@ -86,6 +82,5 @@ fsUnlink:
     mov rdi, [rbp + path]
     mov rax, 87         ; sys_unlink
     syscall
-
     end
     ret 8

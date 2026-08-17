@@ -101,7 +101,6 @@ cStrLen:
     inc rax
     jmp .loop
 .done:
-
     end
     ret 8
 
@@ -119,7 +118,6 @@ allocStr:
     call memAlloc               ; rax = string
     mov rbx, [rbp + len]
     mov [rax], rbx              ; write the len prefix
-
     end
     ret 8
 
@@ -148,7 +146,6 @@ isSpace:
 .yes:
     mov rax, 1
 .done:
-
     end
     ret 8
 
@@ -163,7 +160,6 @@ stringLen:
 
     mov rax, [rbp + pStr]
     mov rax, [rax]              ; the len prefix is the answer
-
     end
     ret 8
 
@@ -199,7 +195,6 @@ stringEq:
 .neq:
     xor rax, rax
 .done:
-
     end
     ret 16
 
@@ -252,7 +247,6 @@ stringCmp:
 .greater:
     mov rax, 1
 .done:
-
     end
     ret 16
 
@@ -270,7 +264,6 @@ stringInit:
     mov qword [rax], 0          ; len = 0
     mov byte [rax + 8], 0       ; data[0] = NUL
     xor rax, rax
-
     end
     ret 8
 
@@ -286,7 +279,6 @@ stringFromCStr:
     push [rbp + pCStr]
     push rax
     call stringFromRaw            ; rax = the new string
-
     end
     ret 8
 
@@ -323,7 +315,6 @@ stringFromRaw:
     mov byte [rax + 8 + rbx], 0
 
     mov rax, [rbp + pStr]
-
     end
     ret 16
 
@@ -346,7 +337,6 @@ stringCopy:
     call stringFromRaw            ; rax = new string
     mov rbx, [rbp + pDst]
     mov [rbx], rax              ; store into dst element
-
     end
     ret 16
 
@@ -369,7 +359,6 @@ stringMove:
     mov [rax], rcx
     mov qword [rbx], 0          ; src element empty
 .done:
-
     end
     ret 16
 
@@ -390,7 +379,6 @@ stringDrop:
     mov rax, [rbp + pSlot]
     mov qword [rax], 0
 .done:
-
     end
     ret 8
 
@@ -405,7 +393,6 @@ stringCStr:
 
     mov rax, [rbp + pStr]
     add rax, 8
-
     end
     ret 8
 
@@ -426,7 +413,6 @@ stringAt:
 .oob:
     xor rax, rax
 .done:
-
     end
     ret 16
 
@@ -446,7 +432,6 @@ stringHash:
     mov rax, FNV_OFFSET_BASIS
     push rax
     call fnv64
-
     end
     ret 8
 
@@ -461,7 +446,6 @@ stringSlotHash:
     mov rax, [rax]              ; string
     push rax
     call stringHash
-
     end
     ret 8
 
@@ -543,7 +527,6 @@ stringSubstring:
     ; result = the shared empty string
     lea rax, [rel emptyStr]
 .done:
-
     end
     ret 24
 
@@ -608,7 +591,6 @@ stringConcat:
     mov byte [rax + 8 + rbx], 0
 
     mov rax, [rbp + pResult]
-
     end
     ret 16
 
@@ -650,7 +632,6 @@ stringStartsWith:
 .no:
     xor rax, rax
 .done:
-
     end
     ret 16
 
@@ -691,7 +672,6 @@ stringEndsWith:
 .no:
     xor rax, rax
 .done:
-
     end
     ret 16
 
@@ -767,7 +747,6 @@ stringFind:
 .notFound:
     mov rax, -1
 .done:
-
     end
     ret 16
 
@@ -855,7 +834,6 @@ stringCount:
 .doneCnt:
     mov rax, [rbp + cnt]
 .done:
-
     end
     ret 16
 
@@ -917,7 +895,6 @@ stringLower:
     mov byte [rax + 8 + rbx], 0 ; trailing NUL
 
     mov rax, [rbp + pResult]
-
     end
     ret 8
 
@@ -977,7 +954,6 @@ stringUpper:
     mov byte [rax + 8 + rbx], 0 ; trailing NUL
 
     mov rax, [rbp + pResult]
-
     end
     ret 8
 
@@ -1047,7 +1023,6 @@ stringCapitalize:
     mov byte [rax + 8 + rbx], 0 ; trailing NUL
 
     mov rax, [rbp + pResult]
-
     end
     ret 8
 
@@ -1113,7 +1088,6 @@ stringStrip:
     push [rbp + start]
     push [rbp + e]
     call stringSubstring
-
     end
     ret 8
 
@@ -1158,7 +1132,6 @@ stringLStrip:
     mov rax, [rax]
     push rax
     call stringSubstring
-
     end
     ret 8
 
@@ -1201,7 +1174,6 @@ stringRStrip:
     push 0
     push [rbp + e]
     call stringSubstring
-
     end
     ret 8
 
@@ -1242,7 +1214,6 @@ stringRemovePrefix:
     push rbx
     call stringFromRaw            ; return value already in rax
 .done:
-
     end
     ret 16
 
@@ -1282,7 +1253,6 @@ stringRemoveSuffix:
     push rbx
     call stringFromRaw            ; return value already in rax
 .done:
-
     end
     ret 16
 
@@ -1404,7 +1374,6 @@ stringSplit:
     call vecPush
 .done:
     mov rax, [rbp + pVec]
-
     end
     ret 24
 
@@ -1527,7 +1496,6 @@ stringSplitLines:
     call vecPush
 .done:
     mov rax, [rbp + pVec]
-
     end
     ret 16
 
@@ -1657,7 +1625,6 @@ stringJoin:
     mov byte [rax + 8 + rbx], 0 ; trailing NUL
 
     mov rax, [rbp + pResult]
-
     end
     ret 16
 

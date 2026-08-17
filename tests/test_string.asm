@@ -261,7 +261,6 @@ checkStr:
     inc qword [rbp + i]
     jmp .loop
 .done:
-
     end
     ret 24
 

@@ -35,7 +35,6 @@ cmpInt64:
     mov rbx, [rbp + b]
     mov rbx, [rbx]
     sub rax, rbx
-
     end
     ret 16
 
@@ -52,7 +51,6 @@ cmpInt32:
     mov rbx, [rbp + b]
     movsx rbx, dword [rbx]
     sub rax, rbx
-
     end
     ret 16
 

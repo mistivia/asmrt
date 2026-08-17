@@ -30,7 +30,6 @@ main:
     push rdx            ; envp -> entry's 3rd argument, pushed last ([rbp+16])
 
     call entry           ; custom-ABI call; entry cleans the stack with ret 24
-
     end
     ret
 
