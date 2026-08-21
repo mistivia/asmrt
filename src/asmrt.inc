@@ -116,9 +116,15 @@
 .set List_meta, List_len + 8
 .set sizeof_List, List_meta + 8
 
-
+/* io.S */
 .extern ioWriteString
+
+/* assert.S */
 .extern assertTrue
+
+/* mem.S */
+.extern memCopy
+.extern memMove
 
 /*
 ; end struct List
