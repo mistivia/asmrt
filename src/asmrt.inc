@@ -92,7 +92,7 @@
     ret
 .endm
 
-/* struct ValueMeta */
+// struct ValueMeta
 .set ValueMeta_size, 0
 .set ValueMeta_align, ValueMeta_size + 4
 .set ValueMeta_drop, ValueMeta_align + 4
@@ -103,7 +103,7 @@
 .set ValueMeta_move, ValueMeta_copy + 8
 .set sizeof_ValueMeta, ValueMeta_move + 8
 
-/* struct Vec */
+// struct Vec
 .set Vec_data, 0
 .set Vec_len, Vec_data + 8
 .set Vec_capacity, Vec_len + 8
@@ -116,13 +116,13 @@
 .set List_meta, List_len + 8
 .set sizeof_List, List_meta + 8
 
-/* io.S */
+// io.S
 .extern ioWriteString
 
-/* assert.S */
+// assert.S
 .extern assertTrue
 
-/* mem.S */
+// mem.S
 .extern memCopy
 .extern memMove
 
@@ -386,4 +386,4 @@ extern listHash
 extern listMeta
 */
 
-#endif /* ASMRT_INC */
+#endif // ASMRT_INC

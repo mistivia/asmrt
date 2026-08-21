@@ -18,91 +18,8 @@
 %include "asmrt.inc"
 
 section .text
-    global memAlloc
-    global memFree
-    global memReloc
-    global memCopy
-    global memMove
     global memFill
     global memSwap
-    extern malloc
-    extern free
-    extern realloc
-
-
-; memCopy(dest, src, n) -> dest
-; Copies n bytes from src to dest. Assumes the two regions don't
-; overlap -- for possibly-overlapping regions use memMove instead.
-; caller pushes in order: push dest; push src; push n
-memCopy:
-    ; args: dest, src, n
-    argnum 3
-    %assign dest arg(1)
-    %assign src  arg(2)
-    %assign n    arg(3)
-    begin
-
-    push qword [rbp + dest]
-    push qword [rbp + src]
-    push qword [rbp + n]
-    call copyForward
-    end
-    ret 24
-
-; memMove(dest, src, n) -> dest
-; Like memCopy, but safe when the two regions overlap: copies forward
-; (low to high address) when dest <= src, backward (high to low) when
-; dest > src, so a byte is never overwritten before it's read.
-; caller pushes in order: push dest; push src; push n
-memMove:
-    ; args: dest, src, n
-    argnum 3
-    %assign dest arg(1)
-    %assign src  arg(2)
-    %assign n    arg(3)
-
-    begin
-    mov rax, [rbp + dest]
-    mov rbx, [rbp + src]
-    cmp rax, rbx
-    jbe .forward
-
-    ; backward: walk down from the high end, 8 bytes at a time, so every
-    ; write lands behind the next not-yet-read source byte. What's left
-    ; once fewer than 8 bytes remain is the low-address tail, which no
-    ; earlier chunk in this loop has touched -- copy that forward, order
-    ; doesn't matter for those last few bytes. No call happens inside
-    ; either loop, so rax/rbx/rcx/r8/al are pure scratch throughout.
-    mov rbx, [rbp + dest]
-    mov rcx, [rbp + src]
-    mov r8, [rbp + n]
-.backQwordLoop:
-    cmp r8, 8
-    jl .backByteLoop
-    sub r8, 8
-    mov rax, [rcx + r8]
-    mov [rbx + r8], rax
-    jmp .backQwordLoop
-.backByteLoop:
-    cmp r8, 0
-    jle .backDone
-    dec r8
-    mov al, [rcx + r8]
-    mov [rbx + r8], al
-    jmp .backByteLoop
-.backDone:
-    mov rax, [rbp + dest]
-    jmp .exit
-
-.forward:
-    push qword [rbp + dest]
-    push qword [rbp + src]
-    push qword [rbp + n]
-    call copyForward     ; already returns dest in rax
-
-.exit:
-    end
-    ret 24
 
 ; memFill(dest, val, n) -> dest
 ; Fills n bytes at dest with the low byte of val -- same low-byte-only
@@ -191,43 +108,5 @@ memSwap:
     inc r8
     jmp .byteLoop
 .done:
-    end
-    ret 24
-
-; copyForward(dest, src, n) -> dest -- internal helper shared by
-; memCopy and memMove's non-overlapping case. Moves 8 bytes at a time
-; while at least 8 remain, then a byte-at-a-time tail for whatever's
-; left (n isn't guaranteed to be a multiple of 8). No call happens
-; inside either loop, so rax/rbx/rcx/r8 are pure scratch throughout.
-; caller pushes in order: push dest; push src; push n
-copyForward:
-    ; args: dest, src, n
-    argnum 3
-    %assign dest arg(1)
-    %assign src  arg(2)
-    %assign n    arg(3)
-
-    begin
-    mov rbx, [rbp + dest]
-    mov rcx, [rbp + src]
-    xor r8, r8
-.qwordLoop:
-    mov rax, [rbp + n]
-    sub rax, r8
-    cmp rax, 8
-    jl .byteLoop
-    mov rax, [rcx + r8]
-    mov [rbx + r8], rax
-    add r8, 8
-    jmp .qwordLoop
-.byteLoop:
-    cmp r8, [rbp + n]
-    jge .done
-    mov al, [rcx + r8]
-    mov [rbx + r8], al
-    inc r8
-    jmp .byteLoop
-.done:
-    mov rax, [rbp + dest]
     end
     ret 24

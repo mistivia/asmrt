@@ -17,16 +17,16 @@ assertTrue:
     #define Rflag a0
     #define Rmsg  a1
     begin
-    /* if flag == 0 */
+    // if flag == 0
     cmp Rflag, 0
     jne .Lelse
-        mov a0, 2 /* stderr */
+        mov a0, 2 // stderr
         call ioWriteString
-        /* exit(-1) */
+        // exit(-1)
         mov a0, -1
         mov r0, 93
         syscall
 .Lelse:
-    /* else */
+    // else
         mov r0, 0
         return

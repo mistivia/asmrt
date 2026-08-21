@@ -3,7 +3,7 @@
 .section .text
 
 .globl memCopy
-/* copyForward(dest, src, n) */
+// copyForward(dest, src, n)
 memCopy:
     #define Rdest a0
     #define Rsrc  a1
@@ -11,7 +11,7 @@ memCopy:
     mov t1, Rdest
     begin
 .LqwordLoop:
-    /* while n >= 8 */
+    // while n >= 8
     cmp Rn, 8
     jb .LbyteLoop
         #define Rt t0
@@ -22,7 +22,7 @@ memCopy:
         sub Rn, 8
         jmp .LqwordLoop
 .LbyteLoop:
-    /* while n >= 1 */
+    // while n >= 1
     cmp Rn, 1
     jb .Ldone
         #define Rtb t0b
@@ -37,14 +37,14 @@ memCopy:
     return
 
 .globl memMove
-/* memMove(dest, src, n) */
+// memMove(dest, src, n)
 memMove:
     #define Rdest a0
     #define Rsrc  a1
     #define Rn    a2
     mov t1, Rdest
     begin
-    /* if dest <= src */
+    // if dest <= src
     cmp Rdest, Rsrc
     ja .LendIf
         call memCopy
@@ -53,7 +53,7 @@ memMove:
     add Rdest, Rn
     add Rsrc, Rn
 .LqwordLoop2:
-    /* while n >= 8 */
+    // while n >= 8
     cmp Rn, 8
     jb .LbyteLoop2
         #define Rt t0
@@ -64,7 +64,7 @@ memMove:
         sub Rn, 8
         jmp .LqwordLoop2
 .LbyteLoop2:
-    /* while n >= 1 */
+    // while n >= 1
     cmp Rn, 1
     jb .Ldone2
         #define Rtb t0b
