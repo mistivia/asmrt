@@ -46,8 +46,10 @@ memMove:
     begin
     /* if dest <= src */
     cmp Rdest, Rsrc
-    jbe .LcallForward
-    /* else: copy backward */
+    ja .LendIf
+        call memCopy
+        return
+.Lendif:
     add Rdest, Rn
     add Rsrc, Rn
 .LqwordLoop2:
@@ -74,7 +76,4 @@ memMove:
         jmp .LbyteLoop2
 .Ldone2:
     mov r0, t1
-    return
-.LcallForward:
-    call memCopy
     return
