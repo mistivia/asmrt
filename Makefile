@@ -1,5 +1,5 @@
 AS      := gcc
-ASFLAGS := -I src/
+ASFLAGS := -c -I src/
 AR      := ar
 CC      := gcc
 CFLAGS  := -no-pie

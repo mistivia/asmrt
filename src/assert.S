@@ -11,22 +11,22 @@
 
 .section .text
 
-.global assertTrue
+.globl assertTrue
 
 assertTrue:
     #define Rflag a0
     #define Rmsg  a1
     begin
+    /* if flag == 0 */
     cmp Rflag, 0
-    jne .Lok
-
-    mov a0, 2 /* stderr */
-    call ioWriteString
-
-    /* exit(-1) */
-    mov a0, -1
-    mov r0, 93
-    syscall    
-.Lok:
-    mov r0, 0
-    return
+    jne .Lelse
+        mov a0, 2 /* stderr */
+        call ioWriteString
+        /* exit(-1) */
+        mov a0, -1
+        mov r0, 93
+        syscall
+.Lelse:
+    /* else */
+        mov r0, 0
+        return

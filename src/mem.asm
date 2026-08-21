@@ -29,47 +29,6 @@ section .text
     extern free
     extern realloc
 
-; memAlloc(size) -> ptr, NULL on failure
-memAlloc:
-    ; args: size
-    argnum 1
-    %assign size arg(1)
-    begin
-
-    hexalign
-    mov rdi, [rbp + size]
-    call malloc
-    end
-    ret 8
-
-; memFree(ptr) -> void
-memFree:
-    argnum 1
-    %assign ptr arg(1)
-
-    begin
-    hexalign
-    mov rdi, [rbp + ptr]
-    call free
-
-    mov rax, 0
-    end
-    ret 8
-
-; memReloc(ptr, size) -> new ptr, NULL on failure (ptr is left untouched by libc on failure)
-memReloc:
-    ; args: ptr, size
-    argnum 2
-    %assign ptr  arg(1)
-    %assign size arg(2)
-    begin
-
-    hexalign
-    mov rdi, [rbp + ptr]
-    mov rsi, [rbp + size]
-    call realloc
-    end
-    ret 16
 
 ; memCopy(dest, src, n) -> dest
 ; Copies n bytes from src to dest. Assumes the two regions don't

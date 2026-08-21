@@ -31,8 +31,20 @@
 #define a4b r8b
 #define a5b r9b
 
+#define a2h dh
+#define a3h ch
+
 #define t0 r10
 #define t1 r11
+
+#define t0d r10d
+#define t1d r11d
+
+#define t0w r10w
+#define t1w r11w
+
+#define t0b r10b
+#define t1b r11b
 
 #define s0 rbx
 #define s1 r12
@@ -58,7 +70,13 @@
 #define s3b r14b
 #define s4b r15b
 
+#define s0h bh
+
 #define r0 rax
+#define r0d eax
+#define r0w ax
+#define r0b al
+#define r0h ah
 
 #define sp rsp
 #define fp rbp
