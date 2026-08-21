@@ -1,155 +1,108 @@
-; asmrt.inc -- shared header for the asmrt runtime
-;
-; Custom ABI: caller pushes args in declaration order (last-pushed arg
-; lands at [rbp+16]); callee cleans its own args with ret N; return value
-; in rax; every register but rax is clobbered by any call (custom-ABI,
-; real-ABI, or bare syscall) -- so no variable ever lives in a register
-; across a call, only on the stack.
-;
-; Params and locals are declared with plain %assign offsets, e.g.:
-;
-;   ; args: x, y, z
-;   argnum 3
-;   %assign x arg(1)
-;   %assign y arg(2)
-;   %assign z arg(3)
-;
-; and accessed as [rbp + x].  Required order in every function:
-;   name: -> begin -> arg declarations -> local declarations ->
-;   endlocal -> body -> end.
+#ifndef ASMRT_INC_
+#define ASMRT_INC_
 
-%ifndef ASMRT_INC
-%define ASMRT_INC
+.intel_syntax noprefix
 
-default rel
+#define a0 rdi
+#define a1 rsi
+#define a2 rdx
+#define a3 rcx
+#define a4 r8
+#define a5 r9
 
-; ---- custom ABI support macros ----
+#define a0d edi
+#define a1d esi
+#define a2d edx
+#define a3d ecx
+#define a4d r8d
+#define a5d r9d
 
-%macro begin 0
+#define a0w di
+#define a1w si
+#define a2w dx
+#define a3w cx
+#define a4w r8w
+#define a5w r9w
+
+#define a0b dil
+#define a1b sil
+#define a2b dl
+#define a3b cl
+#define a4b r8b
+#define a5b r9b
+
+#define t0 r10
+#define t1 r11
+
+#define s0 rbx
+#define s1 r12
+#define s2 r13
+#define s3 r14
+#define s4 r15
+
+#define s0d ebx
+#define s1d r12d
+#define s2d r13d
+#define s3d r14d
+#define s4d r15d
+
+#define s0w bx
+#define s1w r12w
+#define s2w r13w
+#define s3w r14w
+#define s4w r15w
+
+#define s0b bl
+#define s1b r12b
+#define s2b r13b
+#define s3b r14b
+#define s4b r15b
+
+#define r0 rax
+
+#define sp rsp
+#define fp rbp
+
+.macro begin
     push rbp
     mov  rbp, rsp
-%endmacro
+.endm
 
-%macro end 0
+.macro return
     mov  rsp, rbp
     pop  rbp
-%endmacro
+    ret
+.endm
 
-; hexalign: pad rsp to 16-byte alignment before a real-ABI call. Under
-; this ABI rsp is always at least 8-byte aligned, so it's only ever off
-; by 0 or 8; no paired "undo" needed (end's mov rsp,rbp reclaims it).
-%macro hexalign 0
-    mov  rax, rsp
-    and  rax, 8
-    sub  rsp, rax
-%endmacro
+/* struct ValueMeta */
+.set ValueMeta_size, 0
+.set ValueMeta_align, ValueMeta_size + 4
+.set ValueMeta_drop, ValueMeta_align + 4
+.set ValueMeta_cmp, ValueMeta_drop + 8
+.set ValueMeta_eq, ValueMeta_cmp + 8
+.set ValueMeta_hash, ValueMeta_eq + 8
+.set ValueMeta_copy, ValueMeta_hash + 8
+.set ValueMeta_move, ValueMeta_copy + 8
+.set sizeof_ValueMeta, ValueMeta_move + 8
 
-; preasm/postasm: save/restore every register (rax included), for
-; calling into a custom-ABI function from inside a real-ABI callback
-; (e.g. a C function-pointer callback) without clobbering what the
-; real-ABI caller expects to survive. Stash any needed return value to
-; memory before postasm -- it restores rax too.
-%macro preasm 0
-    sub  rsp, 128 ; 16 slots = 15 registers + 1 pad slot, keeps 16-byte alignment
-    mov [rsp+0],   rax
-    mov [rsp+8],   rbx
-    mov [rsp+16],  rcx
-    mov [rsp+24],  rdx
-    mov [rsp+32],  rbp
-    mov [rsp+40],  rsi
-    mov [rsp+48],  rdi
-    mov [rsp+56],  r8
-    mov [rsp+64],  r9
-    mov [rsp+72],  r10
-    mov [rsp+80],  r11
-    mov [rsp+88],  r12
-    mov [rsp+96],  r13
-    mov [rsp+104], r14
-    mov [rsp+112], r15
-%endmacro
+/* struct Vec */
+.set Vec_data, 0
+.set Vec_len, Vec_data + 8
+.set Vec_capacity, Vec_len + 8
+.set Vec_meta, Vec_capacity + 8
+.set sizeof_Vec, Vec_meta + 8
 
-%macro postasm 0
-    mov r15, [rsp+112]
-    mov r14, [rsp+104]
-    mov r13, [rsp+96]
-    mov r12, [rsp+88]
-    mov r11, [rsp+80]
-    mov r10, [rsp+72]
-    mov r9,  [rsp+64]
-    mov r8,  [rsp+56]
-    mov rdi, [rsp+48]
-    mov rsi, [rsp+40]
-    mov rbp, [rsp+32]
-    mov rdx, [rsp+24]
-    mov rcx, [rsp+16]
-    mov rbx, [rsp+8]
-    mov rax, [rsp+0]
-    add  rsp, 128
-%endmacro
+.set List_vhead, 0
+.set List_vtail, List_vhead + 8
+.set List_len, List_vtail + 8
+.set List_meta, List_len + 8
+.set sizeof_List, List_meta + 8
 
-%macro resetOffset 0
-    %assign offset 0
-%endmacro
 
-%macro incOffset 1
-    %assign offset (offset + %1)
-%endmacro
+.extern ioWriteString
+.extern assertTrue
 
-%macro decOffset 1
-    %assign offset (offset - %1)
-%endmacro
-
-%macro argnum 1
-    %assign __argnum %1
-%endmacro
-
-%define arg(i) (16 + (__argnum - i) * 8)
-
-; struct ValueMeta
-resetOffset
-%assign ValueMeta_objsize offset
-incOffset 8
-%assign ValueMeta_align offset
-incOffset 8
-%assign ValueMeta_drop offset
-incOffset 8
-%assign ValueMeta_cmp offset
-incOffset 8
-%assign ValueMeta_eq offset
-incOffset 8
-%assign ValueMeta_hash offset
-incOffset 8
-%assign ValueMeta_copy offset
-incOffset 8
-%assign ValueMeta_move offset
-incOffset 8
-%assign sizeof_ValueMeta offset
-; end struct ValueMeta
-
-; struct Vec
-resetOffset
-%assign Vec_data offset
-incOffset 8
-%assign Vec_len offset
-incOffset 8
-%assign Vec_capacity offset
-incOffset 8
-%assign Vec_meta offset
-incOffset 8
-%assign sizeof_Vec offset
-; end struct Vec
-
-; struct List
-resetOffset
-%assign List_vhead offset
-incOffset 8
-%assign List_vtail offset
-incOffset 8
-%assign List_len offset
-incOffset 8
-%assign List_pValueMeta offset
-incOffset 8
-%assign sizeof_List offset
+/*
 ; end struct List
 
 ; ---- runtime exported symbols ----
@@ -407,5 +360,6 @@ extern listCmp
 extern listHash
 ; listMeta ; ValueMeta instance describing struct List itself
 extern listMeta
+*/
 
-%endif ; ASMRT_INC
+#endif /* ASMRT_INC */

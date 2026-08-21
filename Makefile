@@ -1,5 +1,5 @@
-AS      := nasm
-ASFLAGS := -f elf64 -I src/
+AS      := gcc
+ASFLAGS := -I src/
 AR      := ar
 CC      := gcc
 CFLAGS  := -no-pie
@@ -10,17 +10,16 @@ BUILD_DIR := build
 TEST_DIR  := tests
 TEST_BUILD_DIR := $(BUILD_DIR)/tests
 
-SRCS := $(wildcard $(SRC_DIR)/*.asm)
-OBJS := $(patsubst $(SRC_DIR)/%.asm,$(BUILD_DIR)/%.o,$(SRCS))
+SRCS := $(wildcard $(SRC_DIR)/*.S)
+OBJS := $(patsubst $(SRC_DIR)/%.S,$(BUILD_DIR)/%.o,$(SRCS))
 LIB  := $(BUILD_DIR)/libasmrt.a
 INC  := $(SRC_DIR)/asmrt.inc
 
-TEST_SRCS := $(wildcard $(TEST_DIR)/*.asm)
-TEST_BINS := $(patsubst $(TEST_DIR)/%.asm,$(TEST_BUILD_DIR)/%,$(TEST_SRCS))
+TEST_SRCS := $(wildcard $(TEST_DIR)/*.S)
+TEST_BINS := $(patsubst $(TEST_DIR)/%.S,$(TEST_BUILD_DIR)/%,$(TEST_SRCS))
 
 PREFIX  ?= /usr/local
 LIBDIR  := $(PREFIX)/lib
-INCDIR  := $(PREFIX)/include/nasm
 
 .PHONY: all lib test clean install uninstall
 
@@ -31,7 +30,7 @@ lib: $(LIB)
 $(LIB): $(OBJS) | $(BUILD_DIR)
 	$(AR) rcs $@ $(OBJS)
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.asm $(INC) | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.S $(INC) | $(BUILD_DIR)
 	$(AS) $(ASFLAGS) $< -o $@
 
 $(BUILD_DIR):
@@ -40,7 +39,7 @@ $(BUILD_DIR):
 $(TEST_BUILD_DIR):
 	mkdir -p $(TEST_BUILD_DIR)
 
-$(TEST_BUILD_DIR)/%.o: $(TEST_DIR)/%.asm $(INC) | $(TEST_BUILD_DIR)
+$(TEST_BUILD_DIR)/%.o: $(TEST_DIR)/%.S $(INC) | $(TEST_BUILD_DIR)
 	$(AS) $(ASFLAGS) $< -o $@
 
 $(TEST_BUILD_DIR)/%: $(TEST_BUILD_DIR)/%.o $(LIB)
