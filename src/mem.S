@@ -3,37 +3,35 @@
 .section .text
 
 .globl memCopy
-// copyForward(dest, src, n)
+// memCopy(dest, src, n)
+// copy forward
 memCopy:
     #define Rdest a0
     #define Rsrc  a1
     #define Rn    a2
     mov t1, Rdest
     begin
-.LqwordLoop:
-    // while n >= 8
+10: // while n >= 8
     cmp Rn, 8
-    jb .LbyteLoop
+    jb 20f
         #define Rt t0
         mov Rt, qword ptr [Rsrc]
         mov qword ptr [Rdest], Rt
         add Rsrc, 8
         add Rdest, 8
         sub Rn, 8
-        jmp .LqwordLoop
-.LbyteLoop:
-    // while n >= 1
+        jmp 10b
+20: // while n >= 1
     cmp Rn, 1
-    jb .Ldone
+    jb 30f
         #define Rtb t0b
         mov Rtb, byte ptr [Rsrc]
         mov byte ptr [Rdest], Rtb
         dec Rn
         inc Rsrc
         inc Rdest
-        jmp .LbyteLoop
-.Ldone:
-    mov r0, t1
+        jmp 20b
+30: mov r0, t1
     return
 
 .globl memMove
@@ -46,34 +44,32 @@ memMove:
     begin
     // if dest <= src
     cmp Rdest, Rsrc
-    ja .LendIf
+    ja 10f
         call memCopy
         return
-.Lendif:
+10: // endif
+    // copy backward
     add Rdest, Rn
     add Rsrc, Rn
-.LqwordLoop2:
-    // while n >= 8
+20: // while n >= 8
     cmp Rn, 8
-    jb .LbyteLoop2
+    jb 30f
         #define Rt t0
         sub Rsrc, 8
         sub Rdest, 8
         mov Rt, qword ptr [Rsrc]
         mov qword ptr [Rdest], Rt
         sub Rn, 8
-        jmp .LqwordLoop2
-.LbyteLoop2:
-    // while n >= 1
+        jmp 20b
+30: // while n >= 1
     cmp Rn, 1
-    jb .Ldone2
+    jb 40f
         #define Rtb t0b
         dec Rsrc
         dec Rdest
         mov Rtb, byte ptr [Rsrc]
         mov byte ptr [Rdest], Rtb
         dec Rn
-        jmp .LbyteLoop2
-.Ldone2:
-    mov r0, t1
+        jmp 30b
+40: mov r0, t1
     return
