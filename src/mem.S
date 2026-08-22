@@ -74,6 +74,7 @@ memMove:
 40: mov r0, t1
     return
 
+.globl memFill
 // memFill(dest, val, n)
 memFill:
     #define Rdest a0
@@ -111,4 +112,55 @@ memFill:
         jmp 20b
 30: // end
     mov r0, t1
+    return
+
+.globl memSwap
+// memSwap(pa, pb, n)
+memSwap:
+    #define Rpa a0
+    #define Rpb a1
+    #define Rn  a2
+    begin
+    // if pa == pb
+    cmp Rpa, Rpb
+    jne 0f
+        mov r0, 0
+        return
+0:  // if |pa - pb| < n
+    mov t0, Rpa
+    sub t0, Rpb
+    mov t1, t0
+    neg t1
+    cmp t0, 0
+    cmovl t0, t1
+    cmp t0, Rn
+    jae 10f
+        mov r0, -1
+        return
+10: // endif
+    // while n >= 8
+    cmp Rn, 8
+    jl 20f
+        mov t0, qword ptr [Rpa]
+        mov t1, qword ptr [Rpb]
+        mov qword ptr [Rpa], t1
+        mov qword ptr [Rpb], t0
+        sub Rn, 8
+        add Rpa, 8
+        add Rpb, 8
+        jmp 10b
+20: // end
+    // while n >= 1
+    cmp Rn, 1
+    jl 30f
+        mov t0b, byte ptr [Rpa]
+        mov t1b, byte ptr [Rpb]
+        mov byte ptr [Rpa], t1b
+        mov byte ptr [Rpb], t0b
+        dec Rn
+        inc Rpa
+        inc Rpb
+        jmp 20b
+30: // end
+    mov r0, 0
     return
