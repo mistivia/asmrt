@@ -93,28 +93,28 @@
 .endm
 
 // struct ValueMeta
-.set ValueMeta_size, 0
-.set ValueMeta_align, ValueMeta_size + 4
-.set ValueMeta_drop, ValueMeta_align + 4
-.set ValueMeta_cmp, ValueMeta_drop + 8
-.set ValueMeta_eq, ValueMeta_cmp + 8
-.set ValueMeta_hash, ValueMeta_eq + 8
-.set ValueMeta_copy, ValueMeta_hash + 8
-.set ValueMeta_move, ValueMeta_copy + 8
-.set sizeof_ValueMeta, ValueMeta_move + 8
+.set ValueMeta_size,   0
+.set ValueMeta_align,  4
+.set ValueMeta_drop,   8
+.set ValueMeta_cmp,    16
+.set ValueMeta_eq,     24
+.set ValueMeta_hash,   32
+.set ValueMeta_copy,   40
+.set ValueMeta_move,   48
+.set sizeof_ValueMeta, 56
 
 // struct Vec
-.set Vec_data, 0
-.set Vec_len, Vec_data + 8
-.set Vec_capacity, Vec_len + 8
-.set Vec_meta, Vec_capacity + 8
-.set sizeof_Vec, Vec_meta + 8
+.set Vec_data,     0
+.set Vec_len,      8
+.set Vec_capacity, 16
+.set Vec_meta,     24
+.set sizeof_Vec,   32
 
-.set List_vhead, 0
-.set List_vtail, List_vhead + 8
-.set List_len, List_vtail + 8
-.set List_meta, List_len + 8
-.set sizeof_List, List_meta + 8
+.set List_vhead,  0
+.set List_vtail,  8
+.set List_len,    16
+.set List_meta,   24
+.set sizeof_List, 32
 
 // io.S
 .extern ioWriteString
@@ -125,6 +125,8 @@
 // mem.S
 .extern memCopy
 .extern memMove
+.extern memFill
+.extern memSwap
 
 /*
 ; end struct List
@@ -170,22 +172,6 @@ extern fsMkdir
 extern fsRmdir
 ; fsUnlink(pPath) -> result
 extern fsUnlink
-
-; mem.asm
-; memAlloc(size) -> pMem ; malloc wrapper, NULL on failure
-extern memAlloc
-; memFree(pMem) ; free a memAlloc'd block; rax is always 0
-extern memFree
-; memReloc(pMem, size) -> pMemNew ; realloc wrapper
-extern memReloc
-; memCopy(pDest, pSrc, n) -> pDest ; regions must not overlap
-extern memCopy
-; memMove(pDest, pSrc, n) -> pDest ; overlap-safe
-extern memMove
-; memFill(pDest, val, n) -> pDest ; fills n bytes with val's low byte
-extern memFill
-; memSwap(pA, pB, size) ; swap `size` bytes between pA and pB
-extern memSwap
 
 ; assert.asm
 ; assert(pMsg, flag) -- if flag == 0, write pMsg (length-prefixed string)
