@@ -6,17 +6,17 @@
 // memCopy(dest, src, n)
 // copy forward
 memCopy:
+    // args
     #define Rdest a0
     #define Rsrc  a1
     #define Rn    a2
-
+    // vars
     #define Rt0   t0
     #define Rt1   t1
     #define Rt2   a3
     #define Rt3   a4
     mov r0, Rdest
     begin
-    // align dest to 8 bytes
 1:  // while dest % 8 != 0 and n >= 1
     test Rdest, 7
     jz 2f
@@ -36,8 +36,8 @@ memCopy:
         mov Rt1, qword ptr [Rsrc + 8]
         mov Rt2, qword ptr [Rsrc + 16]
         mov Rt3, qword ptr [Rsrc + 24]
-        mov qword ptr [Rdest], Rt0
-        mov qword ptr [Rdest + 8], Rt1
+        mov qword ptr [Rdest],      Rt0
+        mov qword ptr [Rdest + 8],  Rt1
         mov qword ptr [Rdest + 16], Rt2
         mov qword ptr [Rdest + 24], Rt3
         add Rsrc, 32
@@ -84,7 +84,7 @@ memMove:
     // copy backward
     add Rdest, Rn
     add Rsrc, Rn
-2:  // align the end of dest to 8 bytes
+2:  // while dest not aligned to 8 and n >= 1
     test Rdest, 7
     jz 3f
     cmp Rn, 1
@@ -95,6 +95,7 @@ memMove:
         mov byte ptr [Rdest], t0b
         dec Rn
         jmp 2b
+    // endloop
 3:  // while n >= 8
     cmp Rn, 8
     jb 4f
@@ -105,6 +106,7 @@ memMove:
         mov qword ptr [Rdest], Rt
         sub Rn, 8
         jmp 3b
+    // endloop
 4:  // while n >= 1
     cmp Rn, 1
     jb 5f
@@ -115,6 +117,7 @@ memMove:
         mov byte ptr [Rdest], Rtb
         dec Rn
         jmp 4b
+    // endloop
 5:  mov r0, t1
     return
 
@@ -156,7 +159,7 @@ memFill:
         add Rdest, 8
         sub Rn, 8
         jmp 2b
-3:  // end
+3:  // endloop
     // while n >= 1
     cmp Rn, 1
     jb 4f
@@ -164,7 +167,7 @@ memFill:
         inc Rdest
         dec Rn
         jmp 3b
-4:  // end
+4:  // endloop
     mov r0, t1
     return
 
@@ -180,6 +183,7 @@ memSwap:
     jne 5f
         mov r0, 0
         return
+    // endif
 5:  // if |pa - pb| < n
     mov t0, Rpa
     sub t0, Rpb
